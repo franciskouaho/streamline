@@ -37,69 +37,66 @@ export default function Login() {
                 style={{ flex: 1 }}
             >
                 <ScrollView
+                    style={{ flex: 1 }}
                     contentContainerStyle={styles.scrollContent}
-                    showsVerticalScrollIndicator={false}
                 >
                     <View style={styles.content}>
-                        <View style={styles.titleContainer}>
-                            <Text style={[styles.title, { color: '#000' }]}>{translations.auth.login}</Text>
-                            <Image
-                                source={require('../assets/images/wave.jpeg')}
-                                style={styles.waveIcon}
-                            />
-                        </View>
-
-                        <Text style={[styles.subtitle, { color: '#666' }]}>
-                            {translations.auth.signInToContinue}
-                        </Text>
-
-                        <View style={styles.form}>
-                            <TextInput
-                                style={styles.input}
-                                placeholder={translations.auth.email}
-                                value={email}
-                                onChangeText={setEmail}
-                                keyboardType="email-address"
-                                autoCapitalize="none"
-                                autoComplete="email"
-                                placeholderTextColor="#666"
-                            />
-
-                            <TextInput
-                                style={styles.input}
-                                placeholder={translations.auth.password}
-                                value={password}
-                                onChangeText={setPassword}
-                                secureTextEntry
-                                autoComplete="password"
-                                placeholderTextColor="#666"
-                            />
-
-                            <View style={styles.rememberForgotContainer}>
-                                <TouchableOpacity
-                                    style={styles.rememberContainer}
-                                    onPress={() => setRememberMe(!rememberMe)}
-                                >
-                                    <View style={styles.checkbox}>
-                                        {rememberMe && (
-                                            <View style={styles.checkboxInner} />
-                                        )}
-                                    </View>
-                                    <Text style={[styles.rememberText, { color: '#666' }]}>{translations.auth.rememberMe}</Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity>
-                                    <Text style={[styles.forgotPasswordText, { color: '#ff7a5c' }]}>{translations.auth.forgotPassword}</Text>
-                                </TouchableOpacity>
+                        {/* Section du haut */}
+                        <View style={styles.topSection}>
+                            <View style={styles.titleContainer}>
+                                <Text style={[styles.title, { color: '#000' }]}>{translations.auth.login}</Text>
+                                <Image
+                                    source={require('../assets/images/wave.jpeg')}
+                                    style={styles.waveIcon}
+                                />
                             </View>
 
-                            <TouchableOpacity
-                                style={styles.signInButton}
-                                onPress={handleSignIn}
-                            >
-                                <Text style={[styles.signInButtonText, { color: '#fff' }]}>{translations.auth.login}</Text>
-                            </TouchableOpacity>
+                            <Text style={[styles.subtitle, { color: '#666' }]}>
+                                {translations.auth.signInToContinue}
+                            </Text>
+                        </View>
 
+                        {/* Section du milieu */}
+                        <View style={styles.middleSection}>
+                            <View style={styles.form}>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder={translations.auth.email}
+                                    value={email}
+                                    onChangeText={setEmail}
+                                    keyboardType="email-address"
+                                    autoCapitalize="none"
+                                    autoComplete="email"
+                                    placeholderTextColor="#666"
+                                />
+
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder={translations.auth.password}
+                                    value={password}
+                                    onChangeText={setPassword}
+                                    secureTextEntry
+                                    autoComplete="password"
+                                    placeholderTextColor="#666"
+                                />
+
+                                <View style={styles.rememberForgotContainer}>
+                                    <TouchableOpacity>
+                                        <Text style={[styles.forgotPasswordText, { color: '#ff7a5c' }]}>{translations.auth.forgotPassword}</Text>
+                                    </TouchableOpacity>
+                                </View>
+
+                                <TouchableOpacity
+                                    style={styles.signInButton}
+                                    onPress={handleSignIn}
+                                >
+                                    <Text style={[styles.signInButtonText, { color: '#fff' }]}>{translations.auth.login}</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+
+                        {/* Section du bas */}
+                        <View style={styles.bottomSection}>
                             <View style={styles.divider}>
                                 <View style={styles.dividerLine} />
                                 <Text style={[styles.dividerText, { color: '#888' }]}>{translations.auth.or}</Text>
@@ -154,7 +151,6 @@ const styles = StyleSheet.create({
     },
     scrollContent: {
         flexGrow: 1,
-        paddingBottom: 30,
     },
     header: {
         paddingHorizontal: 20,
@@ -171,7 +167,20 @@ const styles = StyleSheet.create({
     content: {
         flex: 1,
         paddingHorizontal: 20,
-        paddingTop: 20,
+        justifyContent: 'space-between', // Important pour la répartition
+        paddingVertical: 40,
+    },
+    topSection: {
+        flex: 0.2,
+        justifyContent: 'center',
+    },
+    middleSection: {
+        flex: 0.5,
+        justifyContent: 'center',
+    },
+    bottomSection: {
+        flex: 0.3,
+        justifyContent: 'flex-end',
     },
     titleContainer: {
         flexDirection: 'row',

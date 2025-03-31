@@ -7,7 +7,8 @@ import {
     TouchableOpacity,
     KeyboardAvoidingView,
     Platform,
-    ScrollView
+    ScrollView,
+    Image // Ajout de l'import Image
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Link } from 'expo-router';
@@ -28,20 +29,21 @@ export default function Register() {
                 style={{ flex: 1 }}
             >
                 <ScrollView
+                    style={{ flex: 1 }}
                     contentContainerStyle={styles.scrollContent}
-                    showsVerticalScrollIndicator={false}
                 >
-                    <View style={styles.header}>
-                        <TouchableOpacity onPress={() => router.back()}>
-                            <Ionicons name="arrow-back" size={24} color="#000" />
-                        </TouchableOpacity>
-                    </View>
-
                     <View style={styles.content}>
-                        <Text style={styles.title}>{translations.auth.register}</Text>
-                        <Text style={styles.subtitle}>{translations.auth.fillInformation}</Text>
+                        {/* Section du haut */}
+                        <View style={styles.topSection}>
+                            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                                <Ionicons name="arrow-back" size={24} color="#000" />
+                            </TouchableOpacity>
+                            <Text style={styles.title}>{translations.auth.register}</Text>
+                            <Text style={styles.subtitle}>{translations.auth.fillInformation}</Text>
+                        </View>
 
-                        <View style={styles.form}>
+                        {/* Section du milieu */}
+                        <View style={styles.middleSection}>
                             <TextInput
                                 style={styles.input}
                                 placeholder={translations.editProfile.fullName}
@@ -69,7 +71,10 @@ export default function Register() {
                                 secureTextEntry
                                 placeholderTextColor="#666"
                             />
+                        </View>
 
+                        {/* Section du bas */}
+                        <View style={styles.bottomSection}>
                             <TouchableOpacity
                                 style={styles.registerButton}
                                 onPress={() => router.replace('/')}
@@ -78,6 +83,35 @@ export default function Register() {
                                     {translations.auth.register}
                                 </Text>
                             </TouchableOpacity>
+
+                            <View style={styles.divider}>
+                                <View style={styles.dividerLine} />
+                                <Text style={[styles.dividerText, { color: '#888' }]}>{translations.auth.or}</Text>
+                                <View style={styles.dividerLine} />
+                            </View>
+
+                            <View style={styles.socialButtonsContainer}>
+                                <TouchableOpacity style={styles.socialButton}>
+                                    <Image
+                                        source={require('../assets/images/google.png')}
+                                        style={styles.socialIcon}
+                                    />
+                                </TouchableOpacity>
+
+                                <TouchableOpacity style={styles.socialButton}>
+                                    <Image
+                                        source={require('../assets/images/apple.png')}
+                                        style={styles.socialIcon}
+                                    />
+                                </TouchableOpacity>
+
+                                <TouchableOpacity style={styles.socialButton}>
+                                    <Image
+                                        source={require('../assets/images/facebook.png')}
+                                        style={styles.socialIcon}
+                                    />
+                                </TouchableOpacity>
+                            </View>
 
                             <View style={styles.loginContainer}>
                                 <Text style={styles.loginText}>
@@ -107,14 +141,30 @@ const styles = StyleSheet.create({
     scrollContent: {
         flexGrow: 1,
     },
-    header: {
-        paddingHorizontal: 20,
-        paddingTop: 20,
-    },
     content: {
         flex: 1,
         paddingHorizontal: 20,
-        paddingTop: 40,
+        justifyContent: 'space-between', // Important pour la répartition
+        paddingVertical: 40,
+    },
+    topSection: {
+        flex: 0.2,
+        justifyContent: 'flex-start',
+    },
+    middleSection: {
+        flex: 0.5,
+        justifyContent: 'center',
+    },
+    bottomSection: {
+        flex: 0.3,
+        justifyContent: 'flex-end',
+    },
+    backButton: {
+        marginBottom: 30,
+    },
+    header: {
+        paddingHorizontal: 20,
+        paddingTop: 20,
     },
     title: {
         fontSize: 28,
@@ -179,5 +229,48 @@ const styles = StyleSheet.create({
         color: '#ff7a5c',
         fontSize: 14,
         fontWeight: '500',
+    },
+    divider: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: '100%',
+        marginBottom: 25,
+        marginTop: 25,
+    },
+    dividerLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: '#ddd',
+    },
+    dividerText: {
+        marginHorizontal: 10,
+        color: '#888',
+        fontSize: 14,
+    },
+    socialButtonsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginBottom: 30,
+    },
+    socialButton: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        borderWidth: 1,
+        borderColor: '#000',
+        backgroundColor: '#fff',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginHorizontal: 15,
+        shadowColor: '#000',
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+        elevation: 8,
+    },
+    socialIcon: {
+        width: 25,
+        height: 25,
+        resizeMode: 'contain',
     },
 });

@@ -5,6 +5,20 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useLanguage } from '@/contexts/LanguageContext';
 
+type FeatureProps = {
+    icon: string;
+    text: string;
+};
+
+const Feature = ({ icon, text }: FeatureProps) => (
+    <View style={styles.featureHighlight}>
+        <View style={styles.featureIconContainer}>
+            <Ionicons name={icon} size={24} color="#ff7a5c" />
+        </View>
+        <Text style={styles.featureHighlightText}>{text}</Text>
+    </View>
+);
+
 type PlanFeature = {
     text: string;
     included: boolean;
@@ -295,5 +309,41 @@ const styles = StyleSheet.create({
     },
     bottomSpace: {
         height: 32,
+    },
+    featureHighlight: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        padding: 15,
+        borderRadius: 15,
+        marginBottom: 15,
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+        elevation: 8,
+    },
+    featureIconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#fff',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 15,
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+    },
+    featureHighlightText: {
+        fontSize: 16,
+        color: '#000',
+        flex: 1,
+        fontWeight: '500',
     },
 });
