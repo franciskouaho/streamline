@@ -31,7 +31,7 @@ export default function Profile() {
                 </View>
 
                 <Text style={styles.userName}>Bruce Wayne</Text>
-                <Text style={styles.userRole}>{translations.profile.role}</Text>
+                <Text style={styles.userRole}>Product Designer</Text>
 
                 <TouchableOpacity 
                     style={styles.editButton}

@@ -42,14 +42,14 @@ export default function Login() {
                 >
                     <View style={styles.content}>
                         <View style={styles.titleContainer}>
-                            <Text style={[styles.title, { color: '#000' }]}>{translations.auth.login}</Text>
+                            <Text style={styles.title}>{translations.auth.login}</Text>
                             <Image
                                 source={require('../assets/images/wave.jpeg')}
                                 style={styles.waveIcon}
                             />
                         </View>
 
-                        <Text style={[styles.subtitle, { color: '#666' }]}>
+                        <Text style={styles.subtitle}>
                             {translations.auth.signInToContinue}
                         </Text>
 
@@ -62,7 +62,6 @@ export default function Login() {
                                 keyboardType="email-address"
                                 autoCapitalize="none"
                                 autoComplete="email"
-                                placeholderTextColor="#666"
                             />
 
                             <TextInput
@@ -72,7 +71,6 @@ export default function Login() {
                                 onChangeText={setPassword}
                                 secureTextEntry
                                 autoComplete="password"
-                                placeholderTextColor="#666"
                             />
 
                             <View style={styles.rememberForgotContainer}>
@@ -85,11 +83,11 @@ export default function Login() {
                                             <View style={styles.checkboxInner} />
                                         )}
                                     </View>
-                                    <Text style={[styles.rememberText, { color: '#666' }]}>{translations.auth.rememberMe}</Text>
+                                    <Text style={styles.rememberText}>{translations.auth.rememberMe}</Text>
                                 </TouchableOpacity>
 
                                 <TouchableOpacity>
-                                    <Text style={[styles.forgotPasswordText, { color: '#ff7a5c' }]}>{translations.auth.forgotPassword}</Text>
+                                    <Text style={styles.forgotPasswordText}>{translations.auth.forgotPassword}</Text>
                                 </TouchableOpacity>
                             </View>
 
@@ -97,12 +95,12 @@ export default function Login() {
                                 style={styles.signInButton}
                                 onPress={handleSignIn}
                             >
-                                <Text style={[styles.signInButtonText, { color: '#fff' }]}>{translations.auth.login}</Text>
+                                <Text style={styles.signInButtonText}>{translations.auth.login}</Text>
                             </TouchableOpacity>
 
                             <View style={styles.divider}>
                                 <View style={styles.dividerLine} />
-                                <Text style={[styles.dividerText, { color: '#888' }]}>{translations.auth.or}</Text>
+                                <Text style={styles.dividerText}>{translations.auth.or}</Text>
                                 <View style={styles.dividerLine} />
                             </View>
 
@@ -130,12 +128,12 @@ export default function Login() {
                             </View>
 
                             <View style={styles.signUpContainer}>
-                                <Text style={[styles.signUpText, { color: '#666' }]}>
+                                <Text style={styles.signUpText}>
                                     {translations.auth.dontHaveAccount}{' '}
                                 </Text>
                                 <Link href="/register" asChild>
                                     <TouchableOpacity>
-                                        <Text style={[styles.signUpLink, { color: '#ff7a5c' }]}>{translations.auth.createAccount}</Text>
+                                        <Text style={styles.signUpLink}>{translations.auth.createAccount}</Text>
                                     </TouchableOpacity>
                                 </Link>
                             </View>
@@ -202,7 +200,6 @@ const styles = StyleSheet.create({
         padding: 18,
         marginBottom: 15,
         fontSize: 16,
-        color: '#000',  // Ajout de la couleur du texte
         borderWidth: 1,
         borderColor: '#000',
         shadowColor: '#000',

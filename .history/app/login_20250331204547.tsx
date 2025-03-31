@@ -62,7 +62,6 @@ export default function Login() {
                                 keyboardType="email-address"
                                 autoCapitalize="none"
                                 autoComplete="email"
-                                placeholderTextColor="#666"
                             />
 
                             <TextInput
@@ -72,7 +71,6 @@ export default function Login() {
                                 onChangeText={setPassword}
                                 secureTextEntry
                                 autoComplete="password"
-                                placeholderTextColor="#666"
                             />
 
                             <View style={styles.rememberForgotContainer}>
@@ -202,7 +200,6 @@ const styles = StyleSheet.create({
         padding: 18,
         marginBottom: 15,
         fontSize: 16,
-        color: '#000',  // Ajout de la couleur du texte
         borderWidth: 1,
         borderColor: '#000',
         shadowColor: '#000',

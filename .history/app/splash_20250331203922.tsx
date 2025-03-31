@@ -60,9 +60,10 @@ export default function Splash() {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.content}>
-                <View style={styles.logoContainer}>
-                    <Text style={styles.logoText}>S</Text>
-                </View>
+                <Image
+                    source={require("../assets/images/logo.png")}
+                    style={styles.logo}
+                />
                 <Text style={styles.title}>{translations.splash.welcome}</Text>
                 <Text style={styles.subtitle}>{translations.splash.subtitle}</Text>
             </View>
@@ -75,42 +76,26 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#f2f2f2',
     },
     content: {
         alignItems: 'center',
         justifyContent: 'center',
     },
-    logoContainer: {
+    logo: {
         width: 120,
         height: 120,
-        borderRadius: 60,
-        backgroundColor: '#ff7a5c',
-        alignItems: 'center',
-        justifyContent: 'center',
         marginBottom: 30,
-        borderWidth: 1,
-        borderColor: '#000',
-        shadowColor: '#000',
-        shadowOffset: { width: 4, height: 4 },
-        shadowOpacity: 1,
-        shadowRadius: 0,
-    },
-    logoText: {
-        fontSize: 60,
-        fontWeight: 'bold',
-        color: '#fff',
     },
     title: {
         fontSize: 32,
         fontWeight: '700',
-        color: '#000',
+        color: 'white',
         marginBottom: 8,
         letterSpacing: 1,
     },
     subtitle: {
         fontSize: 16,
-        color: '#666',
+        color: 'rgba(255, 255, 255, 0.7)',
         letterSpacing: 0.5,
     },
 });
