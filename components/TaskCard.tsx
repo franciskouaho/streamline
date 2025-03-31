@@ -14,9 +14,10 @@ interface TaskCardProps {
         isCompleted: boolean;
     };
     onPress: () => void;
+    onAddSubTask: (taskId: number) => void;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, onPress }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ task, onPress, onAddSubTask }) => {
     return (
         <TouchableOpacity style={styles.container} onPress={onPress}>
             <View style={styles.timeContainer}>
@@ -50,6 +51,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onPress }) => {
                                     ))}
                                     <TouchableOpacity style={styles.nextButton}>
                                         <Ionicons name="chevron-forward" size={16} color="#000" />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity style={styles.addSubTaskButton} onPress={() => onAddSubTask(task.id)}>
+                                        <Ionicons name="add-circle-outline" size={24} color="#ff7a5c" />
+                                        <Text style={styles.addSubTaskText}>Ajouter une sous-tâche</Text>
                                     </TouchableOpacity>
                                 </View>
                             )}
@@ -135,6 +140,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginLeft: 5,
+    },
+    addSubTaskButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginLeft: 10,
+    },
+    addSubTaskText: {
+        marginLeft: 5,
+        color: '#ff7a5c',
+        fontSize: 12,
     },
 });
 

@@ -1,18 +1,27 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { shadowStyles } from '@/constants/CommonStyles';
 import { useLanguage } from '@/contexts/LanguageContext';
+import NewSubTaskModal from "@/components/NewSubTaskModal";
 
 interface Day {
     day: string;
     date: number;
+    fullDate: Date;
 }
 
 interface Assignee {
     id: number;
     image: any;
+}
+
+interface SubTask {
+    id: number;
+    title: string;
+    isCompleted: boolean;
+    taskId: number;
 }
 
 interface Task {
@@ -21,29 +30,47 @@ interface Task {
     title: string;
     isCompleted: boolean;
     subTask?: string;
+    subTasks?: SubTask[];
     assignees?: Assignee[];
 }
 
 export default function Calendar() {
     const { translations } = useLanguage();
-    const [selectedDate, setSelectedDate] = useState<number>(17);
+    const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+    const [days, setDays] = useState<Day[]>([]);
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
 
-    const days: Day[] = [
-        { day: 'Mon', date: 14 },
-        { day: 'Tue', date: 15 },
-        { day: 'Wed', date: 16 },
-        { day: 'Thu', date: 17 },
-        { day: 'Fri', date: 18 },
-        { day: 'Sat', date: 19 },
-        { day: 'Sun', date: 20 },
-    ];
+    useEffect(() => {
+        const generateWeekDays = () => {
+            const today = new Date();
+            const currentDay = today.getDay();
+            const monday = new Date(today);
+            monday.setDate(today.getDate() - (currentDay === 0 ? 6 : currentDay - 1));
 
-    const tasks: Task[] = [
+            const weekDays: Day[] = [];
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(monday);
+                date.setDate(monday.getDate() + i);
+                weekDays.push({
+                    day: date.toLocaleDateString('fr-FR', { weekday: 'short' }),
+                    date: date.getDate(),
+                    fullDate: date
+                });
+            }
+            setDays(weekDays);
+        };
+
+        generateWeekDays();
+    }, []);
+
+    const [tasks, setTasks] = useState<Task[]>([
         {
             id: 1,
             time: '09:00 am - 10:15 am',
             title: 'Optimize server response time',
-            isCompleted: false
+            isCompleted: false,
+            subTasks: []
         },
         {
             id: 2,
@@ -51,19 +78,49 @@ export default function Calendar() {
             title: 'Team Meeting (Designer and Developer)',
             isCompleted: false,
             subTask: 'Optimization Website for Rune.io',
+            subTasks: [],
             assignees: [
-                { id: 1, image: require("../../assets//images/team1.jpeg") },
-                { id: 2, image: require("../../assets//images/team1.jpeg") },
-                { id: 3, image: require("../../assets//images/team1.jpeg") },
+                { id: 1, image: require("../../assets/images/team1.jpeg") },
+                { id: 2, image: require("../../assets/images/team1.jpeg") },
+                { id: 3, image: require("../../assets/images/team1.jpeg") },
             ]
         },
         {
             id: 3,
             time: '03:00 pm - 04:15 pm',
             title: 'Optimize Homepage Design',
-            isCompleted: false
+            isCompleted: false,
+            subTasks: []
         }
-    ];
+    ]);
+
+    const handleAddSubTask = (title: string) => {
+        if (selectedTaskId) {
+            const newSubTask: SubTask = {
+                id: Date.now(), // Générer un ID unique
+                title,
+                isCompleted: false,
+                taskId: selectedTaskId
+            };
+
+            setTasks(prevTasks => 
+                prevTasks.map(task => 
+                    task.id === selectedTaskId 
+                        ? {
+                            ...task,
+                            subTasks: [...(task.subTasks || []), newSubTask]
+                          }
+                        : task
+                )
+            );
+            setIsModalVisible(false);
+        }
+    };
+
+    const openNewSubTaskModal = (taskId: number) => {
+        setSelectedTaskId(taskId);
+        setIsModalVisible(true);
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -96,14 +153,18 @@ export default function Calendar() {
                                 key={item.date}
                                 style={[
                                     styles.dayItem,
-                                    selectedDate === item.date && styles.selectedDay
+                                    selectedDate.getDate() === item.date && 
+                                    selectedDate.getMonth() === item.fullDate.getMonth() && 
+                                    styles.selectedDay
                                 ]}
-                                onPress={() => setSelectedDate(item.date)}
+                                onPress={() => setSelectedDate(item.fullDate)}
                             >
                                 <Text
                                     style={[
                                         styles.dayText,
-                                        selectedDate === item.date && styles.selectedDayText
+                                        selectedDate.getDate() === item.date &&
+                                        selectedDate.getMonth() === item.fullDate.getMonth() &&
+                                        styles.selectedDayText
                                     ]}
                                 >
                                     {item.day}
@@ -111,7 +172,9 @@ export default function Calendar() {
                                 <Text
                                     style={[
                                         styles.dateText,
-                                        selectedDate === item.date && styles.selectedDateText
+                                        selectedDate.getDate() === item.date &&
+                                        selectedDate.getMonth() === item.fullDate.getMonth() &&
+                                        styles.selectedDateText
                                     ]}
                                 >
                                     {item.date}
@@ -122,38 +185,44 @@ export default function Calendar() {
                 </View>
 
                 <ScrollView style={styles.tasksContainer} showsVerticalScrollIndicator={false}>
-                    {tasks.map((task, index) => (
+                    {tasks.map((task) => (
                         <View key={task.id} style={styles.taskItem}>
                             <View style={styles.timeContainer}>
                                 <Text style={styles.timeText}>{task.time.split(' - ')[0]}</Text>
                             </View>
 
                             <View style={styles.taskContent}>
-                                <TouchableOpacity style={[styles.task, shadowStyles.card]}>
+                                <View style={[styles.task, shadowStyles.card]}>
                                     <View style={styles.taskHeader}>
                                         <Text style={styles.taskTitle}>{task.title}</Text>
-                                        <TouchableOpacity>
-                                            <Ionicons name="ellipsis-horizontal" size={18} color="#888" />
+                                        <TouchableOpacity onPress={() => openNewSubTaskModal(task.id)}>
+                                            <Ionicons name="add-circle-outline" size={24} color="#ff7a5c" />
                                         </TouchableOpacity>
                                     </View>
 
-                                    {task.subTask && (
+                                    {task.subTasks && task.subTasks.length > 0 && (
                                         <View style={styles.subTaskContainer}>
-                                            <Text style={styles.subTaskText}>{task.subTask}</Text>
-
-                                            {task.assignees && (
-                                                <View style={styles.assignees}>
-                                                    {task.assignees.map((assignee) => (
-                                                        <View key={assignee.id} style={styles.assigneeAvatar} />
-                                                    ))}
-                                                    <TouchableOpacity style={styles.nextButton}>
-                                                        <Ionicons name="chevron-forward" size={16} color="#000" />
-                                                    </TouchableOpacity>
+                                            {task.subTasks.map(subTask => (
+                                                <View key={subTask.id} style={styles.subTaskItem}>
+                                                    <Text style={styles.subTaskText}>{subTask.title}</Text>
                                                 </View>
-                                            )}
+                                            ))}
                                         </View>
                                     )}
-                                </TouchableOpacity>
+
+                                    {task.assignees && (
+                                        <View style={styles.assignees}>
+                                            {task.assignees.map((assignee) => (
+                                                <View key={assignee.id} style={styles.assigneeAvatar}>
+                                                    <Image 
+                                                        source={assignee.image} 
+                                                        style={styles.avatarImage}
+                                                    />
+                                                </View>
+                                            ))}
+                                        </View>
+                                    )}
+                                </View>
                             </View>
                         </View>
                     ))}
@@ -161,7 +230,7 @@ export default function Calendar() {
                     <View style={styles.addTaskContainer}>
                         <TouchableOpacity
                             style={styles.addTaskButton}
-                            onPress={() => {/* Navigation vers new-task */}}
+                            onPress={openNewSubTaskModal}
                         >
                             <View style={styles.plusIcon}>
                                 <Ionicons name="add" size={20} color="#000" />
@@ -171,6 +240,12 @@ export default function Calendar() {
                     </View>
                 </ScrollView>
             </View>
+
+            <NewSubTaskModal
+                visible={isModalVisible}
+                onClose={() => setIsModalVisible(false)}
+                onAdd={handleAddSubTask}
+            />
         </SafeAreaView>
     );
 }
@@ -350,5 +425,19 @@ const styles = StyleSheet.create({
     addTaskText: {
         fontSize: 14,
         color: '#666',
+    },
+    subTaskItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+        paddingVertical: 4,
+        paddingHorizontal: 8,
+        backgroundColor: '#f8f8f8',
+        borderRadius: 4,
+    },
+    avatarImage: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 12.5,
     },
 });
