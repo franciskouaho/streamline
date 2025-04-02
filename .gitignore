@@ -4,6 +4,7 @@
 node_modules/
 .idea
 .history
+.vscode
 
 # Expo
 .expo/
