@@ -1,26 +1,105 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Modal, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { shadowStyles } from '@/constants/CommonStyles';
-
-interface Task {
-    id: number;
-    title: string;
-    status: 'todo' | 'inProgress' | 'done';
-}
+import { useProjectTasks, useUpdateTask, useDeleteTask } from '@/services/queries/tasks';
+import { useProject } from '@/services/queries/projects';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function KanbanBoard() {
     const router = useRouter();
     const { id } = useLocalSearchParams();
+    const projectId = Array.isArray(id) ? id[0] : id;
+    const { translations } = useLanguage();
+    
+    const { data: project, isLoading: isLoadingProject } = useProject(projectId);
+    const { data: tasks, isLoading: isLoadingTasks } = useProjectTasks(projectId);
+    const updateTask = useUpdateTask();
+    const deleteTask = useDeleteTask();
 
-    const [tasks] = useState<Task[]>([
-        { id: 1, title: 'Design System', status: 'todo' },
-        { id: 2, title: 'User Flow', status: 'inProgress' },
-        { id: 3, title: 'Wireframes', status: 'done' },
-        { id: 4, title: 'Prototype', status: 'todo' },
-    ]);
+    const [selectedTask, setSelectedTask] = useState(null);
+    const [showStatusModal, setShowStatusModal] = useState(false);
+
+    // Filtrer les tâches par statut
+    const getTasksByStatus = (status) => {
+        if (!tasks) return [];
+        return tasks.filter(task => {
+            if (status === 'todo' && task.status === 'todo') return true;
+            if (status === 'inProgress' && task.status === 'in_progress') return true;
+            if (status === 'done' && task.status === 'done') return true;
+            return false;
+        });
+    };
+
+    const handleTaskStatusChange = async (taskId, newStatus) => {
+        try {
+            await updateTask.mutateAsync({
+                id: taskId,
+                status: newStatus
+            });
+        } catch (error) {
+            console.error("Error updating task status:", error);
+        }
+    };
+
+    const openStatusModal = (task) => {
+        setSelectedTask(task);
+        setShowStatusModal(true);
+    };
+
+    const handleStatusChange = async (newStatus) => {
+        if (!selectedTask) return;
+        
+        try {
+            await updateTask.mutateAsync({
+                id: selectedTask.id,
+                status: newStatus
+            });
+            setShowStatusModal(false);
+            setSelectedTask(null);
+        } catch (error) {
+            console.error("Error updating task status:", error);
+            Alert.alert("Erreur", "Impossible de mettre à jour le statut de la tâche");
+        }
+    };
+
+    const handleDeleteTask = async (taskId) => {
+        try {
+            Alert.alert(
+                "Supprimer la tâche",
+                "Êtes-vous sûr de vouloir supprimer cette tâche ?",
+                [
+                    {
+                        text: "Annuler",
+                        style: "cancel"
+                    },
+                    {
+                        text: "Supprimer",
+                        style: "destructive",
+                        onPress: async () => {
+                            await deleteTask.mutateAsync(taskId);
+                            setShowStatusModal(false);
+                            setSelectedTask(null);
+                        }
+                    }
+                ]
+            );
+        } catch (error) {
+            console.error("Error deleting task:", error);
+            Alert.alert("Erreur", "Impossible de supprimer la tâche");
+        }
+    };
+
+    if (isLoadingProject || isLoadingTasks) {
+        return (
+            <SafeAreaView style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#ff7a5c" />
+                <Text style={styles.loadingText}>Chargement du tableau...</Text>
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView style={styles.container}>
@@ -31,59 +110,182 @@ export default function KanbanBoard() {
                 >
                     <Ionicons name="chevron-back" size={24} color="#000" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Kanban Board</Text>
+                <Text style={styles.headerTitle}>{translations.projects.kanban}</Text>
                 <View style={{ width: 40 }} />
             </View>
 
             <ScrollView horizontal style={styles.boardContainer}>
                 <View style={styles.column}>
                     <View style={[styles.columnHeader, { backgroundColor: '#ffb443' }]}>
-                        <Text style={styles.columnTitle}>To Do</Text>
+                        <Text style={styles.columnTitle}>À faire</Text>
                         <Text style={styles.taskCount}>
-                            {tasks.filter(t => t.status === 'todo').length}
+                            {getTasksByStatus('todo').length}
                         </Text>
                     </View>
-                    {tasks
-                        .filter(task => task.status === 'todo')
-                        .map(task => (
-                            <View key={task.id} style={[styles.taskCard, shadowStyles.card]}>
-                                <Text style={styles.taskTitle}>{task.title}</Text>
-                            </View>
-                        ))}
+                    {getTasksByStatus('todo').map(task => (
+                        <TouchableOpacity 
+                            key={task.id} 
+                            style={[styles.taskCard, shadowStyles.card]}
+                            onPress={() => openStatusModal(task)}
+                            onLongPress={() => router.push(`/task/${task.id}`)}
+                        >
+                            <Text style={styles.taskTitle}>{task.title}</Text>
+                            {task.dueDate && (
+                                <View style={styles.taskDueDate}>
+                                    <Ionicons name="calendar-outline" size={12} color="#666" />
+                                    <Text style={styles.dueDateText}>
+                                        {new Date(task.dueDate).toLocaleDateString('fr-FR', {
+                                            day: 'numeric',
+                                            month: 'short'
+                                        })}
+                                    </Text>
+                                </View>
+                            )}
+                            {task.assignee && (
+                                <View style={styles.assigneeContainer}>
+                                    <View style={styles.assigneeAvatar}>
+                                        <Text style={styles.assigneeInitials}>
+                                            {getInitials(task.assignee.fullName)}
+                                        </Text>
+                                    </View>
+                                </View>
+                            )}
+                        </TouchableOpacity>
+                    ))}
                 </View>
 
                 <View style={styles.column}>
                     <View style={[styles.columnHeader, { backgroundColor: '#4d8efc' }]}>
-                        <Text style={styles.columnTitle}>In Progress</Text>
+                        <Text style={styles.columnTitle}>En cours</Text>
                         <Text style={styles.taskCount}>
-                            {tasks.filter(t => t.status === 'inProgress').length}
+                            {getTasksByStatus('inProgress').length}
                         </Text>
                     </View>
-                    {tasks
-                        .filter(task => task.status === 'inProgress')
-                        .map(task => (
-                            <View key={task.id} style={[styles.taskCard, shadowStyles.card]}>
-                                <Text style={styles.taskTitle}>{task.title}</Text>
-                            </View>
-                        ))}
+                    {getTasksByStatus('inProgress').map(task => (
+                        <TouchableOpacity 
+                            key={task.id} 
+                            style={[styles.taskCard, shadowStyles.card]}
+                            onPress={() => openStatusModal(task)}
+                            onLongPress={() => router.push(`/task/${task.id}`)}
+                        >
+                            <Text style={styles.taskTitle}>{task.title}</Text>
+                            {task.dueDate && (
+                                <View style={styles.taskDueDate}>
+                                    <Ionicons name="calendar-outline" size={12} color="#666" />
+                                    <Text style={styles.dueDateText}>
+                                        {new Date(task.dueDate).toLocaleDateString('fr-FR', {
+                                            day: 'numeric',
+                                            month: 'short'
+                                        })}
+                                    </Text>
+                                </View>
+                            )}
+                            {task.assignee && (
+                                <View style={styles.assigneeContainer}>
+                                    <View style={styles.assigneeAvatar}>
+                                        <Text style={styles.assigneeInitials}>
+                                            {getInitials(task.assignee.fullName)}
+                                        </Text>
+                                    </View>
+                                </View>
+                            )}
+                        </TouchableOpacity>
+                    ))}
                 </View>
 
                 <View style={styles.column}>
                     <View style={[styles.columnHeader, { backgroundColor: '#43d2c3' }]}>
-                        <Text style={styles.columnTitle}>Done</Text>
+                        <Text style={styles.columnTitle}>Terminé</Text>
                         <Text style={styles.taskCount}>
-                            {tasks.filter(t => t.status === 'done').length}
+                            {getTasksByStatus('done').length}
                         </Text>
                     </View>
-                    {tasks
-                        .filter(task => task.status === 'done')
-                        .map(task => (
-                            <View key={task.id} style={[styles.taskCard, shadowStyles.card]}>
-                                <Text style={styles.taskTitle}>{task.title}</Text>
-                            </View>
-                        ))}
+                    {getTasksByStatus('done').map(task => (
+                        <TouchableOpacity 
+                            key={task.id} 
+                            style={[styles.taskCard, shadowStyles.card]}
+                            onPress={() => openStatusModal(task)}
+                            onLongPress={() => router.push(`/task/${task.id}`)}
+                        >
+                            <Text style={styles.taskTitle}>{task.title}</Text>
+                            {task.dueDate && (
+                                <View style={styles.taskDueDate}>
+                                    <Ionicons name="calendar-outline" size={12} color="#666" />
+                                    <Text style={styles.dueDateText}>
+                                        {new Date(task.dueDate).toLocaleDateString('fr-FR', {
+                                            day: 'numeric',
+                                            month: 'short'
+                                        })}
+                                    </Text>
+                                </View>
+                            )}
+                            {task.assignee && (
+                                <View style={styles.assigneeContainer}>
+                                    <View style={styles.assigneeAvatar}>
+                                        <Text style={styles.assigneeInitials}>
+                                            {getInitials(task.assignee.fullName)}
+                                        </Text>
+                                    </View>
+                                </View>
+                            )}
+                        </TouchableOpacity>
+                    ))}
                 </View>
             </ScrollView>
+
+            <Modal
+                transparent={true}
+                visible={showStatusModal}
+                animationType="slide"
+                onRequestClose={() => setShowStatusModal(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.statusModal}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Modifier la tâche</Text>
+                            <TouchableOpacity onPress={() => setShowStatusModal(false)}>
+                                <Ionicons name="close" size={24} color="#000" />
+                            </TouchableOpacity>
+                        </View>
+                        
+                        <TouchableOpacity
+                            style={[styles.statusOption, { backgroundColor: '#ffb443' }]}
+                            onPress={() => handleStatusChange('todo')}
+                        >
+                            <Ionicons name="list" size={20} color="#fff" />
+                            <Text style={styles.statusOptionText}>À faire</Text>
+                        </TouchableOpacity>
+                        
+                        <TouchableOpacity
+                            style={[styles.statusOption, { backgroundColor: '#4d8efc' }]}
+                            onPress={() => handleStatusChange('in_progress')}
+                        >
+                            <Ionicons name="hourglass" size={20} color="#fff" />
+                            <Text style={styles.statusOptionText}>En cours</Text>
+                        </TouchableOpacity>
+                        
+                        <TouchableOpacity
+                            style={[styles.statusOption, { backgroundColor: '#43d2c3' }]}
+                            onPress={() => handleStatusChange('done')}
+                        >
+                            <Ionicons name="checkmark-circle" size={20} color="#fff" />
+                            <Text style={styles.statusOptionText}>Terminé</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.deleteTaskButton}
+                            onPress={() => {
+                                if (selectedTask) {
+                                    handleDeleteTask(selectedTask.id);
+                                }
+                            }}
+                        >
+                            <Ionicons name="trash-outline" size={20} color="#fff" />
+                            <Text style={styles.deleteTaskButtonText}>Supprimer la tâche</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
 
             <TouchableOpacity 
                 style={[styles.addButton, shadowStyles.button]}
@@ -95,10 +297,30 @@ export default function KanbanBoard() {
     );
 }
 
+function getInitials(name: string): string {
+    if (!name) return '';
+    return name
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase();
+}
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#f2f2f2',
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#f2f2f2',
+    },
+    loadingText: {
+        marginTop: 10,
+        fontSize: 16,
+        color: '#666',
     },
     header: {
         flexDirection: 'row',
@@ -161,6 +383,7 @@ const styles = StyleSheet.create({
     taskTitle: {
         fontSize: 14,
         fontWeight: '500',
+        marginBottom: 8,
     },
     addButton: {
         position: 'absolute',
@@ -180,4 +403,123 @@ const styles = StyleSheet.create({
         shadowRadius: 0,
         elevation: 5,
     },
+    taskDueDate: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    dueDateText: {
+        fontSize: 12,
+        color: '#666',
+        marginLeft: 4,
+    },
+    assigneeContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    assigneeAvatar: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: '#f0f0f0',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 8,
+    },
+    assigneeInitials: {
+        fontSize: 10,
+        fontWeight: '600',
+        color: '#666',
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    statusModal: {
+        backgroundColor: 'white',
+        borderRadius: 15,
+        padding: 20,
+        width: '90%',
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+        elevation: 8,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+    },
+    statusOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 0,
+        elevation: 5,
+    },
+    statusOptionText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '500',
+        marginLeft: 10,
+    },
+    deleteTaskButton: {
+        backgroundColor: '#ff3b30',
+        borderRadius: 10,
+        padding: 15,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 10,
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 0,
+        elevation: 5,
+    },
+    deleteTaskButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '500',
+        marginLeft: 10,
+    },
+    taskDetailsButton: {
+        backgroundColor: '#ff7a5c',
+        borderRadius: 10,
+        padding: 15,
+        alignItems: 'center',
+        marginTop: 10,
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 0,
+        elevation: 5,
+    },
+    taskDetailsButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '500',
+    }
 });

@@ -59,7 +59,7 @@ export default function ProjectDetails() {
 
     console.log('Current tasks:', tasks);
     
-    const [activeTab, setActiveTab] = useState<string>('comment');
+    const [activeTab, setActiveTab] = useState<string>('attachment');
     const [showMenu, setShowMenu] = useState(false);
 
     const handleMenuPress = () => {
@@ -126,9 +126,7 @@ export default function ProjectDetails() {
                 <TouchableOpacity onPress={() => router.back()}>
                     <Ionicons name="chevron-back" size={24} color="#000" />
                 </TouchableOpacity>
-                <View style={styles.headerTitleContainer}>
-                    <Text style={styles.statusTag}>In Progress</Text>
-                </View>
+        
                 <View style={styles.headerIcons}>
                     <TouchableOpacity 
                         style={styles.iconButton}
@@ -153,15 +151,6 @@ export default function ProjectDetails() {
                 <Text style={styles.description}>{project?.description}</Text>
 
                 <View style={styles.tabsContainer}>
-                    <TouchableOpacity
-                        style={[styles.tabButton, activeTab === 'comment' && styles.activeTab]}
-                        onPress={() => setActiveTab('comment')}
-                    >
-                        <Text style={[styles.tabText, activeTab === 'comment' && styles.activeTabText]}>
-                            Comment
-                        </Text>
-                    </TouchableOpacity>
-
                     <TouchableOpacity
                         style={[styles.tabButton, activeTab === 'attachment' && styles.activeTab]}
                         onPress={() => setActiveTab('attachment')}

@@ -83,10 +83,25 @@ export function useUpdateTask() {
 }
 
 export function useDeleteTask() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: async (id: string | number) => {
       await api.delete(`/tasks/${id}`);
       return id;
+    },
+    onSuccess: (_, taskId) => {
+      // Invalider toutes les requêtes liées aux tâches
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['task', taskId] });
+      
+      // Si l'ID du projet est dans le cache, invalider les tâches liées à ce projet
+      const projectsWithTasks = queryClient.getQueriesData({ queryKey: ['tasks'] });
+      for (const [queryKey] of projectsWithTasks) {
+        if (Array.isArray(queryKey) && queryKey.length > 1) {
+          queryClient.invalidateQueries({ queryKey });
+        }
+      }
     },
   });
 }
