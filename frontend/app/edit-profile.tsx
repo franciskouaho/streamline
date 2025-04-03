@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput } from "react-native";
+import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, ActivityIndicator, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from 'expo-router';
@@ -10,7 +10,7 @@ import * as ImagePicker from 'expo-image-picker';
 export default function EditProfile() {
     const { translations } = useLanguage();
     const router = useRouter();
-    const { profile, updateProfile } = useProfileStore();
+    const { profile, updateProfile, isLoading } = useProfileStore();
     
     const [formData, setFormData] = useState({
         fullName: '',
@@ -19,6 +19,8 @@ export default function EditProfile() {
         bio: '',
         photoURL: '',
     });
+
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         if (profile) {
@@ -46,15 +48,30 @@ export default function EditProfile() {
             }
         } catch (error) {
             console.error('Error picking image:', error);
+            Alert.alert(
+                "Erreur", 
+                "Impossible de charger l'image. Veuillez réessayer."
+            );
         }
     };
 
     const handleSave = async () => {
         try {
+            setIsSubmitting(true);
             await updateProfile(formData);
-            router.back();
+            Alert.alert(
+                "Succès", 
+                "Votre profil a été mis à jour avec succès.",
+                [{ text: "OK", onPress: () => router.back() }]
+            );
         } catch (error) {
             console.error('Error updating profile:', error);
+            Alert.alert(
+                "Erreur", 
+                "Impossible de mettre à jour le profil. Veuillez réessayer."
+            );
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -127,10 +144,18 @@ export default function EditProfile() {
                 </View>
 
                 <TouchableOpacity 
-                    style={styles.saveButton}
+                    style={[
+                        styles.saveButton, 
+                        (isLoading || isSubmitting) && styles.disabledButton
+                    ]}
                     onPress={handleSave}
+                    disabled={isLoading || isSubmitting}
                 >
-                    <Text style={styles.saveButtonText}>{translations.editProfile.save}</Text>
+                    {isLoading || isSubmitting ? (
+                        <ActivityIndicator color="#000" />
+                    ) : (
+                        <Text style={styles.saveButtonText}>{translations.editProfile.save}</Text>
+                    )}
                 </TouchableOpacity>
             </View>
         </SafeAreaView>
@@ -221,5 +246,8 @@ const styles = StyleSheet.create({
         color: '#000',
         fontSize: 16,
         fontWeight: '600',
+    },
+    disabledButton: {
+        opacity: 0.7,
     },
 });

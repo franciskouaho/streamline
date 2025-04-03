@@ -1,16 +1,20 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Platform, Modal } from "react-native";
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Platform, Modal, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCreateProject } from "@/services/queries/projects";
+import { useAuthStore } from "@/stores/auth";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from "@/services/api";
 
 export default function NewProject() {
     const router = useRouter();
     const { translations } = useLanguage();
     const createProject = useCreateProject();
+    const { isAuthenticated } = useAuthStore();
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [startDate, setStartDate] = useState<Date | null>(null);
@@ -50,13 +54,19 @@ export default function NewProject() {
 
     const handleCreateProject = async () => {
         try {
+            if (!isAuthenticated) {
+                Alert.alert('Erreur', 'Vous devez être connecté pour créer un projet');
+                router.push('/login');
+                return;
+            }
+
             if (!name.trim()) {
-                alert('Veuillez saisir un nom de projet');
+                Alert.alert('Erreur', 'Veuillez saisir un nom de projet');
                 return;
             }
 
             if (!startDate || !endDate) {
-                alert('Veuillez sélectionner les dates de début et de fin');
+                Alert.alert('Erreur', 'Veuillez sélectionner les dates de début et de fin');
                 return;
             }
 
@@ -76,7 +86,40 @@ export default function NewProject() {
             router.back();
         } catch (error) {
             console.error('Error creating project:', error);
-            alert('Erreur lors de la création du projet');
+            
+            let errorMessage = 'Erreur lors de la création du projet';
+            
+            if (error.response) {
+                if (error.response.status === 401) {
+                    errorMessage = 'Vous n\'êtes pas autorisé à créer un projet. Veuillez vous reconnecter.';
+                    
+                    // Si l'erreur est due à l'authentification, on peut essayer de récupérer le token
+                    try {
+                        const { token } = useAuthStore.getState();
+                        if (token) {
+                            console.log('Tentative avec token explicite');
+                            const result = await api.post('/projects', {
+                                name: name.trim(),
+                                description: description.trim(),
+                                startDate: startDate?.toISOString().split('T')[0],
+                                endDate: endDate?.toISOString().split('T')[0],
+                                status: 'active',
+                            });
+                            console.log('Project created with explicit token:', result.data);
+                            resetForm();
+                            router.back();
+                            return;
+                        }
+                    } catch (tokenError) {
+                        console.error('Failed with explicit token:', tokenError);
+                        router.push('/login');
+                    }
+                } else if (error.response.data && error.response.data.message) {
+                    errorMessage = error.response.data.message;
+                }
+            }
+            
+            Alert.alert('Erreur', errorMessage);
         }
     };
 

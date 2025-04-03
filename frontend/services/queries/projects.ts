@@ -1,63 +1,105 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import api from '../api';
-import type { ProjectData } from '@/types/project';
+import { Project, ProjectStats, ProjectProgress, ProjectTimeline } from '@/types/project';
+import api from '@/services/api';
 
-export function useProjects() {
+// Récupérer tous les projets
+export const useProjects = () => {
   return useQuery({
     queryKey: ['projects'],
-    queryFn: async () => {
-      const { data } = await api.get<ProjectData[]>('/projects');
-      return data;
-    },
+    queryFn: async (): Promise<Project[]> => {
+      const response = await api.get('/projects');
+      return response.data;
+    }
   });
-}
+};
 
-export function useProject(id: string | number) {
+// Récupérer un projet spécifique par ID
+export const useProject = (id: string | number) => {
   return useQuery({
-    queryKey: ['project', id],
-    queryFn: async () => {
-      const { data } = await api.get<ProjectData>(`/projects/${id}`);
-      return data;
+    queryKey: ['projects', id],
+    queryFn: async (): Promise<Project> => {
+      const response = await api.get(`/projects/${id}`);
+      return response.data;
     },
+    enabled: !!id
   });
-}
+};
 
-export function useCreateProject() {
+// Créer un nouveau projet
+export const useCreateProject = () => {
   const queryClient = useQueryClient();
-
+  
   return useMutation({
-    mutationFn: async (data: Partial<ProjectData>) => {
-      // Formatage des dates au format ISO
-      const projectData = {
-        ...data,
-        startDate: data.startDate ? new Date(data.startDate).toISOString() : null,
-        endDate: data.endDate ? new Date(data.endDate).toISOString() : null,
-      };
-      
-      console.log('Creating project with data:', projectData);
+    mutationFn: async (projectData: Partial<Project>) => {
       const response = await api.post('/projects', projectData);
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['projects']);
-    },
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    }
   });
-}
+};
 
-export function useUpdateProject(id: string | number) {
+// Mettre à jour un projet
+export const useUpdateProject = () => {
+  const queryClient = useQueryClient();
+  
   return useMutation({
-    mutationFn: async (updatedProject: Partial<ProjectData>) => {
-      const { data } = await api.put<ProjectData>(`/projects/${id}`, updatedProject);
-      return data;
+    mutationFn: async ({ id, ...data }: { id: number } & Partial<Project>) => {
+      const response = await api.put(`/projects/${id}`, data);
+      return response.data;
     },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['projects', data.id] });
+    }
   });
-}
+};
 
-export function useDeleteProject() {
+// Supprimer un projet
+export const useDeleteProject = () => {
+  const queryClient = useQueryClient();
+  
   return useMutation({
-    mutationFn: async (id: string | number) => {
+    mutationFn: async (id: number | string) => {
       await api.delete(`/projects/${id}`);
       return id;
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    }
   });
-}
+};
+
+// Récupérer les statistiques des projets
+export const useProjectStats = () => {
+  return useQuery({
+    queryKey: ['project-stats'],
+    queryFn: async (): Promise<ProjectStats> => {
+      const response = await api.get('/projects/stats');
+      return response.data;
+    }
+  });
+};
+
+// Récupérer les données pour le graphique de progression
+export const useProjectsProgress = () => {
+  return useQuery({
+    queryKey: ['projects-progress'],
+    queryFn: async (): Promise<ProjectProgress[]> => {
+      const response = await api.get('/projects/progress');
+      return response.data;
+    }
+  });
+};
+
+// Récupérer les données pour le graphique de timeline
+export const useProjectTimeline = () => {
+  return useQuery({
+    queryKey: ['project-timeline'],
+    queryFn: async (): Promise<ProjectTimeline[]> => {
+      const response = await api.get('/projects/timeline');
+      return response.data;
+    }
+  });
+};

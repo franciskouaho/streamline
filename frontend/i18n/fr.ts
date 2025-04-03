@@ -70,6 +70,10 @@ export default {
     ongoing: "En cours",
     inProgress: "En traitement",
     completed: "Terminées",
+    singular: "Tâche",
+    plural: "Tâches",
+    todo: "À faire",
+    done: "Terminée",
     categories: {
       design: "Design",
       development: "Développement",

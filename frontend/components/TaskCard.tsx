@@ -1,28 +1,27 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Task } from '@/types/task';
+import { formatDueDate } from '@/utils/projectUtils';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TaskCardProps {
-    task: {
-        id: number;
-        title: string;
-        type: string;
-        date: string;
-        time?: string;
-        assignees?: Array<{ id: number; image: any }>;
-        subTask?: string;
-        isCompleted: boolean;
-    };
+    task: Task;
     onPress: () => void;
     onAddSubTask: (taskId: number) => void;
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({ task, onPress, onAddSubTask }) => {
+    const { translations } = useLanguage();
+    
     return (
         <TouchableOpacity style={styles.container} onPress={onPress}>
             <View style={styles.timeContainer}>
                 {task.time && (
                     <Text style={styles.timeText}>{task.time.split(' - ')[0]}</Text>
+                )}
+                {!task.time && task.dueDate && (
+                    <Text style={styles.timeText}>{new Date(task.dueDate).toLocaleDateString()}</Text>
                 )}
             </View>
             
@@ -35,31 +34,40 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onPress, onAddSubTask }) => {
                         </TouchableOpacity>
                     </View>
                     
-                    {task.subTask && (
-                        <View style={styles.subTaskContainer}>
-                            <Text style={styles.subTaskText}>{task.subTask}</Text>
-                            
-                            {task.assignees && (
-                                <View style={styles.assignees}>
-                                    {task.assignees.map((assignee) => (
-                                        <View key={assignee.id} style={styles.assigneeAvatar}>
-                                            <Image 
-                                                source={assignee.image} 
-                                                style={styles.avatarImage}
-                                            />
-                                        </View>
-                                    ))}
-                                    <TouchableOpacity style={styles.nextButton}>
-                                        <Ionicons name="chevron-forward" size={16} color="#000" />
-                                    </TouchableOpacity>
-                                    <TouchableOpacity style={styles.addSubTaskButton} onPress={() => onAddSubTask(task.id)}>
-                                        <Ionicons name="add-circle-outline" size={24} color="#ff7a5c" />
-                                        <Text style={styles.addSubTaskText}>Ajouter une sous-tâche</Text>
-                                    </TouchableOpacity>
+                    <View style={styles.subTaskContainer}>
+                        {task.description && (
+                            <Text style={styles.subTaskText} numberOfLines={2}>
+                                {task.description}
+                            </Text>
+                        )}
+                        
+                        <View style={styles.assignees}>
+                            {task.assignees && task.assignees.map((assignee) => (
+                                <View key={assignee.id} style={styles.assigneeAvatar}>
+                                    <Image 
+                                        source={assignee.image} 
+                                        style={styles.avatarImage}
+                                    />
                                 </View>
-                            )}
+                            ))}
+                            
+                            <View style={styles.statusBadge}>
+                                <Text style={styles.statusText}>
+                                    {translations.tasks[task.status] || task.status}
+                                </Text>
+                            </View>
+                            
+                            <TouchableOpacity 
+                                style={styles.addSubTaskButton} 
+                                onPress={() => onAddSubTask(task.id)}
+                            >
+                                <Ionicons name="add-circle-outline" size={20} color="#ff7a5c" />
+                                <Text style={styles.addSubTaskText}>
+                                    {translations.projects.addSubtask || "Ajouter une sous-tâche"}
+                                </Text>
+                            </TouchableOpacity>
                         </View>
-                    )}
+                    </View>
                 </View>
             </View>
         </TouchableOpacity>
@@ -120,6 +128,7 @@ const styles = StyleSheet.create({
     assignees: {
         flexDirection: 'row',
         alignItems: 'center',
+        flexWrap: 'wrap',
     },
     assigneeAvatar: {
         width: 25,
@@ -132,19 +141,22 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
     },
-    nextButton: {
-        width: 25,
-        height: 25,
-        borderRadius: 12.5,
+    statusBadge: {
         backgroundColor: '#f0f0f0',
-        alignItems: 'center',
-        justifyContent: 'center',
+        paddingVertical: 2,
+        paddingHorizontal: 6,
+        borderRadius: 5,
         marginLeft: 5,
+    },
+    statusText: {
+        fontSize: 10,
+        color: '#555',
     },
     addSubTaskButton: {
         flexDirection: 'row',
         alignItems: 'center',
         marginLeft: 10,
+        marginTop: 5,
     },
     addSubTaskText: {
         marginLeft: 5,

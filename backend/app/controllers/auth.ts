@@ -1,6 +1,7 @@
 import { HttpContext } from '@adonisjs/core/http'
 import { loginValidator, registerValidator } from '#validators/auth'
 import User from '#models/user'
+import Profile from '#models/profile'
 import hash from '@adonisjs/core/services/hash'
 import { AccessToken } from '@adonisjs/auth/access_tokens'
 
@@ -90,12 +91,93 @@ export default class AuthController {
   /**
    * Déconnecte un utilisateur
    */
-  /* async logout({ auth, response }: HttpContext) {
-    await auth.use('api').revoke()
-    return response.ok({
-      message: 'Déconnecté avec succès',
-    })
-  }*/
+  async logout({ auth, response }: HttpContext) {
+    try {
+      await auth.use('api').revoke()
+      return response.ok({
+        message: 'Déconnecté avec succès',
+      })
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error)
+      return response.internalServerError({
+        message: 'Une erreur est survenue lors de la déconnexion',
+      })
+    }
+  }
+
+  /**
+   * Met à jour le profil de l'utilisateur connecté
+   */
+  async update({ auth, request, response }: HttpContext) {
+    const user = auth.user!
+    const data = request.only(['fullName', 'email', 'bio', 'avatar', 'role'])
+
+    try {
+      // Mise à jour des données de l'utilisateur
+      user.merge({
+        fullName: data.fullName,
+        email: data.email,
+        avatar: data.avatar,
+        role: data.role,
+      })
+      await user.save()
+
+      // Mise à jour ou création du profil
+      let profile = await Profile.findBy('userId', user.id)
+      if (profile) {
+        profile.bio = data.bio
+        await profile.save()
+      } else if (data.bio) {
+        await Profile.create({
+          userId: user.id,
+          bio: data.bio,
+        })
+      }
+
+      await user.load('profile')
+
+      return response.ok({
+        user: {
+          id: user.id,
+          email: user.email,
+          fullName: user.fullName,
+          createdAt: user.createdAt,
+          photoURL: user.avatar,
+          bio: user.profile?.bio,
+          role: user.role,
+        },
+      })
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du profil:', error)
+      return response.internalServerError({
+        message: 'Une erreur est survenue lors de la mise à jour du profil',
+      })
+    }
+  }
+
+  /**
+   * Supprime le compte de l'utilisateur connecté
+   */
+  async deleteAccount({ auth, response }: HttpContext) {
+    const user = auth.user!
+
+    try {
+      // Révoquer tous les tokens d'accès
+      await User.accessTokens.revokeForUser(user)
+
+      // Supprimer l'utilisateur
+      await user.delete()
+
+      return response.ok({
+        message: 'Compte supprimé avec succès',
+      })
+    } catch (error) {
+      console.error('Erreur lors de la suppression du compte:', error)
+      return response.internalServerError({
+        message: 'Une erreur est survenue lors de la suppression du compte',
+      })
+    }
+  }
 
   /**
    * Retourne les informations de l'utilisateur connecté

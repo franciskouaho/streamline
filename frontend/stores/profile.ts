@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import { useAuthStore } from './auth';
-import api from '@/services/api';
+// Suppression de l'import direct pour éviter le cycle de dépendances
+// import { useAuthStore } from './auth';
+// import api from '@/services/api';
 
 interface UserProfile {
   id: number;
@@ -10,6 +11,7 @@ interface UserProfile {
   bio?: string;
   tasksInProgress?: number;
   tasksCompleted?: number;
+  role?: string;
 }
 
 interface ProfileState {
@@ -28,6 +30,10 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   fetchProfile: async () => {
     try {
       set({ isLoading: true, error: null });
+      
+      // Import dynamique pour éviter le cycle de dépendances
+      const { default: api } = await import('@/services/api');
+      
       const response = await api.get<{user: UserProfile}>('/auth/me');
       set({ 
         profile: response.data.user,
@@ -42,9 +48,27 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
   updateProfile: async (data) => {
     try {
       set({ isLoading: true, error: null });
-      const response = await api.put<UserProfile>('/auth/update', data);
+      
+      // Import dynamique pour éviter le cycle de dépendances
+      const { default: api } = await import('@/services/api');
+      
+      // Formatage des données si nécessaire pour l'API
+      const formattedData = {
+        fullName: data.fullName,
+        email: data.email,
+        bio: data.bio,
+        avatar: data.photoURL,  // Adaptation au format attendu par l'API
+        role: data.role
+      };
+      
+      const response = await api.put<{user: UserProfile}>('/auth/update', formattedData);
+      
+      // Mise à jour du profil avec les données renvoyées par l'API
       set({ 
-        profile: response.data,
+        profile: response.data.user || {
+          ...get().profile,
+          ...data
+        },
         isLoading: false
       });
     } catch (error) {

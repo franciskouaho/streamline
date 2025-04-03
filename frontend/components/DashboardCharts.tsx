@@ -1,138 +1,339 @@
-import React from "react";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
-import { LineChart, BarChart } from "react-native-chart-kit";
-import { Ionicons } from "@expo/vector-icons";
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
+import { useProjects, useProjectStats, useProjectTimeline } from '@/services/queries/projects';
+import { LoadingIndicator } from './ui/LoadingIndicator';
+import { calculateProjectStats } from '@/utils/projectUtils';
+import { Ionicons } from '@expo/vector-icons';
+import { shadowStyles } from '@/constants/CommonStyles';
+import { ProjectTimeline } from '@/types/project';
+
+const screenWidth = Dimensions.get('window').width - 40;
 
 const DashboardCharts = () => {
-  const screenWidth = Dimensions.get("window").width - 60; // Augmentation de la marge
-  
+  const { data: projects, isLoading: isLoadingProjects } = useProjects();
+  const { data: projectStats, isLoading: isLoadingStats } = useProjectStats();
+  const { data: timelineData, isLoading: isLoadingTimeline } = useProjectTimeline();
+
+  const [activeChart, setActiveChart] = React.useState('pie');
+  const [monthlyStats, setMonthlyStats] = useState<{
+    labels: string[],
+    ongoing: number[],
+    completed: number[]
+  }>({
+    labels: [],
+    ongoing: [],
+    completed: []
+  });
+
+  useEffect(() => {
+    if (projects && projects.length > 0) {
+      // Analyser les dates pour créer des données mensuelles
+      processProjectsForMonthlyStats();
+    }
+  }, [projects]);
+
+  useEffect(() => {
+    if (timelineData && timelineData.length > 0) {
+      // Si nous avons des données de timeline de l'API, les utiliser directement
+      const labels: string[] = [];
+      const ongoing: number[] = [];
+      const completed: number[] = [];
+
+      // Trier par date
+      const sortedData = [...timelineData].sort((a, b) => 
+        new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+
+      // Extraire les labels et données pour les graphiques
+      sortedData.forEach(item => {
+        // Formater la date pour l'affichage (e.g., "Jan", "Fév", etc.)
+        const date = new Date(item.date);
+        const month = date.toLocaleDateString('fr-FR', { month: 'short' });
+        
+        labels.push(month);
+        ongoing.push(item.inProcess);
+        completed.push(item.completed);
+      });
+
+      setMonthlyStats({ labels, ongoing, completed });
+    }
+  }, [timelineData]);
+
+  // Fonction pour traiter les projets et extraire des statistiques mensuelles si timelineData n'est pas disponible
+  const processProjectsForMonthlyStats = () => {
+    if (!projects || projects.length === 0) return;
+
+    // Si nous n'avons pas de données timeline de l'API, générer à partir des projets
+    if (!timelineData || timelineData.length === 0) {
+      const monthlyData: Record<string, { ongoing: number, completed: number }> = {};
+      
+      // Initialiser les derniers 6 mois
+      const today = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(today);
+        d.setMonth(d.getMonth() - i);
+        const monthKey = d.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
+        monthlyData[monthKey] = { ongoing: 0, completed: 0 };
+      }
+
+      // Analyser les projets pour chaque mois
+      projects.forEach(project => {
+        const createdDate = new Date(project.createdAt);
+        const monthKey = createdDate.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
+        
+        // Si le mois est dans notre période d'analyse (6 derniers mois)
+        if (monthlyData[monthKey]) {
+          if (project.status.toLowerCase() === 'completed') {
+            monthlyData[monthKey].completed += 1;
+          } else if (project.status.toLowerCase() === 'ongoing' || project.status.toLowerCase() === 'in_progress') {
+            monthlyData[monthKey].ongoing += 1;
+          }
+        }
+      });
+
+      // Transformer les données pour le graphique
+      const labels = Object.keys(monthlyData).map(key => key.split(' ')[0]); // Juste le mois
+      const ongoing = Object.values(monthlyData).map(v => v.ongoing);
+      const completed = Object.values(monthlyData).map(v => v.completed);
+
+      setMonthlyStats({ labels, ongoing, completed });
+    }
+  };
+
+  if (isLoadingProjects || isLoadingStats) {
+    return <LoadingIndicator />;
+  }
+
+  // Si aucune donnée de statistiques directe, calculer à partir des projets
+  const stats = projectStats || (projects ? calculateProjectStats(projects) : null);
+
+  // Données pour le graphique circulaire (Pie)
+  const pieChartData = [
+    {
+      name: 'Ongoing',
+      population: stats?.ongoing || 0,
+      color: '#4d8efc',
+      legendFontColor: '#7F7F7F',
+      legendFontSize: 12
+    },
+    {
+      name: 'In Progress',
+      population: stats?.inProgress || 0,
+      color: '#ffb443',
+      legendFontColor: '#7F7F7F',
+      legendFontSize: 12
+    },
+    {
+      name: 'Completed',
+      population: stats?.completed || 0,
+      color: '#43d2c3',
+      legendFontColor: '#7F7F7F',
+      legendFontSize: 12
+    },
+    {
+      name: 'Canceled',
+      population: stats?.canceled || 0,
+      color: '#ff7a5c',
+      legendFontColor: '#7F7F7F',
+      legendFontSize: 12
+    }
+  ];
+
+  // Données pour le graphique linéaire (Trend) avec les vraies données
   const lineChartData = {
-    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    labels: monthlyStats.labels.length > 0 ? monthlyStats.labels : ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin"],
     datasets: [
       {
-        data: [2, 4.5, 3, 5.5, 6.5, 4, 1],
-        color: () => "#43d2c3", // Completed color
-        strokeWidth: 2,
+        data: monthlyStats.completed.length > 0 
+          ? monthlyStats.completed 
+          : [0, 0, 0, 0, 0, stats?.completed || 0],
+        color: (opacity = 1) => `rgba(67, 210, 195, ${opacity})`, // Completed
+        strokeWidth: 2
       },
       {
-        data: [3, 2, 4, 4.5, 4, 6, 5],
-        color: () => "#ffb443", // In Process color
-        strokeWidth: 2,
-      },
+        data: monthlyStats.ongoing.length > 0 
+          ? monthlyStats.ongoing 
+          : [0, 0, 0, 0, 0, stats?.ongoing || 0],
+        color: (opacity = 1) => `rgba(77, 142, 252, ${opacity})`, // Ongoing
+        strokeWidth: 2
+      }
     ],
-    legend: ["Completed", "In Process"],
+    legend: ["Terminés", "En cours"]
   };
 
+  // Données pour le graphique à barres
   const barChartData = {
-    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    labels: ["Ongoing", "In Progress", "Completed", "Canceled"],
     datasets: [
       {
-        data: [4.5, 5.5, 4.5, 6.5, 4.5, 2.5, 3.7],
-      },
-    ],
+        data: [
+          stats?.ongoing || 0,
+          stats?.inProgress || 0,
+          stats?.completed || 0,
+          stats?.canceled || 0
+        ]
+      }
+    ]
   };
 
+  // Configuration des graphiques
   const chartConfig = {
-    backgroundGradientFrom: "#fff",
-    backgroundGradientTo: "#fff",
+    backgroundGradientFrom: '#fff',
+    backgroundGradientTo: '#fff',
     decimalPlaces: 0,
     color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
     labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
     style: {
-      borderRadius: 16,
+      borderRadius: 16
     },
     propsForDots: {
-      r: "4",
-    },
+      r: '6',
+      strokeWidth: '2',
+      stroke: '#fff'
+    }
   };
 
-  const lineChartStyle = {
-    marginVertical: 8,
-    borderRadius: 16,
-    paddingRight: 0,
-    alignSelf: 'center', // Centrer le graphique
-  };
-
-  const barChartStyle = {
-    ...lineChartStyle,
-    paddingRight: 0,
-  };
-  
   const barChartConfig = {
     ...chartConfig,
-    color: (opacity = 1) => `rgba(255, 122, 92, ${opacity})`, // Using the coral color from your scheme
-    barPercentage: 0.8,
+    color: (opacity = 1, index) => {
+      const colors = ['#4d8efc', '#ffb443', '#43d2c3', '#ff7a5c'];
+      return `rgba(${colors[index % colors.length]}, ${opacity})`;
+    },
+    barPercentage: 0.7,
+    barRadius: 5,
+    fillShadowGradient: '#4d8efc',
+    fillShadowGradientOpacity: 1,
   };
 
   return (
     <View style={styles.chartsContainer}>
-      <View style={styles.chartCard}>
-        <View style={styles.chartHeader}>
-          <Text style={styles.chartTitle}>Daily tasks overview</Text>
-          <View style={styles.dropdownContainer}>
-            <Text style={styles.dropdownText}>Weekly</Text>
-            <Ionicons name="chevron-down" size={16} color="#999" />
+      {/* Cartes de statistiques */}
+      <View style={styles.statsContainer}>
+        <View style={[styles.statCard, { backgroundColor: '#f9f9f9', borderLeftColor: '#4d8efc' }]}>
+          <View style={styles.statContent}>
+            <Text style={styles.statValue}>{stats?.ongoing || 0}</Text>
+            <Text style={styles.statLabel}>En cours</Text>
+          </View>
+          <View style={[styles.statIcon, { backgroundColor: '#4d8efc' }]}>
+            <Ionicons name="sync" size={18} color="#fff" />
           </View>
         </View>
-        <LineChart
-          data={lineChartData}
-          width={screenWidth}
-          height={220}
-          chartConfig={chartConfig}
-          bezier
-          style={lineChartStyle}
-          withInnerLines={false}
-          withOuterLines={false}
-          withHorizontalLabels={true}
-          withVerticalLabels={true}
-          fromZero={true}
-          yAxisInterval={2}
-          segments={4}
-          yAxisLabel=""
-          yAxisSuffix=""
-          hidePointsAtIndex={[]}
-          renderDotContent={({ x, y, index, indexData }) => null}
-        />
-        <View style={styles.legendContainer}>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: "#ffb443" }]} />
-            <Text style={styles.legendText}>In Process</Text>
+        
+        <View style={[styles.statCard, { backgroundColor: '#f9f9f9', borderLeftColor: '#ffb443' }]}>
+          <View style={styles.statContent}>
+            <Text style={styles.statValue}>{stats?.inProgress || 0}</Text>
+            <Text style={styles.statLabel}>En progression</Text>
           </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendColor, { backgroundColor: "#43d2c3" }]} />
-            <Text style={styles.legendText}>Completed</Text>
+          <View style={[styles.statIcon, { backgroundColor: '#ffb443' }]}>
+            <Ionicons name="time" size={18} color="#fff" />
+          </View>
+        </View>
+        
+        <View style={[styles.statCard, { backgroundColor: '#f9f9f9', borderLeftColor: '#43d2c3' }]}>
+          <View style={styles.statContent}>
+            <Text style={styles.statValue}>{stats?.completed || 0}</Text>
+            <Text style={styles.statLabel}>Terminés</Text>
+          </View>
+          <View style={[styles.statIcon, { backgroundColor: '#43d2c3' }]}>
+            <Ionicons name="checkmark-circle" size={18} color="#fff" />
+          </View>
+        </View>
+        
+        <View style={[styles.statCard, { backgroundColor: '#f9f9f9', borderLeftColor: '#ff7a5c' }]}>
+          <View style={styles.statContent}>
+            <Text style={styles.statValue}>{stats?.canceled || 0}</Text>
+            <Text style={styles.statLabel}>Annulés</Text>
+          </View>
+          <View style={[styles.statIcon, { backgroundColor: '#ff7a5c' }]}>
+            <Ionicons name="close-circle" size={18} color="#fff" />
           </View>
         </View>
       </View>
-
+      
       <View style={styles.chartCard}>
         <View style={styles.chartHeader}>
-          <View>
-            <Text style={styles.chartTitle}>Project overview</Text>
-            <Text style={styles.chartSubtitle}>Avg project daily</Text>
-          </View>
-          <View style={styles.dropdownContainer}>
-            <Text style={styles.dropdownText}>Weekly</Text>
-            <Ionicons name="chevron-down" size={16} color="#999" />
+          <Text style={styles.chartTitle}>Aperçu des projets</Text>
+          
+          <View style={styles.chartTypesContainer}>
+            <TouchableOpacity 
+              style={[styles.chartTypeButton, activeChart === 'pie' && styles.activeChartTypeButton]}
+              onPress={() => setActiveChart('pie')}
+            >
+              <Ionicons name="pie-chart" size={18} color={activeChart === 'pie' ? '#fff' : '#666'} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.chartTypeButton, activeChart === 'bar' && styles.activeChartTypeButton]}
+              onPress={() => setActiveChart('bar')}
+            >
+              <Ionicons name="bar-chart" size={18} color={activeChart === 'bar' ? '#fff' : '#666'} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.chartTypeButton, activeChart === 'line' && styles.activeChartTypeButton]}
+              onPress={() => setActiveChart('line')}
+            >
+              <Ionicons name="trending-up" size={18} color={activeChart === 'line' ? '#fff' : '#666'} />
+            </TouchableOpacity>
           </View>
         </View>
-        <BarChart
-          data={barChartData}
-          width={screenWidth}
-          height={220}
-          chartConfig={barChartConfig}
-          style={barChartStyle}
-          withInnerLines={false}
-          withOuterLines={false}
-          withHorizontalLabels={true}
-          withVerticalLabels={true}
-          fromZero={true}
-          showBarTops={false}
-          flatColor={true}
-          segments={4}
-          yAxisLabel=""
-          yAxisSuffix=""
-        />
+        
+        {/* Affichage du graphique selon le type choisi */}
+        {activeChart === 'pie' && (
+          <View style={styles.chartWrapper}>
+            <PieChart
+              data={pieChartData}
+              width={screenWidth - 30}
+              height={200}
+              chartConfig={chartConfig}
+              accessor="population"
+              backgroundColor="transparent"
+              paddingLeft="15"
+              absolute
+              hasLegend={true}
+              center={[screenWidth / 4, 0]}
+            />
+          </View>
+        )}
+        
+        {activeChart === 'bar' && (
+          <View style={styles.chartWrapper}>
+            <BarChart
+              data={barChartData}
+              width={screenWidth - 30}
+              height={200}
+              chartConfig={barChartConfig}
+              style={styles.chart}
+              flatColor={false}
+              showBarTops={false}
+              fromZero
+              withHorizontalLabels
+              withInnerLines={false}
+              showValuesOnTopOfBars
+            />
+          </View>
+        )}
+        
+        {activeChart === 'line' && (
+          <View style={styles.chartWrapper}>
+            <LineChart
+              data={lineChartData}
+              width={screenWidth - 30}
+              height={200}
+              chartConfig={chartConfig}
+              bezier
+              style={styles.chart}
+              withDots={true}
+              withShadow={false}
+              withInnerLines={false}
+              withOuterLines={false}
+              withVerticalLines={false}
+              withHorizontalLines={false}
+              fromZero
+            />
+          </View>
+        )}
       </View>
     </View>
   );
@@ -142,66 +343,84 @@ const styles = StyleSheet.create({
   chartsContainer: {
     marginTop: 20,
     paddingHorizontal: 20,
-    width: '100%',
   },
   chartCard: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    padding: 15,
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#000',
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 8,
-    overflow: 'hidden',
+    ...shadowStyles.card
   },
   chartHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
   },
   chartTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#000",
+    fontSize: 18,
+    fontWeight: '600',
   },
-  chartSubtitle: {
+  chartTypesContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#f2f2f2',
+    borderRadius: 25,
+    padding: 4,
+  },
+  chartTypeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 2,
+  },
+  activeChartTypeButton: {
+    backgroundColor: '#ff7a5c',
+  },
+  chartWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chart: {
+    marginVertical: 8,
+    borderRadius: 16,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  statCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '48%',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 15,
+    borderLeftWidth: 4,
+    ...shadowStyles.card
+  },
+  statContent: {
+    flex: 1,
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  statLabel: {
     fontSize: 12,
-    color: "#999",
-    marginTop: 4,
+    color: '#666',
   },
-  dropdownContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  dropdownText: {
-    fontSize: 14,
-    color: "#999",
-    marginRight: 4,
-  },
-  legendContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 10,
-  },
-  legendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginHorizontal: 10,
-  },
-  legendColor: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 6,
-  },
-  legendText: {
-    fontSize: 12,
-    color: "#666",
+  statIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

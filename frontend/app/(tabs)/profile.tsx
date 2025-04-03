@@ -1,103 +1,238 @@
-import React, { useEffect } from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, Image, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from 'expo-router';
 import { useLanguage } from '@/contexts/LanguageContext';
-import {useProfileStore} from "@/stores/profile";
+import { useProfileStore } from "@/stores/profile";
+import { useAuthStore } from "@/stores/auth";
 
 export default function Profile() {
     const { translations } = useLanguage();
     const router = useRouter();
     const { profile } = useProfileStore();
+    const { logout, deleteAccount } = useAuthStore();
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        useProfileStore.getState().fetchProfile();
+        const loadProfile = async () => {
+            try {
+                setIsLoading(true);
+                setError(null);
+                await useProfileStore.getState().fetchProfile();
+            } catch (err) {
+                console.error("Erreur lors du chargement du profil:", err);
+                setError("Impossible de charger votre profil. Veuillez réessayer.");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadProfile();
     }, []);
 
-    if (!profile) return null;
+    const handleLogout = () => {
+        Alert.alert(
+            translations.profile.logoutTitle || "Déconnexion",
+            translations.profile.logoutConfirm || "Êtes-vous sûr de vouloir vous déconnecter ?",
+            [
+                {
+                    text: translations.common.cancel || "Annuler",
+                    style: "cancel"
+                },
+                {
+                    text: translations.common.confirm || "Confirmer",
+                    onPress: async () => {
+                        try {
+                            await logout();
+                            router.replace("/");
+                        } catch (error) {
+                            console.error("Erreur lors de la déconnexion:", error);
+                            Alert.alert(
+                                "Erreur", 
+                                "Une erreur est survenue lors de la déconnexion."
+                            );
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
+    const handleDeleteAccount = () => {
+        Alert.alert(
+            translations.profile.deleteAccountTitle || "Supprimer le compte",
+            translations.profile.deleteAccountConfirm || "Cette action est irréversible. Êtes-vous sûr de vouloir supprimer votre compte ?",
+            [
+                {
+                    text: translations.common.cancel || "Annuler",
+                    style: "cancel"
+                },
+                {
+                    text: translations.profile.delete || "Supprimer",
+                    onPress: async () => {
+                        try {
+                            await deleteAccount();
+                            router.replace("/");
+                        } catch (error) {
+                            console.error("Erreur lors de la suppression du compte:", error);
+                            Alert.alert(
+                                "Erreur", 
+                                "Une erreur est survenue lors de la suppression du compte."
+                            );
+                        }
+                    },
+                    style: "destructive"
+                }
+            ]
+        );
+    };
+
+    const handleRetry = () => {
+        useProfileStore.getState().fetchProfile();
+    };
+
+    if (isLoading) {
+        return (
+            <SafeAreaView style={[styles.container, styles.centerContent]}>
+                <ActivityIndicator size="large" color="#ff7a5c" />
+                <Text style={{marginTop: 10}}>{translations.common.loading || "Chargement..."}</Text>
+            </SafeAreaView>
+        );
+    }
+
+    if (error) {
+        return (
+            <SafeAreaView style={[styles.container, styles.centerContent]}>
+                <Text style={styles.errorText}>{error}</Text>
+                <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
+                    <Text style={styles.retryButtonText}>{translations.common.retry || "Réessayer"}</Text>
+                </TouchableOpacity>
+            </SafeAreaView>
+        );
+    }
+
+    if (!profile) {
+        return (
+            <SafeAreaView style={[styles.container, styles.centerContent]}>
+                <Text>{translations.profile.noProfile || "Aucun profil trouvé"}</Text>
+                <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
+                    <Text style={styles.retryButtonText}>{translations.common.retry || "Réessayer"}</Text>
+                </TouchableOpacity>
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.profileSection}>
-                <View style={styles.statsContainer}>
-                    <View style={styles.statItem}>
-                        <Text style={styles.statNumber}>{profile.tasksInProgress || 0}</Text>
-                        <Text style={styles.statLabel}>{translations.tasks.inProgress}</Text>
+            <ScrollView 
+                style={styles.scrollView}
+                contentContainerStyle={styles.scrollViewContent}
+                showsVerticalScrollIndicator={false}
+            >
+                <View style={styles.profileSection}>
+                    <View style={styles.statsContainer}>
+                        <View style={styles.statItem}>
+                            <Text style={styles.statNumber}>{profile.tasksInProgress || 0}</Text>
+                            <Text style={styles.statLabel}>{translations.tasks.inProgress}</Text>
+                        </View>
+
+                        <Image
+                            source={profile.photoURL ? { uri: profile.photoURL } : require("../../assets/images/profile.jpeg")}
+                            style={styles.profileImage}
+                        />
+
+                        <View style={styles.statItem}>
+                            <Text style={styles.statNumber}>{profile.tasksCompleted || 0}</Text>
+                            <Text style={styles.statLabel}>{translations.tasks.completed}</Text>
+                        </View>
                     </View>
 
-                    <Image
-                        source={profile.photoURL ? { uri: profile.photoURL } : require("../../assets/images/profile.jpeg")}
-                        style={styles.profileImage}
-                    />
+                    <Text style={styles.userName}>{profile.fullName}</Text>
+                    <Text style={styles.userRole}>{translations.profile.role}</Text>
 
-                    <View style={styles.statItem}>
-                        <Text style={styles.statNumber}>{profile.tasksCompleted || 0}</Text>
-                        <Text style={styles.statLabel}>{translations.tasks.completed}</Text>
-                    </View>
+                    <TouchableOpacity 
+                        style={styles.editButton}
+                        onPress={() => router.push("/edit-profile")}
+                    >
+                        <Text style={styles.editButtonText}>{translations.profile.editProfile}</Text>
+                    </TouchableOpacity>
                 </View>
 
-                <Text style={styles.userName}>{profile.fullName}</Text>
-                <Text style={styles.userRole}>{translations.profile.role}</Text>
+                <View style={styles.menuSection}>
+                    <TouchableOpacity 
+                        style={styles.menuItem}
+                        onPress={() => router.push("/notification-settings")}
+                    >
+                        <View style={styles.menuIconContainer}>
+                            <Ionicons name="notifications-outline" size={24} color="#000" />
+                        </View>
+                        <Text style={styles.menuItemText}>{translations.profile.notification}</Text>
+                        <Ionicons name="chevron-forward" size={20} color="#888" />
+                    </TouchableOpacity>
 
-                <TouchableOpacity 
-                    style={styles.editButton}
-                    onPress={() => router.push("/edit-profile")}
-                >
-                    <Text style={styles.editButtonText}>{translations.profile.editProfile}</Text>
-                </TouchableOpacity>
-            </View>
+                    <TouchableOpacity style={styles.menuItem}>
+                        <View style={styles.menuIconContainer}>
+                            <Ionicons name="shield-checkmark-outline" size={24} color="#000" />
+                        </View>
+                        <Text style={styles.menuItemText}>{translations.profile.security}</Text>
+                        <Ionicons name="chevron-forward" size={20} color="#888" />
+                    </TouchableOpacity>
 
-            <View style={styles.menuSection}>
-                <TouchableOpacity 
-                    style={styles.menuItem}
-                    onPress={() => router.push("/notification-settings")}
-                >
-                    <View style={styles.menuIconContainer}>
-                        <Ionicons name="notifications-outline" size={24} color="#000" />
-                    </View>
-                    <Text style={styles.menuItemText}>{translations.profile.notification}</Text>
-                    <Ionicons name="chevron-forward" size={20} color="#888" />
-                </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={styles.menuItem}
+                        onPress={() => router.push("/language")}
+                    >
+                        <View style={styles.menuIconContainer}>
+                            <Ionicons name="globe-outline" size={24} color="#000" />
+                        </View>
+                        <Text style={styles.menuItemText}>{translations.profile.language}</Text>
+                        <Ionicons name="chevron-forward" size={20} color="#888" />
+                    </TouchableOpacity>
 
-                <TouchableOpacity style={styles.menuItem}>
-                    <View style={styles.menuIconContainer}>
-                        <Ionicons name="shield-checkmark-outline" size={24} color="#000" />
-                    </View>
-                    <Text style={styles.menuItemText}>{translations.profile.security}</Text>
-                    <Ionicons name="chevron-forward" size={20} color="#888" />
-                </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={styles.menuItem}
+                        onPress={() => router.push("/premium")}
+                    >
+                        <View style={styles.menuIconContainer}>
+                            <Ionicons name="diamond-outline" size={24} color="#000" />
+                        </View>
+                        <Text style={styles.menuItemText}>{translations.profile.goPremium}</Text>
+                        <Ionicons name="chevron-forward" size={20} color="#888" />
+                    </TouchableOpacity>
 
-                <TouchableOpacity 
-                    style={styles.menuItem}
-                    onPress={() => router.push("/language")}
-                >
-                    <View style={styles.menuIconContainer}>
-                        <Ionicons name="globe-outline" size={24} color="#000" />
-                    </View>
-                    <Text style={styles.menuItemText}>{translations.profile.language}</Text>
-                    <Ionicons name="chevron-forward" size={20} color="#888" />
-                </TouchableOpacity>
+                    <TouchableOpacity style={styles.menuItem}>
+                        <View style={styles.menuIconContainer}>
+                            <Ionicons name="help-circle-outline" size={24} color="#000" />
+                        </View>
+                        <Text style={styles.menuItemText}>{translations.profile.helpCenter}</Text>
+                        <Ionicons name="chevron-forward" size={20} color="#888" />
+                    </TouchableOpacity>
 
-                <TouchableOpacity 
-                    style={styles.menuItem}
-                    onPress={() => router.push("/premium")}
-                >
-                    <View style={styles.menuIconContainer}>
-                        <Ionicons name="diamond-outline" size={24} color="#000" />
-                    </View>
-                    <Text style={styles.menuItemText}>{translations.profile.goPremium}</Text>
-                    <Ionicons name="chevron-forward" size={20} color="#888" />
-                </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={[styles.menuItem, styles.logoutButton]}
+                        onPress={handleLogout}
+                    >
+                        <View style={[styles.menuIconContainer, styles.logoutIconContainer]}>
+                            <Ionicons name="log-out-outline" size={24} color="#FF3B30" />
+                        </View>
+                        <Text style={[styles.menuItemText, styles.logoutText]}>{translations.profile.logout || "Se déconnecter"}</Text>
+                        <Ionicons name="chevron-forward" size={20} color="#888" />
+                    </TouchableOpacity>
 
-                <TouchableOpacity style={styles.menuItem}>
-                    <View style={styles.menuIconContainer}>
-                        <Ionicons name="help-circle-outline" size={24} color="#000" />
-                    </View>
-                    <Text style={styles.menuItemText}>{translations.profile.helpCenter}</Text>
-                    <Ionicons name="chevron-forward" size={20} color="#888" />
-                </TouchableOpacity>
-            </View>
+                    <TouchableOpacity 
+                        style={[styles.menuItem, styles.deleteAccountButton]}
+                        onPress={handleDeleteAccount}
+                    >
+                        <View style={[styles.menuIconContainer, styles.deleteIconContainer]}>
+                            <Ionicons name="trash-outline" size={24} color="#FF3B30" />
+                        </View>
+                        <Text style={[styles.menuItemText, styles.deleteText]}>{translations.profile.deleteAccount || "Supprimer mon compte"}</Text>
+                        <Ionicons name="chevron-forward" size={20} color="#888" />
+                    </TouchableOpacity>
+                </View>
+            </ScrollView>
         </SafeAreaView>
     );
 }
@@ -106,6 +241,13 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#f2f2f2",
+    },
+    scrollView: {
+        flex: 1,
+        width: '100%',
+    },
+    scrollViewContent: {
+        paddingBottom: 30,
     },
     profileSection: {
         alignItems: "center",
@@ -213,5 +355,52 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "500",
         marginLeft: 10,
+    },
+    logoutButton: {
+        borderColor: '#FF3B30',
+    },
+    logoutIconContainer: {
+        borderColor: '#FF3B30',
+    },
+    logoutText: {
+        color: '#FF3B30',
+    },
+    deleteAccountButton: {
+        borderColor: '#FF3B30',
+        marginTop: 15,
+    },
+    deleteIconContainer: {
+        borderColor: '#FF3B30',
+    },
+    deleteText: {
+        color: '#FF3B30',
+    },
+    centerContent: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    errorText: {
+        color: '#FF3B30',
+        fontSize: 16,
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    retryButton: {
+        backgroundColor: "#ff7a5c",
+        paddingVertical: 12,
+        paddingHorizontal: 30,
+        borderRadius: 25,
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+        elevation: 8,
+    },
+    retryButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });

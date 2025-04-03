@@ -17,71 +17,78 @@ const CommentsController = () => import('#controllers/comments')
 const NotificationsController = () => import('#controllers/notifications')
 const ProjectMembersController = () => import('#controllers/project_members')
 
-router.get('/', async ({ response }) => response.ok({ uptime: process.uptime() }))
-router.get('health', ({ response }) => response.noContent())
-
+// Appliquer le préfixe global à toutes les routes
+// Correction: Utiliser .group() au lieu de .prefix() pour définir un préfixe global
 router
   .group(() => {
-    // Auth routes
+    // Routes de santé
+    router.get('/', async ({ response }) => response.ok({ uptime: process.uptime() }))
+    router.get('/health', ({ response }) => response.noContent())
+
+    // Routes publiques (sans authentification)
+    router.post('/auth/login', [AuthController, 'login'])
+    router.post('/auth/register', [AuthController, 'register'])
+
+    // Routes protégées (avec authentification)
     router
       .group(() => {
-        router.post('login', [AuthController, 'login'])
-        router.post('register', [AuthController, 'register'])
-        router.get('me', [AuthController, 'me']).use([middleware.auth()])
-        router.post('logout', [AuthController, 'logout']).use([middleware.auth()])
-      })
-      .prefix('auth')
+        router.get('/auth/me', [AuthController, 'me'])
+        router.post('/auth/logout', [AuthController, 'logout'])
+        router.put('/auth/update', [AuthController, 'update'])
+        router.delete('/auth/me', [AuthController, 'deleteAccount'])
 
-    // Protected routes
-    router
-      .group(() => {
-        // Projects routes
+        // Protected routes
         router
           .group(() => {
-            router.get('/', [ProjectsController, 'index'])
-            router.post('/', [ProjectsController, 'store'])
-            router.get('/:id', [ProjectsController, 'show'])
-            router.put('/:id', [ProjectsController, 'update'])
-            router.delete('/:id', [ProjectsController, 'destroy'])
+            // Projects routes
+            router
+              .group(() => {
+                router.get('/', [ProjectsController, 'index'])
+                router.post('/', [ProjectsController, 'store'])
+                router.get('/:id', [ProjectsController, 'show'])
+                router.put('/:id', [ProjectsController, 'update'])
+                router.delete('/:id', [ProjectsController, 'destroy'])
 
-            // Project members routes
-            router.post('/:projectId/members', [ProjectMembersController, 'store'])
-            router.put('/:projectId/members/:id', [ProjectMembersController, 'update'])
-            router.delete('/:projectId/members/:id', [ProjectMembersController, 'destroy'])
-          })
-          .prefix('projects')
+                // Project members routes
+                router.post('/:projectId/members', [ProjectMembersController, 'store'])
+                router.put('/:projectId/members/:id', [ProjectMembersController, 'update'])
+                router.delete('/:projectId/members/:id', [ProjectMembersController, 'destroy'])
+              })
+              .prefix('/projects')
 
-        // Tasks routes
-        router
-          .group(() => {
-            router.get('/', [TasksController, 'index'])
-            router.post('/', [TasksController, 'store'])
-            router.get('/:id', [TasksController, 'show'])
-            router.put('/:id', [TasksController, 'update'])
-            router.delete('/:id', [TasksController, 'destroy'])
-          })
-          .prefix('tasks')
+            // Tasks routes
+            router
+              .group(() => {
+                router.get('/', [TasksController, 'index'])
+                router.post('/', [TasksController, 'store'])
+                router.get('/:id', [TasksController, 'show'])
+                router.put('/:id', [TasksController, 'update'])
+                router.delete('/:id', [TasksController, 'destroy'])
+              })
+              .prefix('/tasks')
 
-        // Comments routes
-        router
-          .group(() => {
-            router.get('/', [CommentsController, 'index'])
-            router.post('/', [CommentsController, 'store'])
-            router.get('/:id', [CommentsController, 'show'])
-            router.put('/:id', [CommentsController, 'update'])
-            router.delete('/:id', [CommentsController, 'destroy'])
-          })
-          .prefix('comments')
+            // Comments routes
+            router
+              .group(() => {
+                router.get('/', [CommentsController, 'index'])
+                router.post('/', [CommentsController, 'store'])
+                router.get('/:id', [CommentsController, 'show'])
+                router.put('/:id', [CommentsController, 'update'])
+                router.delete('/:id', [CommentsController, 'destroy'])
+              })
+              .prefix('/comments')
 
-        // Notifications routes
-        router
-          .group(() => {
-            router.get('/', [NotificationsController, 'index'])
-            router.put('/:id/read', [NotificationsController, 'markAsRead'])
-            router.delete('/:id', [NotificationsController, 'destroy'])
+            // Notifications routes
+            router
+              .group(() => {
+                router.get('/', [NotificationsController, 'index'])
+                router.put('/:id/read', [NotificationsController, 'markAsRead'])
+                router.delete('/:id', [NotificationsController, 'destroy'])
+              })
+              .prefix('/notifications')
           })
-          .prefix('notifications')
+          .use([middleware.auth()])
       })
       .use([middleware.auth()])
   })
-  .prefix('api/v1')
+  .prefix('/api/v1') // Utilisation correcte du préfixe global avec prefix()

@@ -72,6 +72,10 @@ export default {
     ongoing: "Ongoing",
     inProgress: "In Progress",
     completed: "Completed",
+    singular: "Task",
+    plural: "Tasks",
+    todo: "To Do",
+    done: "Done",
     categories: {
       design: "Design",
       development: "Development",

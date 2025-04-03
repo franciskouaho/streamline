@@ -1,139 +1,196 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import api from '../api';
-import type { TaskData } from '@/types/task';
+import { Task, SubTask } from '@/types/task';
+import api from '@/services/api';
 
-export function useTasks(projectId?: string | number) {
+// Récupérer toutes les tâches
+export const useTasks = () => {
   return useQuery({
-    queryKey: ['tasks', { projectId }],
-    queryFn: async () => {
-      const { data } = await api.get<TaskData[]>('/tasks', {
-        params: { projectId },
-      });
-      return data;
-    },
-  });
-}
-
-export function useTask(id: string | number) {
-  return useQuery({
-    queryKey: ['task', id],
-    queryFn: async () => {
-      const { data } = await api.get<TaskData>(`/tasks/${id}`);
-      return data;
-    },
-  });
-}
-
-interface CreateTaskData {
-  title: string;
-  description?: string;
-  dueDate?: string;
-  assigneeId?: number;
-  projectId?: number;
-  status?: string;
-  priority?: string;
-}
-
-export function useCreateTask() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (data: CreateTaskData) => {
+    queryKey: ['tasks'],
+    queryFn: async (): Promise<Task[]> => {
       try {
-        const taskData = {
-          title: data.title,
-          description: data.description,
-          projectId: data.projectId,
-          status: data.status || 'todo',
-          priority: data.priority || 'medium',
-          dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : undefined,
-          assigneeId: data.assigneeId || null
-        };
-        
-        console.log('Sending task data:', taskData);
-        const response = await api.post('/tasks', taskData);
+        const response = await api.get('/tasks');
+        console.log("Tâches récupérées:", response.data.length);
         return response.data;
       } catch (error) {
-        console.error('Task creation error:', error);
-        throw error;
+        console.error("Erreur lors de la récupération des tâches:", error);
+        return [];
       }
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['tasks', { projectId: variables.projectId }] });
     }
   });
-}
+};
 
-export function useUpdateTask() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (data: { id: number | string } & Partial<TaskData>) => {
-      const { id, ...updates } = data;
-      const response = await api.put<TaskData>(`/tasks/${id}`, updates);
+// Récupérer les tâches d'un projet spécifique
+export const useProjectTasks = (projectId: string | number) => {
+  return useQuery({
+    queryKey: ['tasks', 'project', projectId],
+    queryFn: async (): Promise<Task[]> => {
+      const response = await api.get(`/tasks?projectId=${projectId}`);
       return response.data;
     },
-    onSuccess: (_, variables) => {
-      const { id } = variables;
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['task', id] });
-    },
+    enabled: !!projectId
   });
-}
+};
 
-export function useDeleteTask() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (id: string | number) => {
-      await api.delete(`/tasks/${id}`);
-      return id;
+// Récupérer une tâche spécifique par ID
+export const useTask = (id: string | number) => {
+  return useQuery({
+    queryKey: ['tasks', id],
+    queryFn: async (): Promise<Task> => {
+      const response = await api.get(`/tasks/${id}`);
+      return response.data;
     },
-    onSuccess: (_, taskId) => {
-      // Invalider toutes les requêtes liées aux tâches
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['task', taskId] });
-      
-      // Si l'ID du projet est dans le cache, invalider les tâches liées à ce projet
-      const projectsWithTasks = queryClient.getQueriesData({ queryKey: ['tasks'] });
-      for (const [queryKey] of projectsWithTasks) {
-        if (Array.isArray(queryKey) && queryKey.length > 1) {
-          queryClient.invalidateQueries({ queryKey });
+    enabled: !!id
+  });
+};
+
+// Récupérer les tâches pour une date spécifique
+export const useTasksByDate = (date: Date | null) => {
+  // Convertir la date en format YYYY-MM-DD
+  const formattedDate = date ? date.toISOString().split('T')[0] : null;
+  
+  return useQuery({
+    queryKey: ['tasks', 'date', formattedDate],
+    queryFn: async (): Promise<Task[]> => {
+      try {
+        console.log(`Récupération des tâches pour la date: ${formattedDate}`);
+        
+        // Si votre API ne prend pas en charge le filtrage par date, vous pouvez récupérer toutes les tâches
+        // et les filtrer côté client
+        const response = await api.get('/tasks');
+        
+        if (formattedDate) {
+          // Filtrer les tâches pour la date spécifiée
+          const tasksForDate = response.data.filter((task: Task) => {
+            if (!task.dueDate && !task.date) return false;
+            
+            const taskDueDate = task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : null;
+            const taskDate = task.date ? new Date(task.date).toISOString().split('T')[0] : null;
+            
+            return taskDueDate === formattedDate || taskDate === formattedDate;
+          });
+          
+          console.log(`Tâches filtrées pour ${formattedDate}:`, tasksForDate.length);
+          return tasksForDate;
         }
+        
+        return response.data;
+      } catch (error) {
+        console.error("Erreur lors de la récupération des tâches par date:", error);
+        return [];
       }
     },
+    enabled: !!formattedDate
   });
-}
+};
 
-export function useProjectTasks(projectId: string | number) {
-  return useQuery({
-    queryKey: ['tasks', { projectId }],
-    queryFn: async () => {
-      const { data } = await api.get<TaskData[]>('/tasks', {
-        params: { projectId },
-      });
-      console.log('Project tasks:', data);
-      return data;
-    },
-    enabled: !!projectId,
-  });
-}
-
-export function useCreateProjectTask(projectId: number) {
+// Créer une nouvelle tâche
+export const useCreateTask = () => {
   const queryClient = useQueryClient();
-
+  
   return useMutation({
-    mutationFn: async (data: Partial<TaskData>) => {
-      const taskData = {
-        ...data,
-        projectId,
-      };
+    mutationFn: async (taskData: Partial<Task>) => {
       const response = await api.post('/tasks', taskData);
       return response.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', { projectId }] });
-    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      if (data.projectId) {
+        queryClient.invalidateQueries({ queryKey: ['tasks', 'project', data.projectId] });
+      }
+    }
   });
-}
+};
+
+// Mettre à jour une tâche
+export const useUpdateTask = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, ...data }: { id: number } & Partial<Task>) => {
+      const response = await api.put(`/tasks/${id}`, data);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      // Invalider les requêtes de tâches
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks', data.id] });
+      
+      if (data.projectId) {
+        // Invalider les tâches du projet
+        queryClient.invalidateQueries({ queryKey: ['tasks', 'project', data.projectId] });
+        
+        // Invalider le projet lui-même et la liste des projets
+        queryClient.invalidateQueries({ queryKey: ['projects', data.projectId] });
+        queryClient.invalidateQueries({ queryKey: ['projects'] });
+      }
+    }
+  });
+};
+
+// Supprimer une tâche
+export const useDeleteTask = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: number | string) => {
+      await api.delete(`/tasks/${id}`);
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    }
+  });
+};
+
+// Ajouter une sous-tâche
+export const useAddSubTask = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (subtaskData: Partial<SubTask>) => {
+      const response = await api.post('/subtasks', subtaskData);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', data.taskId] });
+    }
+  });
+};
+
+// Mettre à jour une sous-tâche
+export const useUpdateSubTask = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, ...data }: { id: number } & Partial<SubTask>) => {
+      const response = await api.put(`/subtasks/${id}`, data);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', data.taskId] });
+    }
+  });
+};
+
+// Calculer les statistiques des tâches
+export const calculateTaskStats = (tasks: Task[]) => {
+  if (!tasks || !tasks.length) {
+    return { todo: 0, inProgress: 0, done: 0, total: 0 };
+  }
+
+  return tasks.reduce((stats, task) => {
+    switch (task.status.toLowerCase()) {
+      case 'todo':
+        stats.todo += 1;
+        break;
+      case 'in_progress':
+        stats.inProgress += 1;
+        break;
+      case 'done':
+        stats.done += 1;
+        break;
+    }
+    stats.total += 1;
+    return stats;
+  }, { todo: 0, inProgress: 0, done: 0, total: 0 });
+};

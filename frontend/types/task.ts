@@ -14,4 +14,9 @@ export interface Task {
   assignees?: Array<{ id: number; image: any }>;
   subTasks?: SubTask[];
   isCompleted: boolean;
+  status: string;
+  description?: string;
+  dueDate?: string;
+  priority?: string;
+  projectId?: number;
 }
