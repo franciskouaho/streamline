@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { shadowStyles } from '@/constants/CommonStyles';
-import { useProject } from '@/services/queries/projects';
+import { useProject, useDeleteProject } from '@/services/queries/projects';
 import { useProjectTasks, useUpdateTask } from '@/services/queries/tasks';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -55,10 +55,11 @@ export default function ProjectDetails() {
     const { data: tasks, isLoading: isLoadingTasks } = useProjectTasks(projectId);
     const queryClient = useQueryClient();
     const updateTask = useUpdateTask();
+    const deleteProject = useDeleteProject();
 
     console.log('Current tasks:', tasks);
     
-    const [activeTab, setActiveTab] = useState<string>('detail');
+    const [activeTab, setActiveTab] = useState<string>('comment');
     const [showMenu, setShowMenu] = useState(false);
 
     const handleMenuPress = () => {
@@ -74,6 +75,32 @@ export default function ProjectDetails() {
             });
         } catch (error) {
             console.error('Error updating task status:', error.response?.data || error);
+        }
+    };
+
+    const handleDeleteProject = async () => {
+        try {
+            Alert.alert(
+                "Supprimer le projet",
+                "Êtes-vous sûr de vouloir supprimer ce projet ?",
+                [
+                    {
+                        text: "Annuler",
+                        style: "cancel"
+                    },
+                    {
+                        text: "Supprimer",
+                        style: "destructive",
+                        onPress: async () => {
+                            await deleteProject.mutateAsync(projectId);
+                            router.replace('/');
+                        }
+                    }
+                ]
+            );
+        } catch (error) {
+            console.error('Error deleting project:', error);
+            Alert.alert('Erreur', 'Erreur lors de la suppression du projet');
         }
     };
 
@@ -103,35 +130,29 @@ export default function ProjectDetails() {
                     <Text style={styles.statusTag}>In Progress</Text>
                 </View>
                 <View style={styles.headerIcons}>
-                    <TouchableOpacity style={styles.iconButton}>
-                        <Ionicons name="calendar-outline" size={22} color="#000" />
-                    </TouchableOpacity>
                     <TouchableOpacity 
                         style={styles.iconButton}
                         onPress={() => router.push('/new-task')}
                     >
                         <Ionicons name="add-circle-outline" size={22} color="#000" />
                     </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={[styles.iconButton, styles.deleteButton]}
+                        onPress={handleDeleteProject}
+                    >
+                        <Ionicons name="trash-outline" size={22} color="#ff3b30" />
+                    </TouchableOpacity>
                 </View>
             </View>
 
             <View style={styles.titleContainer}>
-                <Text style={styles.title}>{project?.title}</Text>
+                <Text style={styles.title}>{project?.name}</Text>
             </View>
 
             <ScrollView style={styles.content}>
                 <Text style={styles.description}>{project?.description}</Text>
 
                 <View style={styles.tabsContainer}>
-                    <TouchableOpacity
-                        style={[styles.tabButton, activeTab === 'detail' && styles.activeTab]}
-                        onPress={() => setActiveTab('detail')}
-                    >
-                        <Text style={[styles.tabText, activeTab === 'detail' && styles.activeTabText]}>
-                            Detail
-                        </Text>
-                    </TouchableOpacity>
-
                     <TouchableOpacity
                         style={[styles.tabButton, activeTab === 'comment' && styles.activeTab]}
                         onPress={() => setActiveTab('comment')}
@@ -594,5 +615,8 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#666',
         marginTop: 4,
+    },
+    deleteButton: {
+        borderColor: '#ff3b30',
     },
 });

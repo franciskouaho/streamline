@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Platform } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Platform, Modal } from "react-native";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -98,6 +98,15 @@ export default function NewTask() {
         }
     };
 
+    const formatDate = (date: Date | null) => {
+        if (!date) return 'Sélectionner une date';
+        return date.toLocaleDateString('fr-FR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
@@ -106,7 +115,7 @@ export default function NewTask() {
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>{translations.tasks.newTask}</Text>
                 <TouchableOpacity>
-                    <Text style={styles.saveButton}>{translations.common.save}</Text>
+                    <Text style={styles.saveButton}></Text>
                 </TouchableOpacity>
             </View>
 
@@ -120,29 +129,61 @@ export default function NewTask() {
                     />
                 </View>
 
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Date"
-                        value={date}
-                        editable={false}
-                    />
+                <View style={styles.dateField}>
+                    <Text style={styles.label}>Date d'échéance</Text>
                     <TouchableOpacity 
-                        style={styles.inputIcon} 
+                        style={[styles.dateButton, date && styles.dateButtonSelected]}
                         onPress={() => setShowDatePicker(true)}
                     >
-                        <Ionicons name="calendar-outline" size={20} color="#888" />
+                        <Ionicons 
+                            name="calendar-outline" 
+                            size={20} 
+                            color={date ? "#ff7a5c" : "#666"} 
+                        />
+                        <Text style={[
+                            styles.dateText,
+                            date && styles.dateTextSelected
+                        ]}>
+                            {formatDate(selectedDate)}
+                        </Text>
                     </TouchableOpacity>
                 </View>
 
-                {showDatePicker && (
-                    <DateTimePicker
-                        value={selectedDate}
-                        mode="date"
-                        display={Platform.OS === "ios" ? "spinner" : "default"}
-                        onChange={onDateChange}
-                    />
-                )}
+                <Modal
+                    animationType="slide"
+                    transparent={true}
+                    visible={showDatePicker}
+                    onRequestClose={() => setShowDatePicker(false)}
+                >
+                    <View style={styles.modalContainer}>
+                        <View style={styles.modalContent}>
+                            <View style={styles.modalHeader}>
+                                <Text style={styles.modalTitle}>
+                                    Date d'échéance
+                                </Text>
+                                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                                    <Ionicons name="close" size={24} color="#000" />
+                                </TouchableOpacity>
+                            </View>
+
+                            <DateTimePicker
+                                value={selectedDate}
+                                mode="date"
+                                display="spinner"
+                                onChange={onDateChange}
+                                minimumDate={new Date()}
+                                style={styles.datePicker}
+                            />
+
+                            <TouchableOpacity 
+                                style={styles.modalButton}
+                                onPress={() => setShowDatePicker(false)}
+                            >
+                                <Text style={styles.modalButtonText}>Confirmer</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
 
                 <View style={styles.inputContainerMultiline}>
                     <TextInput
@@ -444,5 +485,84 @@ const styles = StyleSheet.create({
         backgroundColor: '#000',
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    dateField: {
+        gap: 8,
+        marginBottom: 15,
+    },
+    dateButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        borderRadius: 15,
+        padding: 15,
+        gap: 10,
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+        elevation: 8,
+    },
+    dateButtonSelected: {
+        borderColor: '#ff7a5c',
+        borderWidth: 2,
+    },
+    dateText: {
+        fontSize: 16,
+        color: '#666',
+        flex: 1,
+    },
+    dateTextSelected: {
+        color: '#ff7a5c',
+        fontWeight: '500',
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'flex-end',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        padding: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+    },
+    datePicker: {
+        marginBottom: 20,
+        height: 200,
+    },
+    modalButton: {
+        backgroundColor: '#ff7a5c',
+        borderRadius: 15,
+        padding: 15,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+    },
+    modalButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });

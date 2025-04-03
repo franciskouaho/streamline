@@ -35,6 +35,9 @@ export interface ProjectData {
 export interface CreateProjectInput {
     name: string;
     description?: string;
+    startDate?: string;
+    endDate?: string;
+    status?: string;
 }
 
 export interface UpdateProjectInput extends Partial<CreateProjectInput> {}

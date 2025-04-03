@@ -55,18 +55,24 @@ export default function NewProject() {
                 return;
             }
 
+            if (!startDate || !endDate) {
+                alert('Veuillez sélectionner les dates de début et de fin');
+                return;
+            }
+
             const projectData = {
                 name: name.trim(),
-                description: description.trim() || null,
-                startDate: startDate?.toISOString().split('T')[0], // Format YYYY-MM-DD
-                endDate: endDate?.toISOString().split('T')[0], // Format YYYY-MM-DD
-                status: 'active'
+                description: description.trim(),
+                startDate: startDate.toISOString().split('T')[0],  // Format YYYY-MM-DD
+                endDate: endDate.toISOString().split('T')[0],      // Format YYYY-MM-DD
+                status: 'active',
             };
 
-            console.log('Creating project with data:', projectData);
-            await createProject.mutateAsync(projectData);
+            console.log('Sending project data:', projectData);
+            const response = await createProject.mutateAsync(projectData);
+            console.log('Project created:', response);
             
-            resetForm(); // Réinitialiser le formulaire
+            resetForm();
             router.back();
         } catch (error) {
             console.error('Error creating project:', error);

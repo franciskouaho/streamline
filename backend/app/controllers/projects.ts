@@ -1,4 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import { DateTime } from 'luxon'
 import { createProjectValidator, updateProjectValidator } from '#validators/project'
 import Project from '#models/project'
 
@@ -25,14 +26,13 @@ export default class Projects {
         return response.unauthorized('User not authenticated')
       }
 
-      // Conversion explicite des dates
       const projectData = {
         name: data.name,
         description: data.description,
         status: data.status || 'active',
         ownerId: auth.user.id,
-        startDate: data.startDate ? new Date(data.startDate) : null,
-        endDate: data.endDate ? new Date(data.endDate) : null,
+        startDate: data.startDate ? DateTime.fromISO(data.startDate) : null,
+        endDate: data.endDate ? DateTime.fromISO(data.endDate) : null,
         settings: null,
       }
 

@@ -27,29 +27,19 @@ export function useCreateProject() {
 
   return useMutation({
     mutationFn: async (data: Partial<ProjectData>) => {
-      try {
-        // Nettoyer les données avant l'envoi
-        const projectData = {
-          name: data.name?.trim(),
-          description: data.description?.trim() || null,
-          status: data.status || 'active'
-        };
-
-        console.log('Sending project data:', projectData);
-        const response = await api.post('/projects', projectData);
-        console.log('Project creation response:', response.data);
-        return response.data;
-      } catch (error) {
-        console.error('Project creation error details:', {
-          error,
-          response: error.response?.data,
-          status: error.response?.status
-        });
-        throw error;
-      }
+      // Formatage des dates au format ISO
+      const projectData = {
+        ...data,
+        startDate: data.startDate ? new Date(data.startDate).toISOString() : null,
+        endDate: data.endDate ? new Date(data.endDate).toISOString() : null,
+      };
+      
+      console.log('Creating project with data:', projectData);
+      const response = await api.post('/projects', projectData);
+      return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries(['projects']);
     },
   });
 }
