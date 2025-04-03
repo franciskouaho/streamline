@@ -1,6 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import type { ProjectData } from "@/types/project";
 
 interface ProjectCardProps {

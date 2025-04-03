@@ -4,6 +4,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { shadowStyles } from '@/constants/CommonStyles';
+import { useProject } from '@/services/queries/projects';
+import { useProjectTasks, useUpdateTask } from '@/services/queries/tasks';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ChecklistItem {
     id: number;
@@ -34,9 +37,27 @@ interface ProjectData {
     todaysTasks: TodayTask[];
 }
 
+function formatDeadline(dateString: string) {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    });
+}
+
 export default function ProjectDetails() {
     const router = useRouter();
     const { id } = useLocalSearchParams();
+    const projectId = Array.isArray(id) ? id[0] : id;
+    
+    const { data: project, isLoading: isLoadingProject } = useProject(projectId);
+    const { data: tasks, isLoading: isLoadingTasks } = useProjectTasks(projectId);
+    const queryClient = useQueryClient();
+    const updateTask = useUpdateTask();
+
+    console.log('Current tasks:', tasks);
+    
     const [activeTab, setActiveTab] = useState<string>('detail');
     const [showMenu, setShowMenu] = useState(false);
 
@@ -44,30 +65,33 @@ export default function ProjectDetails() {
         setShowMenu(!showMenu);
     };
 
-    const projectData: ProjectData = {
-        id: Array.isArray(id) ? id[0] : id,
-        title: "Website for Rune.io",
-        description: "Effectively manage and coordinate the tasks involved in the development and enhancement of the Rune.io job finder website. Ensure alignment with project goals, timelines, and quality standards.",
-        deadline: "February 6",
-        progress: 60,
-        team: [
-            { id: 1, image: require("../../assets/images/team1.jpeg") },
-            { id: 2, image: require("../../assets/images/team1.jpeg") },
-            { id: 3, image: require("../../assets/images/team1.jpeg") },
-        ],
-        checklist: [
-            { id: 1, title: "Collaborate with the design team to outline the requirements for the website redesign.", completed: true },
-            { id: 2, title: "Coordinate with the content creation team to ensure the development of engaging and informative content for the website.", completed: true },
-            { id: 3, title: "Task the development team with enhancing the user profile functionality.", completed: true },
-            { id: 4, title: "Work closely with the tech team to optimize the job matching algorithm.", completed: false },
-            { id: 5, title: "Task the development team with ensuring the website's mobile responsiveness.", completed: false },
-        ],
-        todaysTasks: [
-            { id: 1, title: "Job Matching Optimization", assignee: "Jack Roberts", completed: true },
-            { id: 2, title: "Employer Dashboard Upgrades", assignee: "Ava Taylor", completed: false },
-        ]
+    const handleTaskToggle = async (task) => {
+        try {
+            console.log('Toggling task:', task.id);
+            await updateTask.mutateAsync({
+                id: task.id,
+                status: task.status === 'done' ? 'todo' : 'done'
+            });
+        } catch (error) {
+            console.error('Error updating task status:', error.response?.data || error);
+        }
     };
 
+    if (isLoadingProject || isLoadingTasks) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <Text>Chargement...</Text>
+            </SafeAreaView>
+        );
+    }
+
+    if (!project) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <Text>Projet non trouvé</Text>
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView style={styles.container}>
@@ -92,11 +116,11 @@ export default function ProjectDetails() {
             </View>
 
             <View style={styles.titleContainer}>
-                <Text style={styles.title}>{projectData.title}</Text>
+                <Text style={styles.title}>{project?.title}</Text>
             </View>
 
             <ScrollView style={styles.content}>
-                <Text style={styles.description}>{projectData.description}</Text>
+                <Text style={styles.description}>{project?.description}</Text>
 
                 <View style={styles.tabsContainer}>
                     <TouchableOpacity
@@ -141,7 +165,7 @@ export default function ProjectDetails() {
                         <View>
                             <Text style={styles.sectionTitle}>Team Assign</Text>
                             <View style={styles.teamContainer}>
-                                {projectData.team.map((member) => (
+                                {project.members?.map((member) => (
                                     <View key={member.id} style={styles.teamMember}>
                                         <View style={styles.memberAvatar} />
                                     </View>
@@ -153,49 +177,95 @@ export default function ProjectDetails() {
                         </View>
                         
                         <View style={[styles.progressCircle, shadowStyles.card]}>
-                            <Text style={styles.progressPercentage}>{projectData.progress}%</Text>
+                            <Text style={styles.progressPercentage}>
+                                {calculateProgress(tasks || [])}%
+                            </Text>
                             <Text style={styles.progressLabel}>Progress</Text>
                         </View>
                     </View>
 
                     <View style={styles.deadlineContainer}>
                         <Ionicons name="alarm-outline" size={20} color="#000" />
-                        <Text style={styles.deadlineText}>Deadline: {projectData.deadline}</Text>
+                        <Text style={styles.deadlineText}>
+                            Date limite : {project?.endDate ? formatDeadline(project.endDate) : 'Non définie'}
+                        </Text>
                     </View>
                 </View>
 
                 <View style={styles.checklistSection}>
-                    <Text style={styles.sectionTitle}>Checklist</Text>
-
-                    {projectData.checklist.map((item) => (
-                        <View key={item.id} style={styles.checklistItem}>
-                            <TouchableOpacity
-                                style={[
-                                    styles.checkbox,
-                                    item.completed && styles.checkboxCompleted
-                                ]}
-                            >
-                                {item.completed && (
-                                    <Ionicons name="checkmark" size={18} color="#fff" />
-                                )}
-                            </TouchableOpacity>
-                            <Text
-                                style={[
-                                    styles.checklistText,
-                                    item.completed && styles.checklistTextCompleted
-                                ]}
-                            >
-                                {item.title}
-                            </Text>
-                            <TouchableOpacity style={styles.moreButton}>
-                                <Ionicons name="ellipsis-horizontal" size={18} color="#888" />
-                            </TouchableOpacity>
-                        </View>
-                    ))}
+                    <Text style={styles.sectionTitle}>Tâches ({tasks?.length || 0})</Text>
+                    
+                    {!tasks?.length ? (
+                        <Text style={styles.emptyText}>Aucune tâche pour ce projet</Text>
+                    ) : (
+                        tasks.map((task) => (
+                            <View key={task.id} style={styles.checklistItem}>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.checkbox,
+                                        task.status === 'done' && styles.checkboxCompleted
+                                    ]}
+                                    onPress={() => handleTaskToggle(task)}
+                                >
+                                    {task.status === 'done' && (
+                                        <Ionicons name="checkmark" size={18} color="#fff" />
+                                    )}
+                                </TouchableOpacity>
+                                <View style={styles.taskContent}>
+                                    <Text
+                                        style={[
+                                            styles.checklistText,
+                                            task.status === 'done' && styles.checklistTextCompleted
+                                        ]}
+                                    >
+                                        {task.title}
+                                    </Text>
+                                    {task.dueDate && (
+                                        <Text style={styles.dueDateText}>
+                                            {new Date(task.dueDate).toLocaleDateString('fr-FR', {
+                                                day: 'numeric',
+                                                month: 'long',
+                                                year: 'numeric'
+                                            })}
+                                        </Text>
+                                    )}
+                                </View>
+                                <TouchableOpacity 
+                                    style={styles.moreButton}
+                                    onPress={() => router.push(`/task/${task.id}`)}
+                                >
+                                    <Ionicons name="ellipsis-horizontal" size={18} color="#888" />
+                                </TouchableOpacity>
+                            </View>
+                        ))
+                    )}
                 </View>
             </ScrollView>
         </SafeAreaView>
     );
+}
+
+function calculateProgress(tasks: any[]): number {
+    if (!tasks || tasks.length === 0) return 0;
+    const completedTasks = tasks.filter(task => task.status === 'done').length;
+    return Math.round((completedTasks / tasks.length) * 100);
+}
+
+function getStatusColor(status: string): string {
+    const colors = {
+        todo: '#ffb443',
+        in_progress: '#4d8efc',
+        done: '#43d2c3'
+    };
+    return colors[status] || '#666';
+}
+
+function getInitials(name: string): string {
+    return name
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase();
 }
 
 const styles = StyleSheet.create({
@@ -428,5 +498,101 @@ const styles = StyleSheet.create({
         height: '100%',
         backgroundColor: '#ff7a5c',
         borderRadius: 4,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 15,
+    },
+    addButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#fff',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+    },
+    taskHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 8,
+    },
+    taskStatus: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    statusDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        marginRight: 6,
+    },
+    statusText: {
+        fontSize: 12,
+        color: '#666',
+    },
+    priorityText: {
+        fontSize: 12,
+        color: '#666',
+        textTransform: 'capitalize',
+    },
+    taskTitle: {
+        fontSize: 16,
+        fontWeight: '500',
+        marginBottom: 8,
+    },
+    taskDueDate: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    dueDateText: {
+        fontSize: 12,
+        color: '#666',
+        marginLeft: 4,
+    },
+    assigneeContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    assigneeAvatar: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: '#f0f0f0',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 8,
+    },
+    assigneeInitials: {
+        fontSize: 10,
+        fontWeight: '600',
+        color: '#666',
+    },
+    assigneeName: {
+        fontSize: 12,
+        color: '#666',
+    },
+    emptyText: {
+        textAlign: 'center',
+        color: '#666',
+        fontSize: 14,
+        marginTop: 20,
+    },
+    taskContent: {
+        flex: 1,
+        marginLeft: 15,
+    },
+    dueDateText: {
+        fontSize: 12,
+        color: '#666',
+        marginTop: 4,
     },
 });

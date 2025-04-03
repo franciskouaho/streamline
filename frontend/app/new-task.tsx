@@ -25,15 +25,11 @@ export default function NewTask() {
     const createTask = useCreateTask();
     const [title, setTitle] = useState<string>('');
     const [date, setDate] = useState<string>('');
-    const [assignee, setAssignee] = useState<string>('');
     const [details, setDetails] = useState<string>('');
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [alertEnabled, setAlertEnabled] = useState<boolean>(true);
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
-    const [showPersonSelector, setShowPersonSelector] = useState(false);
-    const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
-    const [selectedPeople, setSelectedPeople] = useState<Person[]>([]);
 
     const categories: Category[] = [
         { id: 'design', label: translations.tasks.categories.design },
@@ -71,22 +67,6 @@ export default function NewTask() {
         }
     };
 
-    const selectPerson = (person: Person) => {
-        setSelectedPerson(person);
-        setShowPersonSelector(false);
-        setAssignee(person.name);
-    };
-
-    const togglePerson = (person: Person) => {
-        const isSelected = selectedPeople.some(p => p.id === person.id);
-        if (isSelected) {
-            setSelectedPeople(selectedPeople.filter(p => p.id !== person.id));
-        } else {
-            setSelectedPeople([...selectedPeople, person]);
-        }
-        setAssignee(selectedPeople.map(p => p.name).join(', '));
-    };
-
     const handleCreateTask = async () => {
         try {
             if (!title) {
@@ -98,7 +78,6 @@ export default function NewTask() {
                 title,
                 description: details,
                 dueDate: selectedDate.toISOString(),
-                assigneeId: selectedPerson?.id ? parseInt(selectedPerson.id) : undefined,
                 status: 'todo',
                 priority: 'medium',
                 projectId: 1 // Ajouter un projectId par défaut pour test
@@ -126,6 +105,9 @@ export default function NewTask() {
                     <Ionicons name="arrow-back" size={24} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>{translations.tasks.newTask}</Text>
+                <TouchableOpacity>
+                    <Text style={styles.saveButton}>{translations.common.save}</Text>
+                </TouchableOpacity>
             </View>
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -160,46 +142,6 @@ export default function NewTask() {
                         display={Platform.OS === "ios" ? "spinner" : "default"}
                         onChange={onDateChange}
                     />
-                )}
-
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Assignee"
-                        value={assignee}
-                        editable={false}
-                    />
-                    <TouchableOpacity 
-                        style={styles.inputIcon}
-                        onPress={() => setShowPersonSelector(!showPersonSelector)}
-                    >
-                        <Ionicons name="person" size={20} color="#888" />
-                    </TouchableOpacity>
-                </View>
-
-                {showPersonSelector && (
-                    <View style={styles.personSelector}>
-                        {people.map((person) => (
-                            <TouchableOpacity
-                                key={person.id}
-                                style={[
-                                    styles.personItem,
-                                    selectedPeople.some(p => p.id === person.id) && styles.personItemSelected
-                                ]}
-                                onPress={() => togglePerson(person)}
-                            >
-                                <View style={styles.personAvatar}>
-                                    <Ionicons name="person-circle-outline" size={24} color="#000" />
-                                </View>
-                                <Text style={styles.personName}>{person.name}</Text>
-                                {selectedPeople.some(p => p.id === person.id) && (
-                                    <View style={styles.checkmark}>
-                                        <Ionicons name="checkmark" size={20} color="#fff" />
-                                    </View>
-                                )}
-                            </TouchableOpacity>
-                        ))}
-                    </View>
                 )}
 
                 <View style={styles.inputContainerMultiline}>

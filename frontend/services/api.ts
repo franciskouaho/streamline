@@ -38,9 +38,12 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      const authStore = useAuthStore.getState();
-      authStore.clearAuth();
-      router.replace('/login');
+      // Utiliser getState() pour accéder aux méthodes du store
+      const { clearAuth } = useAuthStore.getState();
+      if (clearAuth) {
+        clearAuth();
+        router.replace('/login');
+      }
     }
     return Promise.reject(error);
   }

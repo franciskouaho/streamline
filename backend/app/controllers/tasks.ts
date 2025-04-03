@@ -4,41 +4,46 @@ import Task from '#models/task'
 
 export default class Tasks {
   async index({ request, response }: HttpContext) {
-    const { projectId } = request.qs()
-    const query = Task.query().preload('assignee').preload('subtasks').preload('comments')
+    try {
+      const { projectId } = request.qs()
+      const query = Task.query().preload('assignee').orderBy('createdAt', 'desc')
 
-    if (projectId) {
-      query.where('projectId', projectId)
+      if (projectId) {
+        query.where('projectId', projectId)
+      }
+
+      const tasks = await query
+      console.log('Tasks found:', tasks.length)
+      return response.ok(tasks)
+    } catch (error) {
+      console.error('Error fetching tasks:', error)
+      return response.internalServerError({
+        message: 'Error fetching tasks',
+        error: error.message,
+      })
     }
-
-    const tasks = await query
-    return response.ok(tasks)
   }
 
   async store({ request, auth, response }: HttpContext) {
     try {
-      console.log('Request body:', request.body())
-
       const data = await request.validateUsing(createTaskValidator)
-      console.log('Validated data:', data)
 
       if (!auth.user) {
-        console.log('User not authenticated')
         return response.unauthorized('User not authenticated')
       }
 
       const taskData = {
         ...data,
+        assigneeId: data.assigneeId || null,
         status: data.status || 'todo',
         priority: data.priority || 'medium',
         createdBy: auth.user.id,
       }
 
-      console.log('Creating task with data:', taskData)
       const task = await Task.create(taskData)
-
-      console.log('Task created:', task.toJSON())
-      await task.load('assignee')
+      if (task.assigneeId) {
+        await task.load('assignee')
+      }
 
       return response.created(task)
     } catch (error) {
@@ -65,11 +70,29 @@ export default class Tasks {
   }
 
   async update({ params, request, response }: HttpContext) {
-    const task = await Task.findOrFail(params.id)
-    const data = await request.validateUsing(updateTaskValidator)
-    await task.merge(data).save()
-    await task.load('assignee')
-    return response.ok(task)
+    try {
+      const task = await Task.findOrFail(params.id)
+      const data = await request.validateUsing(updateTaskValidator)
+
+      console.log('Updating task:', { taskId: params.id, updates: data })
+
+      await task.merge(data).save()
+      await task.load('assignee')
+
+      console.log('Task updated successfully:', task)
+
+      return response.ok(task)
+    } catch (error) {
+      console.error('Task update error:', {
+        message: error.message,
+        stack: error.stack,
+      })
+
+      return response.internalServerError({
+        message: 'Error updating task',
+        error: error.message,
+      })
+    }
   }
 
   async destroy({ params, response }: HttpContext) {

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Platform, Modal } from "react-native";
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -17,13 +17,6 @@ export default function NewProject() {
     const [endDate, setEndDate] = useState<Date | null>(null);
     const [showStartDatePicker, setShowStartDatePicker] = useState(false);
     const [showEndDatePicker, setShowEndDatePicker] = useState(false);
-
-    const resetForm = () => {
-        setName('');
-        setDescription('');
-        setStartDate(null);
-        setEndDate(null);
-    };
 
     const onStartDateChange = (event: any, selectedDate?: Date) => {
         setShowStartDatePicker(false);
@@ -51,26 +44,25 @@ export default function NewProject() {
     const handleCreateProject = async () => {
         try {
             if (!name.trim()) {
-                alert('Veuillez saisir un nom de projet');
+                alert('Please enter a project name');
                 return;
             }
 
             const projectData = {
                 name: name.trim(),
                 description: description.trim() || null,
-                startDate: startDate?.toISOString().split('T')[0], // Format YYYY-MM-DD
-                endDate: endDate?.toISOString().split('T')[0], // Format YYYY-MM-DD
+                startDate: startDate ? startDate.toISOString() : null,
+                endDate: endDate ? endDate.toISOString() : null,
                 status: 'active'
             };
 
-            console.log('Creating project with data:', projectData);
+            console.log('Creating project:', projectData);
             await createProject.mutateAsync(projectData);
             
-            resetForm(); // Réinitialiser le formulaire
             router.back();
         } catch (error) {
             console.error('Error creating project:', error);
-            alert('Erreur lors de la création du projet');
+            alert('Failed to create project');
         }
     };
 
@@ -150,55 +142,28 @@ export default function NewProject() {
                             </TouchableOpacity>
                         </View>
                     </View>
+
+                    {showStartDatePicker && (
+                        <DateTimePicker
+                            value={startDate || new Date()}
+                            mode="date"
+                            display={Platform.OS === "ios" ? "spinner" : "default"}
+                            onChange={onStartDateChange}
+                            minimumDate={new Date()}
+                        />
+                    )}
+
+                    {showEndDatePicker && (
+                        <DateTimePicker
+                            value={endDate || new Date()}
+                            mode="date"
+                            display={Platform.OS === "ios" ? "spinner" : "default"}
+                            onChange={onEndDateChange}
+                            minimumDate={startDate || new Date()}
+                        />
+                    )}
                 </View>
             </ScrollView>
-
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={showStartDatePicker || showEndDatePicker}
-                onRequestClose={() => {
-                    setShowStartDatePicker(false);
-                    setShowEndDatePicker(false);
-                }}
-            >
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>
-                                {showStartDatePicker ? 'Date de début' : 'Date de fin'}
-                            </Text>
-                            <TouchableOpacity 
-                                onPress={() => {
-                                    setShowStartDatePicker(false);
-                                    setShowEndDatePicker(false);
-                                }}
-                            >
-                                <Ionicons name="close" size={24} color="#000" />
-                            </TouchableOpacity>
-                        </View>
-
-                        <DateTimePicker
-                            value={showStartDatePicker ? (startDate || new Date()) : (endDate || new Date())}
-                            mode="date"
-                            display="spinner"
-                            onChange={showStartDatePicker ? onStartDateChange : onEndDateChange}
-                            minimumDate={showEndDatePicker ? startDate || new Date() : new Date()}
-                            style={styles.datePicker}
-                        />
-
-                        <TouchableOpacity 
-                            style={styles.modalButton}
-                            onPress={() => {
-                                setShowStartDatePicker(false);
-                                setShowEndDatePicker(false);
-                            }}
-                        >
-                            <Text style={styles.modalButtonText}>Confirmer</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
 
             <View style={styles.footer}>
                 <TouchableOpacity
@@ -336,52 +301,5 @@ const styles = StyleSheet.create({
     dateTextSelected: {
         color: '#ff7a5c',
         fontWeight: '500',
-    },
-    modalContainer: {
-        flex: 1,
-        justifyContent: 'flex-end',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    },
-    modalContent: {
-        backgroundColor: '#fff',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        padding: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        elevation: 5,
-    },
-    modalHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    modalTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-    },
-    datePicker: {
-        marginBottom: 20,
-        height: 200,
-    },
-    modalButton: {
-        backgroundColor: '#ff7a5c',
-        borderRadius: 15,
-        padding: 15,
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#000',
-        shadowColor: '#000',
-        shadowOffset: { width: 4, height: 4 },
-        shadowOpacity: 1,
-        shadowRadius: 0,
-    },
-    modalButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
     },
 });

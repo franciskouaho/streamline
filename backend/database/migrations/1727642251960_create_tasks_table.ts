@@ -21,6 +21,7 @@ export default class extends BaseSchema {
       table.integer('parent_task_id').unsigned().references('id').inTable('tasks').nullable()
       table.json('attachments').nullable()
       table.json('custom_fields').nullable()
+      table.integer('created_by').unsigned().references('id').inTable('users')
 
       table.timestamp('created_at').notNullable()
       table.timestamp('updated_at').nullable()

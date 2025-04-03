@@ -18,43 +18,34 @@ export default class Projects {
 
   async store({ request, auth, response }: HttpContext) {
     try {
-      // Récupérer et valider les données
-      const requestBody = request.body()
-      console.log('Raw request body:', requestBody)
-
       const data = await request.validateUsing(createProjectValidator)
-      console.log('Validated data:', data)
+      console.log('Received project data:', data)
 
       if (!auth.user) {
         return response.unauthorized('User not authenticated')
       }
 
-      // Créer le projet
-      const project = await Project.create({
+      // Conversion explicite des dates
+      const projectData = {
         name: data.name,
-        description: data.description || null,
+        description: data.description,
         status: data.status || 'active',
         ownerId: auth.user.id,
-        startDate: null,
-        endDate: null,
+        startDate: data.startDate ? new Date(data.startDate) : null,
+        endDate: data.endDate ? new Date(data.endDate) : null,
         settings: null,
-      })
+      }
 
+      console.log('Creating project with:', projectData)
+      const project = await Project.create(projectData)
       await project.refresh()
-      console.log('Created project:', project.toJSON())
 
       return response.created(project)
     } catch (error) {
-      console.error('Project creation error details:', {
-        error: error.message,
-        stack: error.stack,
-        validation: error.messages,
-      })
-
+      console.error('Project creation error:', error)
       return response.internalServerError({
         message: 'Error creating project',
         error: error.message,
-        details: error.messages,
       })
     }
   }

@@ -39,6 +39,9 @@ export default class Task extends BaseModel {
   @column()
   declare customFields: JSON | null
 
+  @column()
+  declare createdBy: number
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
@@ -55,6 +58,11 @@ export default class Task extends BaseModel {
     foreignKey: 'assigneeId',
   })
   declare assignee: BelongsTo<typeof User>
+
+  @belongsTo(() => User, {
+    foreignKey: 'createdBy',
+  })
+  declare creator: BelongsTo<typeof User>
 
   @belongsTo(() => Task, {
     foreignKey: 'parentTaskId',

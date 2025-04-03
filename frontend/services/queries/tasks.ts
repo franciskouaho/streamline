@@ -40,43 +40,44 @@ export function useCreateTask() {
   return useMutation({
     mutationFn: async (data: CreateTaskData) => {
       try {
-        console.log('Creating task with data:', data);
-        // S'assurer que projectId est défini
         const taskData = {
-          ...data,
-          projectId: data.projectId || 1, // Forcer une valeur par défaut
+          title: data.title,
+          description: data.description,
+          projectId: data.projectId,
           status: data.status || 'todo',
           priority: data.priority || 'medium',
           dueDate: data.dueDate ? new Date(data.dueDate).toISOString() : undefined,
+          assigneeId: data.assigneeId || null
         };
         
-        console.log('Formatted task data:', taskData);
+        console.log('Sending task data:', taskData);
         const response = await api.post('/tasks', taskData);
         return response.data;
       } catch (error) {
-        console.error('Task creation error:', {
-          error,
-          request: error.config,
-          response: error.response?.data
-        });
+        console.error('Task creation error:', error);
         throw error;
       }
     },
-    onSuccess: () => {
-      console.log('Task created successfully, invalidating queries');
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
-    },
-    onError: (error) => {
-      console.error('Task creation mutation error:', error);
+      queryClient.invalidateQueries({ queryKey: ['tasks', { projectId: variables.projectId }] });
     }
   });
 }
 
-export function useUpdateTask(id: string | number) {
+export function useUpdateTask() {
+  const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: async (updatedTask: Partial<TaskData>) => {
-      const { data } = await api.put<TaskData>(`/tasks/${id}`, updatedTask);
-      return data;
+    mutationFn: async (data: { id: number | string } & Partial<TaskData>) => {
+      const { id, ...updates } = data;
+      const response = await api.put<TaskData>(`/tasks/${id}`, updates);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      const { id } = variables;
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['task', id] });
     },
   });
 }
@@ -86,6 +87,38 @@ export function useDeleteTask() {
     mutationFn: async (id: string | number) => {
       await api.delete(`/tasks/${id}`);
       return id;
+    },
+  });
+}
+
+export function useProjectTasks(projectId: string | number) {
+  return useQuery({
+    queryKey: ['tasks', { projectId }],
+    queryFn: async () => {
+      const { data } = await api.get<TaskData[]>('/tasks', {
+        params: { projectId },
+      });
+      console.log('Project tasks:', data);
+      return data;
+    },
+    enabled: !!projectId,
+  });
+}
+
+export function useCreateProjectTask(projectId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: Partial<TaskData>) => {
+      const taskData = {
+        ...data,
+        projectId,
+      };
+      const response = await api.post('/tasks', taskData);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', { projectId }] });
     },
   });
 }
