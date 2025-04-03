@@ -5,28 +5,43 @@ import { Task } from '@/types/task';
  * Calcule les statistiques des projets à partir d'une liste de projets
  */
 export const calculateProjectStats = (projects: Project[]): ProjectStats => {
-  if (!projects || !projects.length) {
-    return { ongoing: 0, inProgress: 0, completed: 0, canceled: 0, total: 0 };
+  if (!projects || projects.length === 0) {
+    return {
+      total: 0,
+      ongoing: 0,
+      inProgress: 0,
+      completed: 0,
+      canceled: 0
+    };
   }
 
-  return projects.reduce((stats, project) => {
-    switch (project.status.toLowerCase()) {
-      case 'ongoing':
-        stats.ongoing += 1;
-        break;
-      case 'in_progress':
-        stats.inProgress += 1;
-        break;
-      case 'completed':
-        stats.completed += 1;
-        break;
-      case 'canceled':
-        stats.canceled += 1;
-        break;
+  const stats = {
+    total: projects.length,
+    ongoing: 0,
+    inProgress: 0,
+    completed: 0,
+    canceled: 0
+  };
+
+  projects.forEach(project => {
+    const normalizedStatus = project.status.toLowerCase().trim();
+    
+    if (normalizedStatus === 'completed') {
+      stats.completed += 1;
+    } else if (normalizedStatus === 'ongoing' || normalizedStatus === 'en cours') {
+      stats.ongoing += 1;
+    } else if (normalizedStatus === 'in_progress' || normalizedStatus === 'in progress') {
+      stats.inProgress += 1;
+    } else if (normalizedStatus === 'canceled' || normalizedStatus === 'cancelled' || normalizedStatus === 'annulé') {
+      stats.canceled += 1;
+    } else {
+      // Statut non reconnu, ajouter aux "en cours" par défaut
+      stats.ongoing += 1;
+      console.log('Statut non reconnu:', project.status, '- assigné à "ongoing"');
     }
-    stats.total += 1;
-    return stats;
-  }, { ongoing: 0, inProgress: 0, completed: 0, canceled: 0, total: 0 });
+  });
+
+  return stats;
 };
 
 /**

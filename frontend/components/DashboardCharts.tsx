@@ -1,303 +1,304 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
-import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
-import { useProjects, useProjectStats, useProjectTimeline } from '@/services/queries/projects';
-import { LoadingIndicator } from './ui/LoadingIndicator';
-import { calculateProjectStats } from '@/utils/projectUtils';
-import { Ionicons } from '@expo/vector-icons';
-import { shadowStyles } from '@/constants/CommonStyles';
-import { ProjectTimeline } from '@/types/project';
+"use client"
 
-const screenWidth = Dimensions.get('window').width - 40;
+import React, { useEffect, useState } from "react"
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from "react-native"
+import { LineChart, BarChart, PieChart } from "react-native-chart-kit"
+import { useProjects, useProjectStats, useProjectTimeline } from "@/services/queries/projects"
+import { LoadingIndicator } from "./ui/LoadingIndicator"
+import { calculateProjectStats } from "@/utils/projectUtils"
+import { Ionicons } from "@expo/vector-icons"
+import { shadowStyles } from "@/constants/CommonStyles"
+
+const screenWidth = Dimensions.get("window").width - 40
 
 const DashboardCharts = () => {
-  const { data: projects, isLoading: isLoadingProjects } = useProjects();
-  const { data: projectStats, isLoading: isLoadingStats } = useProjectStats();
-  const { data: timelineData, isLoading: isLoadingTimeline } = useProjectTimeline();
+  const { data: projects, isLoading: isLoadingProjects } = useProjects()
+  const { data: projectStats, isLoading: isLoadingStats } = useProjectStats()
+  const { data: timelineData, isLoading: isLoadingTimeline } = useProjectTimeline()
 
-  const [activeChart, setActiveChart] = React.useState('pie');
+  const [activeChart, setActiveChart] = React.useState("pie")
   const [monthlyStats, setMonthlyStats] = useState<{
-    labels: string[],
-    ongoing: number[],
+    labels: string[]
+    ongoing: number[]
     completed: number[]
   }>({
     labels: [],
     ongoing: [],
-    completed: []
-  });
+    completed: [],
+  })
 
   useEffect(() => {
     if (projects && projects.length > 0) {
       // Analyser les dates pour créer des données mensuelles
-      processProjectsForMonthlyStats();
+      processProjectsForMonthlyStats()
     }
-  }, [projects]);
+  }, [projects])
 
   useEffect(() => {
     if (timelineData && timelineData.length > 0) {
       // Si nous avons des données de timeline de l'API, les utiliser directement
-      const labels: string[] = [];
-      const ongoing: number[] = [];
-      const completed: number[] = [];
+      const labels: string[] = []
+      const ongoing: number[] = []
+      const completed: number[] = []
 
       // Trier par date
-      const sortedData = [...timelineData].sort((a, b) => 
-        new Date(a.date).getTime() - new Date(b.date).getTime()
-      );
+      const sortedData = [...timelineData].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
       // Extraire les labels et données pour les graphiques
-      sortedData.forEach(item => {
+      sortedData.forEach((item) => {
         // Formater la date pour l'affichage (e.g., "Jan", "Fév", etc.)
-        const date = new Date(item.date);
-        const month = date.toLocaleDateString('fr-FR', { month: 'short' });
-        
-        labels.push(month);
-        ongoing.push(item.inProcess);
-        completed.push(item.completed);
-      });
+        const date = new Date(item.date)
+        const month = date.toLocaleDateString("fr-FR", { month: "short" })
 
-      setMonthlyStats({ labels, ongoing, completed });
+        labels.push(month)
+        ongoing.push(item.inProcess)
+        completed.push(item.completed)
+      })
+
+      setMonthlyStats({ labels, ongoing, completed })
     }
-  }, [timelineData]);
+  }, [timelineData])
 
   // Fonction pour traiter les projets et extraire des statistiques mensuelles si timelineData n'est pas disponible
   const processProjectsForMonthlyStats = () => {
-    if (!projects || projects.length === 0) return;
+    if (!projects || projects.length === 0) return
 
     // Si nous n'avons pas de données timeline de l'API, générer à partir des projets
     if (!timelineData || timelineData.length === 0) {
-      const monthlyData: Record<string, { ongoing: number, completed: number }> = {};
-      
+      const monthlyData: Record<string, { ongoing: number; completed: number }> = {}
+
       // Initialiser les derniers 6 mois
-      const today = new Date();
+      const today = new Date()
       for (let i = 5; i >= 0; i--) {
-        const d = new Date(today);
-        d.setMonth(d.getMonth() - i);
-        const monthKey = d.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
-        monthlyData[monthKey] = { ongoing: 0, completed: 0 };
+        const d = new Date(today)
+        d.setMonth(d.getMonth() - i)
+        const monthKey = d.toLocaleDateString("fr-FR", { month: "short", year: "numeric" })
+        monthlyData[monthKey] = { ongoing: 0, completed: 0 }
       }
 
       // Analyser les projets pour chaque mois
-      projects.forEach(project => {
-        const createdDate = new Date(project.createdAt);
-        const monthKey = createdDate.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
-        
+      projects.forEach((project) => {
+        const createdDate = new Date(project.createdAt)
+        const monthKey = createdDate.toLocaleDateString("fr-FR", { month: "short", year: "numeric" })
+
+        // Normaliser le statut pour une meilleure correspondance
+        const normalizedStatus = project.status.toLowerCase().trim()
+
         // Si le mois est dans notre période d'analyse (6 derniers mois)
         if (monthlyData[monthKey]) {
-          if (project.status.toLowerCase() === 'completed') {
-            monthlyData[monthKey].completed += 1;
-          } else if (project.status.toLowerCase() === 'ongoing' || project.status.toLowerCase() === 'in_progress') {
-            monthlyData[monthKey].ongoing += 1;
+          if (normalizedStatus === "completed") {
+            monthlyData[monthKey].completed += 1
+          } else if (["ongoing", "in_progress", "in progress", "en cours"].includes(normalizedStatus)) {
+            monthlyData[monthKey].ongoing += 1
           }
         }
-      });
+      })
 
       // Transformer les données pour le graphique
-      const labels = Object.keys(monthlyData).map(key => key.split(' ')[0]); // Juste le mois
-      const ongoing = Object.values(monthlyData).map(v => v.ongoing);
-      const completed = Object.values(monthlyData).map(v => v.completed);
+      const labels = Object.keys(monthlyData).map((key) => key.split(" ")[0]) // Juste le mois
+      const ongoing = Object.values(monthlyData).map((v) => v.ongoing)
+      const completed = Object.values(monthlyData).map((v) => v.completed)
 
-      setMonthlyStats({ labels, ongoing, completed });
+      setMonthlyStats({ labels, ongoing, completed })
     }
-  };
+  }
 
   if (isLoadingProjects || isLoadingStats) {
-    return <LoadingIndicator />;
+    return <LoadingIndicator />
   }
 
   // Si aucune donnée de statistiques directe, calculer à partir des projets
-  const stats = projectStats || (projects ? calculateProjectStats(projects) : null);
+  const stats = projectStats || (projects ? calculateProjectStats(projects) : null)
 
-  // Données pour le graphique circulaire (Pie)
+  // Déboguer les données des projets pour vérifier les statuts
+  console.log(
+    "Projets disponibles:",
+    projects?.map((p) => ({ id: p.id, status: p.status })),
+  )
+  console.log("Statistiques calculées:", stats)
+
+  // Données pour le graphique circulaire (Pie) - Assurez-vous que tous les statuts sont bien comptés
   const pieChartData = [
     {
-      name: 'Ongoing',
+      name: "Ongoing",
       population: stats?.ongoing || 0,
-      color: '#4d8efc',
-      legendFontColor: '#7F7F7F',
-      legendFontSize: 12
+      color: "#4d8efc",
+      legendFontColor: "#7F7F7F",
+      legendFontSize: 12,
     },
     {
-      name: 'In Progress',
+      name: "In Progress",
       population: stats?.inProgress || 0,
-      color: '#ffb443',
-      legendFontColor: '#7F7F7F',
-      legendFontSize: 12
+      color: "#ffb443",
+      legendFontColor: "#7F7F7F",
+      legendFontSize: 12,
     },
     {
-      name: 'Completed',
+      name: "Completed",
       population: stats?.completed || 0,
-      color: '#43d2c3',
-      legendFontColor: '#7F7F7F',
-      legendFontSize: 12
+      color: "#43d2c3",
+      legendFontColor: "#7F7F7F",
+      legendFontSize: 12,
     },
     {
-      name: 'Canceled',
+      name: "Canceled",
       population: stats?.canceled || 0,
-      color: '#ff7a5c',
-      legendFontColor: '#7F7F7F',
-      legendFontSize: 12
-    }
-  ];
+      color: "#ff7a5c",
+      legendFontColor: "#7F7F7F",
+      legendFontSize: 12,
+    },
+  ]
 
   // Données pour le graphique linéaire (Trend) avec les vraies données
   const lineChartData = {
     labels: monthlyStats.labels.length > 0 ? monthlyStats.labels : ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin"],
     datasets: [
       {
-        data: monthlyStats.completed.length > 0 
-          ? monthlyStats.completed 
-          : [0, 0, 0, 0, 0, stats?.completed || 0],
+        data: monthlyStats.completed.length > 0 ? monthlyStats.completed : [0, 0, 0, 0, 0, stats?.completed || 0],
         color: (opacity = 1) => `rgba(67, 210, 195, ${opacity})`, // Completed
-        strokeWidth: 2
+        strokeWidth: 2,
       },
       {
-        data: monthlyStats.ongoing.length > 0 
-          ? monthlyStats.ongoing 
-          : [0, 0, 0, 0, 0, stats?.ongoing || 0],
+        data: monthlyStats.ongoing.length > 0 ? monthlyStats.ongoing : [0, 0, 0, 0, 0, stats?.ongoing || 0],
         color: (opacity = 1) => `rgba(77, 142, 252, ${opacity})`, // Ongoing
-        strokeWidth: 2
-      }
+        strokeWidth: 2,
+      },
     ],
-    legend: ["Terminés", "En cours"]
-  };
+    legend: ["Terminés", "En cours"],
+  }
 
   // Données pour le graphique à barres
   const barChartData = {
     labels: ["Ongoing", "In Progress", "Completed", "Canceled"],
     datasets: [
       {
-        data: [
-          stats?.ongoing || 0,
-          stats?.inProgress || 0,
-          stats?.completed || 0,
-          stats?.canceled || 0
-        ]
-      }
-    ]
-  };
+        data: [stats?.ongoing || 0, stats?.inProgress || 0, stats?.completed || 0, stats?.canceled || 0],
+      },
+    ],
+  }
 
   // Configuration des graphiques
   const chartConfig = {
-    backgroundGradientFrom: '#fff',
-    backgroundGradientTo: '#fff',
+    backgroundGradientFrom: "#fff",
+    backgroundGradientTo: "#fff",
     decimalPlaces: 0,
     color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
     labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
     style: {
-      borderRadius: 16
+      borderRadius: 16,
     },
     propsForDots: {
-      r: '6',
-      strokeWidth: '2',
-      stroke: '#fff'
-    }
-  };
+      r: "6",
+      strokeWidth: "2",
+      stroke: "#fff",
+    },
+  }
 
   const barChartConfig = {
     ...chartConfig,
     color: (opacity = 1, index) => {
-      const colors = ['#4d8efc', '#ffb443', '#43d2c3', '#ff7a5c'];
-      return `rgba(${colors[index % colors.length]}, ${opacity})`;
+      const colors = ["#4d8efc", "#ffb443", "#43d2c3", "#ff7a5c"]
+      return `rgba(${colors[index % colors.length]}, ${opacity})`
     },
     barPercentage: 0.7,
     barRadius: 5,
-    fillShadowGradient: '#4d8efc',
+    fillShadowGradient: "#4d8efc",
     fillShadowGradientOpacity: 1,
-  };
+  }
 
   return (
     <View style={styles.chartsContainer}>
       {/* Cartes de statistiques */}
       <View style={styles.statsContainer}>
-        <View style={[styles.statCard, { backgroundColor: '#f9f9f9', borderLeftColor: '#4d8efc' }]}>
+        <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: "#4d8efc" }]}>
           <View style={styles.statContent}>
             <Text style={styles.statValue}>{stats?.ongoing || 0}</Text>
             <Text style={styles.statLabel}>En cours</Text>
           </View>
-          <View style={[styles.statIcon, { backgroundColor: '#4d8efc' }]}>
+          <View style={[styles.statIcon, { backgroundColor: "#4d8efc" }]}>
             <Ionicons name="sync" size={18} color="#fff" />
           </View>
         </View>
-        
-        <View style={[styles.statCard, { backgroundColor: '#f9f9f9', borderLeftColor: '#ffb443' }]}>
+
+        <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: "#ffb443" }]}>
           <View style={styles.statContent}>
             <Text style={styles.statValue}>{stats?.inProgress || 0}</Text>
             <Text style={styles.statLabel}>En progression</Text>
           </View>
-          <View style={[styles.statIcon, { backgroundColor: '#ffb443' }]}>
+          <View style={[styles.statIcon, { backgroundColor: "#ffb443" }]}>
             <Ionicons name="time" size={18} color="#fff" />
           </View>
         </View>
-        
-        <View style={[styles.statCard, { backgroundColor: '#f9f9f9', borderLeftColor: '#43d2c3' }]}>
+
+        <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: "#43d2c3" }]}>
           <View style={styles.statContent}>
             <Text style={styles.statValue}>{stats?.completed || 0}</Text>
             <Text style={styles.statLabel}>Terminés</Text>
           </View>
-          <View style={[styles.statIcon, { backgroundColor: '#43d2c3' }]}>
+          <View style={[styles.statIcon, { backgroundColor: "#43d2c3" }]}>
             <Ionicons name="checkmark-circle" size={18} color="#fff" />
           </View>
         </View>
-        
-        <View style={[styles.statCard, { backgroundColor: '#f9f9f9', borderLeftColor: '#ff7a5c' }]}>
+
+        <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: "#ff7a5c" }]}>
           <View style={styles.statContent}>
             <Text style={styles.statValue}>{stats?.canceled || 0}</Text>
             <Text style={styles.statLabel}>Annulés</Text>
           </View>
-          <View style={[styles.statIcon, { backgroundColor: '#ff7a5c' }]}>
+          <View style={[styles.statIcon, { backgroundColor: "#ff7a5c" }]}>
             <Ionicons name="close-circle" size={18} color="#fff" />
           </View>
         </View>
       </View>
-      
+
       <View style={styles.chartCard}>
         <View style={styles.chartHeader}>
           <Text style={styles.chartTitle}>Aperçu des projets</Text>
-          
+
           <View style={styles.chartTypesContainer}>
-            <TouchableOpacity 
-              style={[styles.chartTypeButton, activeChart === 'pie' && styles.activeChartTypeButton]}
-              onPress={() => setActiveChart('pie')}
+            <TouchableOpacity
+              style={[styles.chartTypeButton, activeChart === "pie" && styles.activeChartTypeButton]}
+              onPress={() => setActiveChart("pie")}
             >
-              <Ionicons name="pie-chart" size={18} color={activeChart === 'pie' ? '#fff' : '#666'} />
+              <Ionicons name="pie-chart" size={18} color={activeChart === "pie" ? "#fff" : "#666"} />
             </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[styles.chartTypeButton, activeChart === 'bar' && styles.activeChartTypeButton]}
-              onPress={() => setActiveChart('bar')}
+
+            <TouchableOpacity
+              style={[styles.chartTypeButton, activeChart === "bar" && styles.activeChartTypeButton]}
+              onPress={() => setActiveChart("bar")}
             >
-              <Ionicons name="bar-chart" size={18} color={activeChart === 'bar' ? '#fff' : '#666'} />
+              <Ionicons name="bar-chart" size={18} color={activeChart === "bar" ? "#fff" : "#666"} />
             </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[styles.chartTypeButton, activeChart === 'line' && styles.activeChartTypeButton]}
-              onPress={() => setActiveChart('line')}
+
+            <TouchableOpacity
+              style={[styles.chartTypeButton, activeChart === "line" && styles.activeChartTypeButton]}
+              onPress={() => setActiveChart("line")}
             >
-              <Ionicons name="trending-up" size={18} color={activeChart === 'line' ? '#fff' : '#666'} />
+              <Ionicons name="trending-up" size={18} color={activeChart === "line" ? "#fff" : "#666"} />
             </TouchableOpacity>
           </View>
         </View>
-        
+
         {/* Affichage du graphique selon le type choisi */}
-        {activeChart === 'pie' && (
+        {activeChart === "pie" && (
           <View style={styles.chartWrapper}>
             <PieChart
               data={pieChartData}
-              width={screenWidth - 30}
-              height={200}
+              width={screenWidth}
+              height={220}
               chartConfig={chartConfig}
               accessor="population"
               backgroundColor="transparent"
-              paddingLeft="15"
+              paddingLeft="30"
               absolute
               hasLegend={true}
-              center={[screenWidth / 4, 0]}
+              center={[5, 0]}
+              legendOffset={screenWidth / 2 + 100}
             />
           </View>
         )}
-        
-        {activeChart === 'bar' && (
+
+        {activeChart === "bar" && (
           <View style={styles.chartWrapper}>
             <BarChart
               data={barChartData}
@@ -314,8 +315,8 @@ const DashboardCharts = () => {
             />
           </View>
         )}
-        
-        {activeChart === 'line' && (
+
+        {activeChart === "line" && (
           <View style={styles.chartWrapper}>
             <LineChart
               data={lineChartData}
@@ -336,8 +337,8 @@ const DashboardCharts = () => {
         )}
       </View>
     </View>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   chartsContainer: {
@@ -345,25 +346,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   chartCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 15,
     padding: 15,
     marginBottom: 20,
-    ...shadowStyles.card
+    ...shadowStyles.card,
   },
   chartHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 15,
   },
   chartTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   chartTypesContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#f2f2f2',
+    flexDirection: "row",
+    backgroundColor: "#f2f2f2",
     borderRadius: 25,
     padding: 4,
   },
@@ -371,57 +372,60 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginHorizontal: 2,
   },
   activeChartTypeButton: {
-    backgroundColor: '#ff7a5c',
+    backgroundColor: "#ff7a5c",
   },
   chartWrapper: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: -15,
+    marginRight: -15,
   },
   chart: {
     marginVertical: 8,
     borderRadius: 16,
   },
   statsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
     marginBottom: 20,
   },
   statCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '48%',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "48%",
     padding: 12,
     borderRadius: 12,
     marginBottom: 15,
     borderLeftWidth: 4,
-    ...shadowStyles.card
+    ...shadowStyles.card,
   },
   statContent: {
     flex: 1,
   },
   statValue: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
-    color: '#666',
+    color: "#666",
   },
   statIcon: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
-});
+})
 
-export default DashboardCharts;
+export default DashboardCharts
+

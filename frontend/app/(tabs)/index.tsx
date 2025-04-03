@@ -25,6 +25,11 @@ const Home = () => {
     const projectStats = projects ? calculateProjectStats(projects) : null;
     const taskStats = tasks ? calculateTaskStats(tasks) : null;
 
+    // Ajouter du code de débogage pour vérifier les données
+    console.log('Projets disponibles dans Home:', projects?.length);
+    console.log('Statistiques de projets:', projectStats);
+    console.log('Statistiques des tâches:', taskStats);
+
     return (
         <SafeAreaView style={styles.container}>
             <TopBar title={translations.common.home} />
