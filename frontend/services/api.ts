@@ -2,6 +2,7 @@ import axios from 'axios';
 import { Platform } from 'react-native';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import i18n from '@/i18n';
 
 // Fonction améliorée pour obtenir l'URL de l'API selon la plateforme
 const getApiUrl = () => {
@@ -75,12 +76,12 @@ api.interceptors.response.use(
 
     // Gestion spécifique des erreurs réseau
     if (error.message === 'Network Error') {
-      console.warn('Erreur de connexion réseau. Vérifiez votre connexion internet ou que le serveur est bien démarré.');
+      console.warn(i18n.t('errors.network'));
       
       // Logique de retry pour les erreurs réseau
       if (retryCount < MAX_RETRIES && originalRequest) {
         retryCount++;
-        console.log(`Tentative de reconnexion ${retryCount}/${MAX_RETRIES}...`);
+        console.log(`${i18n.t('errors.retryAttempt')} ${retryCount}/${MAX_RETRIES}...`);
         
         // Attendre avant de réessayer (délai exponentiel avec jitter)
         const delay = Math.min(1000 * 2 ** retryCount + Math.random() * 1000, 10000);
@@ -92,7 +93,7 @@ api.interceptors.response.use(
     
     // Gestion des erreurs d'authentification
     if (error.response?.status === 401) {
-      console.log('Session expirée ou non autorisée');
+      console.log(i18n.t('errors.sessionExpired'));
       await AsyncStorage.removeItem('@auth_token');
       delete api.defaults.headers.common['Authorization'];
       

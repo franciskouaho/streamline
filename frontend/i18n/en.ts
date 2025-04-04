@@ -12,6 +12,10 @@ export default {
     delete: "Delete",
     edit: "Edit",
     back: "Back",
+    loading: "Loading...",
+    retry: "Retry",
+    confirm: "Confirm",
+    viewAll: "View all"
   },
   auth: {
     login: "Login",
@@ -40,7 +44,7 @@ export default {
     security: "Security",
     about: "About",
     help: "Help",
-    premium: "Premium",
+    premium: "Premium"
   },
   profile: {
     editProfile: "Edit Profile",
@@ -55,6 +59,13 @@ export default {
     goPremium: "Go Premium",
     helpCenter: "Help Center",
     role: "Product Designer",
+    deleteAccount: "Delete my account",
+    deleteAccountTitle: "Delete account",
+    deleteAccountConfirm: "This action is irreversible. Are you sure you want to delete your account?",
+    logoutTitle: "Logout",
+    logoutConfirm: "Are you sure you want to log out?",
+    delete: "Delete",
+    noProfile: "No profile found"
   },
   tasks: {
     newTask: "New Task",
@@ -94,7 +105,26 @@ export default {
     timeline: "Timeline",
     kanban: "Kanban Board",
     files: "Files",
-    recentProjects: "Recent Projects"
+    recentProjects: "Recent Projects",
+    noProjects: "No projects yet",
+    status: {
+      ongoing: "Ongoing",
+      in_progress: "In Progress",
+      completed: "Completed",
+      canceled: "Canceled",
+      active: "Active"
+    },
+    changeStatus: "Change Status",
+    statusUpdated: "Status updated",
+    deleteConfirm: "Are you sure you want to delete this project?",
+    deleteTitle: "Delete Project",
+    noTasks: "No tasks for this project",
+    teamAssign: "Team Assign",
+    deadline: "Deadline:",
+    progress: "Progress",
+    startDate: "Start Date",
+    endDate: "End Date",
+    testNotification: "Send test notification"
   },
   calendar: {
     today: "Today",
@@ -102,6 +132,10 @@ export default {
     week: "Week",
     day: "Day",
     schedule: "Schedule",
+    title: "Calendar",
+    emptyDate: "No items for",
+    startDate: "Start Date",
+    endDate: "End Date"
   },
   notifications: {
     title: "Notifications",
@@ -110,6 +144,29 @@ export default {
     newMessage: "New Message",
     newTask: "New Task",
     reminder: "Reminder",
+    general: "General",
+    projectActivities: "Project Activities",
+    communications: "Communications",
+    today: "Today",
+    yesterday: "Yesterday",
+    thisWeek: "This Week",
+    older: "Older",
+    empty: "No notifications",
+    all: "All",
+    unread: "Unread",
+    settings: {
+      taskAssigned: "Task assignment",
+      taskDeadline: "Deadline reminders",
+      taskComment: "Task comments",
+      projectUpdate: "Project updates",
+      teamMessage: "Team messages",
+      appUpdates: "App updates",
+      subscriptionAlerts: "Subscription alerts",
+      quietHours: "Quiet hours",
+      quietHoursEnabled: "Enable quiet hours",
+      quietHoursStart: "Start",
+      quietHoursEnd: "End"
+    }
   },
   premium: {
     title: "Premium",
@@ -123,7 +180,9 @@ export default {
     monthly: "Monthly",
     yearly: "Yearly",
     subscribe: "Subscribe",
-    current: "Your current plan"
+    current: "Your current plan",
+    selectPlan: "Select",
+    recommended: "Recommended"
   },
   editProfile: {
     title: "Edit Profile",
@@ -138,5 +197,29 @@ export default {
   splash: {
     welcome: "Welcome to Streamline",
     subtitle: "Organize your projects efficiently"
+  },
+  errors: {
+    network: "Network connection error. Check your internet connection or that the server is running.",
+    retryAttempt: "Reconnection attempt",
+    sessionExpired: "Session expired or unauthorized",
+    authStoreImport: "Error importing Auth store:",
+    redirectionError: "Redirection error:",
+    taskStatus: "Error updating task status:",
+    deleteProject: "Error deleting project",
+    updateProjectStatus: "Unable to update project status",
+    loadProfile: "Unable to load your profile. Please try again.",
+    logout: "An error occurred during logout.",
+    deleteAccount: "An error occurred while deleting the account.",
+    loadNotifications: "Unable to load notifications. Please try again later.",
+    markNotificationRead: "Unable to mark notification as read.",
+    markAllNotificationsRead: "Unable to mark all notifications as read.",
+    deleteNotification: "Unable to delete notification.",
+    loadNotificationSettings: "Unable to load your notification settings.",
+    updateNotificationSettings: "Unable to update your notification settings.",
+    sendTestNotification: "Unable to send test notification.",
+    permissionRequired: "Push notifications require permission",
+    physicalDeviceRequired: "Push notifications don't work on an emulator",
+    tokenUnavailable: "Notification token not available. Make sure you have granted the required permissions.",
+    testNotificationSuccess: "A test notification has been sent to your device."
   }
 };

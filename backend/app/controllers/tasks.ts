@@ -37,8 +37,11 @@ export default class Tasks {
         assigneeId: data.assigneeId || null,
         status: data.status || 'todo',
         priority: data.priority || 'medium',
+        projectId: data.projectId || 1, // Utiliser 1 comme valeur par défaut
         createdBy: auth.user.id,
       }
+
+      console.log('Creating task with data:', taskData)
 
       const task = await Task.create(taskData)
       if (task.assigneeId) {

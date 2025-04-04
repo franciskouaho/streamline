@@ -64,13 +64,13 @@ export default function Docs() {
 
             <View style={styles.filterContainer}>
                 <TouchableOpacity style={[styles.filterButton, styles.activeFilter]}>
-                    <Text style={styles.activeFilterText}>All</Text>
+                    <Text style={styles.activeFilterText}>Tous</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.filterButton}>
-                    <Text style={styles.filterText}>Shared</Text>
+                    <Text style={styles.filterText}>Partagés</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.filterButton}>
-                    <Text style={styles.filterText}>Starred</Text>
+                    <Text style={styles.filterText}>Favoris</Text>
                 </TouchableOpacity>
             </View>
 

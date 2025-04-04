@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Task, SubTask } from '@/types/task';
 import api from '@/services/api';
+import { normalizeTaskStatus } from '@/utils/projectUtils'; // Importer la fonction de normalisation
 
 // Récupérer toutes les tâches
 export const useTasks = () => {
@@ -89,8 +90,33 @@ export const useCreateTask = () => {
   
   return useMutation({
     mutationFn: async (taskData: Partial<Task>) => {
-      const response = await api.post('/tasks', taskData);
-      return response.data;
+      try {
+        // Vérifier si projectId est défini et n'est pas 'undefined' ou 'null' en tant que chaîne
+        if (taskData.projectId !== undefined && 
+            taskData.projectId !== null && 
+            taskData.projectId !== 'undefined' && 
+            taskData.projectId !== 'null') {
+          try {
+            // Vérifier si le projet existe
+            await api.get(`/projects/${taskData.projectId}`);
+          } catch (error) {
+            if (error.response && error.response.status === 404) {
+              // Si le projet n'existe pas, on supprime le projectId pour éviter l'erreur de clé étrangère
+              console.warn(`Le projet avec l'ID ${taskData.projectId} n'existe pas. Création d'une tâche sans projet.`);
+              delete taskData.projectId;
+            }
+          }
+        } else {
+          // Si projectId est undefined, null ou une chaîne invalide, le supprimer
+          delete taskData.projectId;
+        }
+        
+        const response = await api.post('/tasks', taskData);
+        return response.data;
+      } catch (error) {
+        console.error("Erreur lors de la création de la tâche:", error.response?.data || error.message);
+        throw error;
+      }
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
@@ -120,8 +146,10 @@ export const useUpdateTask = () => {
         queryClient.invalidateQueries({ queryKey: ['tasks', 'project', data.projectId] });
         
         // Invalider le projet lui-même et la liste des projets
+        // pour déclencher la mise à jour automatique du statut
         queryClient.invalidateQueries({ queryKey: ['projects', data.projectId] });
         queryClient.invalidateQueries({ queryKey: ['projects'] });
+        queryClient.invalidateQueries({ queryKey: ['project-stats'] });
       }
     }
   });
@@ -179,17 +207,17 @@ export const calculateTaskStats = (tasks: Task[]) => {
   }
 
   return tasks.reduce((stats, task) => {
-    switch (task.status.toLowerCase()) {
-      case 'todo':
-        stats.todo += 1;
-        break;
-      case 'in_progress':
-        stats.inProgress += 1;
-        break;
-      case 'done':
-        stats.done += 1;
-        break;
+    // Utiliser la fonction centralisée pour normaliser le statut
+    const normalizedStatus = normalizeTaskStatus(task.status);
+    
+    if (normalizedStatus === 'done') {
+      stats.done += 1;
+    } else if (normalizedStatus === 'in_progress') {
+      stats.inProgress += 1;
+    } else {
+      stats.todo += 1;
     }
+    
     stats.total += 1;
     return stats;
   }, { todo: 0, inProgress: 0, done: 0, total: 0 });

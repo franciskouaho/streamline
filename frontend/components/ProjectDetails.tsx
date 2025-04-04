@@ -7,9 +7,8 @@ import { shadowStyles } from '@/constants/CommonStyles';
 import { useProject, useDeleteProject, useUpdateProjectStatus } from '@/services/queries/projects';
 import { useProjectTasks, useUpdateTask } from '@/services/queries/tasks';
 import { useQueryClient } from '@tanstack/react-query';
-import { shouldUpdateProjectStatus } from '@/utils/projectUtils';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { Project, Task, TaskStatusUpdateInput } from '@/types/project';
+import { getProjectStatusLabel, normalizeProjectStatus, shouldUpdateProjectStatus, getStatusColor, calculateProjectProgress } from '@/utils/projectUtils';
+import { useLanguage } from '@/contexts/LanguageContext'; // Ajout de l'import
 
 interface ChecklistItem {
     id: number;
@@ -52,8 +51,8 @@ function formatDeadline(dateString: string) {
 export default function ProjectDetails() {
     const router = useRouter();
     const { id } = useLocalSearchParams();
-    const projectId = Array.isArray(id) ? id[0] : id as string;
-    const { translations } = useLanguage();
+    const projectId = Array.isArray(id) ? id[0] : id;
+    const { translations } = useLanguage(); // Ajout du hook useLanguage
     
     const { data: project, isLoading: isLoadingProject } = useProject(projectId);
     const { data: tasks, isLoading: isLoadingTasks } = useProjectTasks(projectId);
@@ -62,20 +61,25 @@ export default function ProjectDetails() {
     const deleteProject = useDeleteProject();
     const updateProjectStatus = useUpdateProjectStatus();
 
+    console.log('Current tasks:', tasks);
+    
     const [activeTab, setActiveTab] = useState<string>('attachment');
     const [showMenu, setShowMenu] = useState(false);
     const [showStatusMenu, setShowStatusMenu] = useState(false);
     const [statusAutoUpdated, setStatusAutoUpdated] = useState(false);
 
-    const handleTaskToggle = async (task: Task) => {
+    const handleMenuPress = () => {
+        setShowMenu(!showMenu);
+    };
+
+    const handleTaskToggle = async (task) => {
         try {
             console.log('Toggling task:', task.id);
-            const updateData: TaskStatusUpdateInput = {
-                id: Number(task.id), // Conversion explicite en nombre
+            await updateTask.mutateAsync({
+                id: task.id,
                 status: task.status === 'done' ? 'todo' : 'done'
-            };
-            await updateTask.mutateAsync(updateData);
-        } catch (error: any) {
+            });
+        } catch (error) {
             console.error('Error updating task status:', error.response?.data || error);
         }
     };
@@ -83,15 +87,15 @@ export default function ProjectDetails() {
     const handleDeleteProject = async () => {
         try {
             Alert.alert(
-                translations.projects.deleteTitle,
-                translations.projects.deleteConfirm,
+                "Supprimer le projet",
+                "Êtes-vous sûr de vouloir supprimer ce projet ?",
                 [
                     {
-                        text: translations.common.cancel,
+                        text: "Annuler",
                         style: "cancel"
                     },
                     {
-                        text: translations.common.delete,
+                        text: "Supprimer",
                         style: "destructive",
                         onPress: async () => {
                             await deleteProject.mutateAsync(projectId);
@@ -102,10 +106,7 @@ export default function ProjectDetails() {
             );
         } catch (error) {
             console.error('Error deleting project:', error);
-            Alert.alert(
-                'Erreur', 
-                translations.errors.deleteProject
-            );
+            Alert.alert('Erreur', 'Erreur lors de la suppression du projet');
         }
     };
 
@@ -132,7 +133,7 @@ export default function ProjectDetails() {
             if (shouldUpdate && newStatus) {
                 // Mettre à jour le statut du projet automatiquement
                 updateProjectStatus.mutate(
-                    { id: Number(projectId), status: newStatus }, // Conversion explicite en nombre
+                    { id: projectId, status: newStatus },
                     {
                         onSuccess: () => {
                             console.log(`Statut du projet mis à jour automatiquement vers: ${newStatus}`);
@@ -147,7 +148,7 @@ export default function ProjectDetails() {
     if (isLoadingProject || isLoadingTasks) {
         return (
             <SafeAreaView style={styles.container}>
-                <Text>{translations.common.loading}</Text>
+                <Text>Chargement...</Text>
             </SafeAreaView>
         );
     }
@@ -160,12 +161,26 @@ export default function ProjectDetails() {
         );
     }
 
+    // Obtenir la couleur du statut pour le cercle de progression
+    const statusColor = getStatusColor(project?.status || 'ongoing');
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()}>
                     <Ionicons name="chevron-back" size={24} color="#000" />
                 </TouchableOpacity>
+        
+                <View 
+                    style={[
+                        styles.statusBadge, 
+                        { backgroundColor: statusColor }
+                    ]}
+                >
+                    <Text style={styles.statusText}>
+                        {getProjectStatusLabel(project?.status || 'ongoing')}
+                    </Text>
+                </View>
 
                 <View style={styles.headerIcons}>
                     <TouchableOpacity 
@@ -173,6 +188,7 @@ export default function ProjectDetails() {
                         onPress={() => {
                             if (project && project.id) {
                                 router.push(`/new-task?projectId=${project.id}`);
+                                console.log(`Navigation vers /new-task?projectId=${project.id}`);
                             }
                         }}
                     >
@@ -215,42 +231,47 @@ export default function ProjectDetails() {
                 </View>
 
                 <View style={styles.teamSection}>
-                    <View style={styles.teamHeaderContainer}>
-                        <View>
-                            <Text style={styles.sectionTitle}>{translations.projects.teamAssign}</Text>
-                            <View style={styles.teamContainer}>
-                                {project.members?.map((member) => (
-                                    <View key={member.id} style={styles.teamMember}>
-                                        <View style={styles.memberAvatar} />
-                                    </View>
-                                ))}
-                                <TouchableOpacity style={styles.addMemberButton}>
-                                    <Ionicons name="add" size={20} color="#000" />
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                        
-                        <View style={[styles.progressCircle, shadowStyles.card]}>
-                            <Text style={styles.progressPercentage}>
-                                {calculateProgress(project)}%
-                            </Text>
-                            <Text style={styles.progressLabel}>{translations.projects.progress}</Text>
+                    <View>
+                        <Text style={styles.sectionTitle}>Team Assign</Text>
+                        <View style={styles.teamContainer}>
+                            {project.members?.map((member) => (
+                                <View key={member.id} style={styles.teamMember}>
+                                    <View style={styles.memberAvatar} />
+                                </View>
+                            ))}
+                            <TouchableOpacity style={styles.addMemberButton}>
+                                <Ionicons name="add" size={20} color="#000" />
+                            </TouchableOpacity>
                         </View>
                     </View>
 
                     <View style={styles.deadlineContainer}>
                         <Ionicons name="alarm-outline" size={20} color="#000" />
                         <Text style={styles.deadlineText}>
-                            {translations.projects.deadline} {project?.endDate ? formatDeadline(project.endDate) : 'Non définie'}
+                            Date limite : {project?.endDate ? formatDeadline(project.endDate) : 'Non définie'}
                         </Text>
+                    </View>
+                    
+                    {/* Cercle de progression avec la couleur du statut */}
+                    <View style={styles.progressSection}>
+                        <View style={[
+                            styles.progressCircle, 
+                            shadowStyles.card,
+                            { borderColor: statusColor }
+                        ]}>
+                            <Text style={[styles.progressPercentage, { color: statusColor }]}>
+                                {calculateProgress(project)}%
+                            </Text>
+                            <Text style={styles.progressLabel}>Progress</Text>
+                        </View>
                     </View>
                 </View>
 
                 <View style={styles.checklistSection}>
-                    <Text style={styles.sectionTitle}>{translations.tasks.plural} ({tasks?.length || 0})</Text>
+                    <Text style={styles.sectionTitle}>Tâches ({tasks?.length || 0})</Text>
                     
                     {!tasks?.length ? (
-                        <Text style={styles.emptyText}>{translations.projects.noTasks}</Text>
+                        <Text style={styles.emptyText}>Aucune tâche pour ce projet</Text>
                     ) : (
                         tasks.map((task) => (
                             <View key={task.id} style={styles.checklistItem}>
@@ -289,26 +310,11 @@ export default function ProjectDetails() {
                     )}
                 </View>
             </ScrollView>
-
-            <TouchableOpacity
-                style={styles.addTaskButton}
-                onPress={() => {
-                    if (project && project.id) {
-                        router.push(`/new-task?projectId=${project.id}`);
-                        console.log(`Navigation vers /new-task?projectId=${project.id}`);
-                    } else {
-                        console.log("Impossible de naviguer, project.id est undefined");
-                    }
-                }}
-            >
-                <Ionicons name="add" size={24} color="#fff" />
-                <Text style={styles.addTaskButtonText}>{translations.tasks.newTask}</Text>
-            </TouchableOpacity>
         </SafeAreaView>
     );
 }
 
-function calculateProgress(project: Project | null): number {
+function calculateProgress(project: any): number {
     if (!project || !project.tasks || project.tasks.length === 0) return 0;
     
     const completedTasks = project.tasks.filter(task => 
@@ -318,8 +324,7 @@ function calculateProgress(project: Project | null): number {
     return Math.round((completedTasks / project.tasks.length) * 100);
 }
 
-function getInitials(name: string | undefined): string {
-    if (!name) return '';
+function getInitials(name: string): string {
     return name
         .split(' ')
         .map(n => n[0])
@@ -417,11 +422,9 @@ const styles = StyleSheet.create({
     teamSection: {
         marginBottom: 20,
     },
-    teamHeaderContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: 15,
+    progressSection: {
+        marginTop: 20,
+        alignItems: 'center',
     },
     progressCircle: {
         width: 80,
@@ -431,16 +434,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         padding: 10,
-    },
-    progressPercentage: {
-        fontSize: 20,
-        fontWeight: '700',
-        color: '#ff7a5c',
-    },
-    progressLabel: {
-        fontSize: 12,
-        color: '#666',
-        marginTop: 2,
+        borderWidth: 2, // Ajouté pour rendre la bordure colorée plus visible
     },
     sectionTitle: {
         fontSize: 16,
@@ -726,28 +720,5 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '500',
         marginLeft: 10,
-    },
-    addTaskButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#ff7a5c',
-        borderRadius: 10,
-        padding: 15,
-        marginHorizontal: 20,
-        marginVertical: 10,
-        borderWidth: 1,
-        borderColor: '#000',
-        shadowColor: '#000',
-        shadowOffset: { width: 4, height: 4 },
-        shadowOpacity: 1,
-        shadowRadius: 0,
-        elevation: 8,
-    },
-    addTaskButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
-        marginLeft: 8,
     },
 });

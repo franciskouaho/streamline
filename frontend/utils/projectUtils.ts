@@ -1,5 +1,170 @@
 import { Project, ProjectStats } from '@/types/project';
 import { Task } from '@/types/task';
+import { STATUS_COLORS } from '@/constants/StatusColors';
+
+/**
+ * GESTION DES STATUTS - NORMALISATION ET LABELS
+ */
+
+/**
+ * Normalise un statut pour traitement uniforme
+ * @param status Le statut à normaliser
+ * @param type Le type d'objet ('project' ou 'task')
+ * @returns Le statut normalisé
+ */
+export const normalizeStatus = (status: string, type: 'project' | 'task' = 'project'): string => {
+  if (!status) return type === 'project' ? 'ongoing' : 'todo';
+  
+  const normalized = status.toLowerCase().trim();
+  
+  // Statuts communs
+  if (['completed', 'terminé', 'termine', 'done', 'terminés', 'terminée'].includes(normalized)) {
+    return type === 'project' ? 'completed' : 'done';
+  } else if (['ongoing', 'en cours', 'in_progress', 'in progress', 'progression'].includes(normalized)) {
+    return type === 'project' ? (normalized === 'in_progress' || normalized === 'in progress' || normalized === 'progression' ? 'in_progress' : 'ongoing') : 'in_progress';
+  }
+  
+  // Statuts spécifiques aux projets
+  if (type === 'project' && ['canceled', 'cancelled', 'annulé', 'annule', 'annulés'].includes(normalized)) {
+    return 'canceled';
+  }
+  
+  // Statuts spécifiques aux tâches
+  if (type === 'task' && ['todo', 'à faire', 'a faire', 'pending'].includes(normalized)) {
+    return 'todo';
+  }
+  
+  // Valeurs par défaut
+  return type === 'project' ? 'ongoing' : 'todo';
+};
+
+// Fonctions d'aide qui utilisent la fonction centrale normalizeStatus
+export const normalizeProjectStatus = (status: string): string => {
+  if (!status) return 'unknown';
+  
+  const statusLower = status.toLowerCase();
+  
+  if (statusLower.includes('progress') || statusLower.includes('en_progres')) {
+    return 'in_progress';
+  } else if (statusLower.includes('cours') || statusLower.includes('ongo')) {
+    return 'ongoing';
+  } else if (statusLower.includes('term') || statusLower.includes('complet')) {
+    return 'completed';
+  } else if (statusLower.includes('annul') || statusLower.includes('cancel')) {
+    return 'canceled';
+  } else if (statusLower.includes('actif') || statusLower.includes('active')) {
+    return 'active';
+  }
+  
+  return statusLower;
+};
+
+export const normalizeTaskStatus = (status: string): string => normalizeStatus(status, 'task');
+
+/**
+ * Obtient un libellé convivial pour un statut
+ * @param status Le statut à traduire en libellé
+ * @param type Le type d'objet ('project' ou 'task')
+ * @returns Le libellé du statut
+ */
+export const getStatusLabel = (status: string, type: 'project' | 'task' = 'project'): string => {
+  const normalized = normalizeStatus(status, type);
+  
+  const labels = {
+    project: {
+      'ongoing': 'En cours',
+      'in_progress': 'En progression',
+      'completed': 'Terminé',
+      'canceled': 'Annulé'
+    },
+    task: {
+      'todo': 'À faire',
+      'in_progress': 'En cours',
+      'done': 'Terminé'
+    }
+  };
+  
+  return labels[type][normalized] || (type === 'project' ? 'En cours' : 'À faire');
+};
+
+// Fonction d'aide qui utilise la fonction centrale getStatusLabel
+export function getProjectStatusLabel(status: string, translations?: any): string {
+  const statusKey = normalizeProjectStatus(status);
+  
+  if (translations && translations.projects && translations.projects.status) {
+    return translations.projects.status[statusKey] || statusKey;
+  }
+  
+  // Fallback sans traductions
+  switch (statusKey) {
+    case 'ongoing':
+      return 'En cours';
+    case 'in_progress':
+      return 'En progression';
+    case 'completed':
+      return 'Terminé';
+    case 'canceled':
+      return 'Annulé';
+    case 'active':
+      return 'Actif';
+    default:
+      return status;
+  }
+}
+
+export const getTaskStatusLabel = (status: string, translations?: any): string => {
+  const normalizedStatus = normalizeTaskStatus(status);
+  
+  if (translations && translations.tasks) {
+    return translations.tasks[normalizedStatus] || normalizedStatus;
+  }
+  
+  // Fallback pour les tâches
+  switch (normalizedStatus) {
+    case 'todo':
+      return 'À faire';
+    case 'done':
+      return 'Terminée';
+    case 'ongoing':
+      return 'En cours';
+    case 'in_progress':
+      return 'En traitement';
+    case 'completed':
+      return 'Terminée';
+    default:
+      return status;
+  }
+};
+
+/**
+ * Récupère une couleur en fonction du statut
+ * @param status Le statut à coloriser
+ * @param type Le type d'objet ('project' ou 'task')
+ * @returns La couleur correspondante au statut
+ */
+export const getStatusColor = (status: string, type: 'project' | 'task' = 'project'): string => {
+  const normalized = normalizeStatus(status, type);
+  
+  const colorMap = {
+    project: {
+      'ongoing': STATUS_COLORS.ONGOING,
+      'in_progress': STATUS_COLORS.IN_PROGRESS,
+      'completed': STATUS_COLORS.COMPLETED,
+      'canceled': STATUS_COLORS.CANCELED
+    },
+    task: {
+      'todo': STATUS_COLORS.TODO,
+      'in_progress': STATUS_COLORS.IN_PROGRESS,
+      'done': STATUS_COLORS.DONE
+    }
+  };
+  
+  return colorMap[type][normalized] || STATUS_COLORS.DEFAULT;
+};
+
+/**
+ * ANALYSE ET STATISTIQUES DES PROJETS
+ */
 
 /**
  * Calcule les statistiques des projets à partir d'une liste de projets
@@ -24,15 +189,15 @@ export const calculateProjectStats = (projects: Project[]): ProjectStats => {
   };
 
   projects.forEach(project => {
-    const normalizedStatus = project.status.toLowerCase().trim();
+    const normalizedStatus = normalizeProjectStatus(project.status);
     
     if (normalizedStatus === 'completed') {
       stats.completed += 1;
-    } else if (normalizedStatus === 'ongoing' || normalizedStatus === 'en cours') {
+    } else if (normalizedStatus === 'ongoing') {
       stats.ongoing += 1;
-    } else if (normalizedStatus === 'in_progress' || normalizedStatus === 'in progress') {
+    } else if (normalizedStatus === 'in_progress') {
       stats.inProgress += 1;
-    } else if (normalizedStatus === 'canceled' || normalizedStatus === 'cancelled' || normalizedStatus === 'annulé') {
+    } else if (normalizedStatus === 'canceled') {
       stats.canceled += 1;
     } else {
       // Statut non reconnu, ajouter aux "en cours" par défaut
@@ -45,42 +210,61 @@ export const calculateProjectStats = (projects: Project[]): ProjectStats => {
 };
 
 /**
- * Calcule les statistiques des tâches à partir d'une liste de tâches
+ * Calcule le pourcentage de progression d'un projet et son statut recommandé
  */
-export const calculateTaskStats = (tasks: Task[]) => {
-  if (!tasks || !tasks.length) {
-    return { todo: 0, inProgress: 0, done: 0, total: 0 };
+export const calculateProjectProgress = (project: Project): { progress: number; recommendedStatus?: string } => {
+  if (!project.tasks || project.tasks.length === 0) return { progress: 0 };
+  
+  const completedTasks = project.tasks.filter(task => 
+    normalizeTaskStatus(task.status) === 'done'
+  ).length;
+  
+  const progress = Math.round((completedTasks / project.tasks.length) * 100);
+  
+  // Déterminer le statut recommandé en fonction de la progression
+  let recommendedStatus;
+  if (progress === 100) {
+    recommendedStatus = 'completed';
+  } else if (progress >= 70) {
+    recommendedStatus = 'in_progress';
+  } else if (progress > 0) {
+    recommendedStatus = 'ongoing';
+  } else {
+    recommendedStatus = 'ongoing';
   }
-
-  return tasks.reduce((stats, task) => {
-    switch (task.status.toLowerCase()) {
-      case 'todo':
-        stats.todo += 1;
-        break;
-      case 'in_progress':
-        stats.inProgress += 1;
-        break;
-      case 'done':
-        stats.done += 1;
-        break;
-    }
-    stats.total += 1;
-    return stats;
-  }, { todo: 0, inProgress: 0, done: 0, total: 0 });
+  
+  return { progress, recommendedStatus };
 };
 
 /**
- * Calcule le pourcentage de progression d'un projet
+ * Détermine si le statut d'un projet doit être mis à jour automatiquement
  */
-export const calculateProjectProgress = (project: Project): number => {
-  if (!project.tasks || project.tasks.length === 0) return 0;
+export const shouldUpdateProjectStatus = (project: Project, tasks: Task[]): { 
+  shouldUpdate: boolean; 
+  newStatus?: string; 
+  progress: number 
+} => {
+  // Si le projet est annulé, on ne le met pas à jour automatiquement
+  if (normalizeProjectStatus(project.status) === 'canceled') {
+    return { shouldUpdate: false, progress: 0 };
+  }
   
-  const completedTasks = project.tasks.filter(task => 
-    task.status.toLowerCase() === 'done' || task.status.toLowerCase() === 'completed'
-  ).length;
+  // Calculer la progression
+  const { progress, recommendedStatus } = calculateProjectProgress(project);
   
-  return Math.round((completedTasks / project.tasks.length) * 100);
+  // Vérifier si le statut actuel est différent du statut recommandé
+  const currentStatus = normalizeProjectStatus(project.status);
+  
+  return { 
+    shouldUpdate: currentStatus !== recommendedStatus,
+    newStatus: recommendedStatus,
+    progress
+  };
 };
+
+/**
+ * UTILITAIRES DE DATE
+ */
 
 /**
  * Formate la date d'échéance pour l'affichage
@@ -136,6 +320,10 @@ export const isSameDay = (date1: string | Date | null | undefined, date2: string
 };
 
 /**
+ * AUTRES UTILITAIRES
+ */
+
+/**
  * Récupère les initiales d'un nom complet
  */
 export const getInitials = (name: string): string => {
@@ -146,22 +334,4 @@ export const getInitials = (name: string): string => {
     .map(part => part[0])
     .join('')
     .toUpperCase();
-};
-
-/**
- * Récupère une couleur en fonction du statut
- */
-export const getStatusColor = (status: string): string => {
-  const colors = {
-    todo: '#ffb443',
-    in_progress: '#4d8efc',
-    ongoing: '#4d8efc',
-    active: '#43d2c3',      // Ajout de la couleur pour "active"
-    done: '#43d2c3',
-    completed: '#43d2c3',
-    canceled: '#ff3b30',
-    archived: '#888888'
-  };
-  
-  return colors[status.toLowerCase()] || '#666';
 };

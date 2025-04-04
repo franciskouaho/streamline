@@ -23,26 +23,26 @@ export default function Profile() {
                 await useProfileStore.getState().fetchProfile();
             } catch (err) {
                 console.error("Erreur lors du chargement du profil:", err);
-                setError("Impossible de charger votre profil. Veuillez réessayer.");
+                setError(translations.errors.loadProfile);
             } finally {
                 setIsLoading(false);
             }
         };
 
         loadProfile();
-    }, []);
+    }, [translations]);
 
     const handleLogout = () => {
         Alert.alert(
-            translations.profile.logoutTitle || "Déconnexion",
-            translations.profile.logoutConfirm || "Êtes-vous sûr de vouloir vous déconnecter ?",
+            translations.profile.logoutTitle,
+            translations.profile.logoutConfirm,
             [
                 {
-                    text: translations.common.cancel || "Annuler",
+                    text: translations.common.cancel,
                     style: "cancel"
                 },
                 {
-                    text: translations.common.confirm || "Confirmer",
+                    text: translations.common.confirm,
                     onPress: async () => {
                         try {
                             await logout();
@@ -51,7 +51,7 @@ export default function Profile() {
                             console.error("Erreur lors de la déconnexion:", error);
                             Alert.alert(
                                 "Erreur", 
-                                "Une erreur est survenue lors de la déconnexion."
+                                translations.errors.logout
                             );
                         }
                     }
@@ -62,15 +62,15 @@ export default function Profile() {
 
     const handleDeleteAccount = () => {
         Alert.alert(
-            translations.profile.deleteAccountTitle || "Supprimer le compte",
-            translations.profile.deleteAccountConfirm || "Cette action est irréversible. Êtes-vous sûr de vouloir supprimer votre compte ?",
+            translations.profile.deleteAccountTitle,
+            translations.profile.deleteAccountConfirm,
             [
                 {
-                    text: translations.common.cancel || "Annuler",
+                    text: translations.common.cancel,
                     style: "cancel"
                 },
                 {
-                    text: translations.profile.delete || "Supprimer",
+                    text: translations.profile.delete,
                     onPress: async () => {
                         try {
                             await deleteAccount();
@@ -79,7 +79,7 @@ export default function Profile() {
                             console.error("Erreur lors de la suppression du compte:", error);
                             Alert.alert(
                                 "Erreur", 
-                                "Une erreur est survenue lors de la suppression du compte."
+                                translations.errors.deleteAccount
                             );
                         }
                     },
@@ -97,7 +97,7 @@ export default function Profile() {
         return (
             <SafeAreaView style={[styles.container, styles.centerContent]}>
                 <ActivityIndicator size="large" color="#ff7a5c" />
-                <Text style={{marginTop: 10}}>{translations.common.loading || "Chargement..."}</Text>
+                <Text style={{marginTop: 10}}>{translations.common.loading}</Text>
             </SafeAreaView>
         );
     }
@@ -107,7 +107,7 @@ export default function Profile() {
             <SafeAreaView style={[styles.container, styles.centerContent]}>
                 <Text style={styles.errorText}>{error}</Text>
                 <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
-                    <Text style={styles.retryButtonText}>{translations.common.retry || "Réessayer"}</Text>
+                    <Text style={styles.retryButtonText}>{translations.common.retry}</Text>
                 </TouchableOpacity>
             </SafeAreaView>
         );
@@ -116,9 +116,9 @@ export default function Profile() {
     if (!profile) {
         return (
             <SafeAreaView style={[styles.container, styles.centerContent]}>
-                <Text>{translations.profile.noProfile || "Aucun profil trouvé"}</Text>
+                <Text>{translations.profile.noProfile}</Text>
                 <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
-                    <Text style={styles.retryButtonText}>{translations.common.retry || "Réessayer"}</Text>
+                    <Text style={styles.retryButtonText}>{translations.common.retry}</Text>
                 </TouchableOpacity>
             </SafeAreaView>
         );

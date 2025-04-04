@@ -7,11 +7,12 @@ import { shadowStyles } from '@/constants/CommonStyles';
 import { useProjectTasks, useUpdateTask, useDeleteTask } from '@/services/queries/tasks';
 import { useProject } from '@/services/queries/projects';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Task, TaskStatusUpdateInput } from '@/types/project';
 
 export default function KanbanBoard() {
     const router = useRouter();
     const { id } = useLocalSearchParams();
-    const projectId = Array.isArray(id) ? id[0] : id;
+    const projectId = Array.isArray(id) ? id[0] : id as string;
     const { translations } = useLanguage();
     
     const { data: project, isLoading: isLoadingProject } = useProject(projectId);
@@ -19,11 +20,11 @@ export default function KanbanBoard() {
     const updateTask = useUpdateTask();
     const deleteTask = useDeleteTask();
 
-    const [selectedTask, setSelectedTask] = useState(null);
-    const [showStatusModal, setShowStatusModal] = useState(false);
+    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+    const [showStatusModal, setShowStatusModal] = useState<boolean>(false);
 
     // Filtrer les tâches par statut
-    const getTasksByStatus = (status) => {
+    const getTasksByStatus = (status: string): Task[] => {
         if (!tasks) return [];
         return tasks.filter(task => {
             if (status === 'todo' && task.status === 'todo') return true;
@@ -33,30 +34,32 @@ export default function KanbanBoard() {
         });
     };
 
-    const handleTaskStatusChange = async (taskId, newStatus) => {
+    const handleTaskStatusChange = async (taskId: number | string, newStatus: string) => {
         try {
-            await updateTask.mutateAsync({
-                id: taskId,
+            const updateData: TaskStatusUpdateInput = {
+                id: Number(taskId), // Conversion explicite en nombre
                 status: newStatus
-            });
+            };
+            await updateTask.mutateAsync(updateData);
         } catch (error) {
             console.error("Error updating task status:", error);
         }
     };
 
-    const openStatusModal = (task) => {
+    const openStatusModal = (task: Task) => {
         setSelectedTask(task);
         setShowStatusModal(true);
     };
 
-    const handleStatusChange = async (newStatus) => {
+    const handleStatusChange = async (newStatus: string) => {
         if (!selectedTask) return;
         
         try {
-            await updateTask.mutateAsync({
-                id: selectedTask.id,
+            const updateData: TaskStatusUpdateInput = {
+                id: Number(selectedTask.id), // Conversion explicite en nombre
                 status: newStatus
-            });
+            };
+            await updateTask.mutateAsync(updateData);
             setShowStatusModal(false);
             setSelectedTask(null);
         } catch (error) {
@@ -65,7 +68,7 @@ export default function KanbanBoard() {
         }
     };
 
-    const handleDeleteTask = async (taskId) => {
+    const handleDeleteTask = async (taskId: number | string) => {
         try {
             Alert.alert(
                 "Supprimer la tâche",
@@ -79,7 +82,7 @@ export default function KanbanBoard() {
                         text: "Supprimer",
                         style: "destructive",
                         onPress: async () => {
-                            await deleteTask.mutateAsync(taskId);
+                            await deleteTask.mutateAsync(Number(taskId)); // Conversion explicite en nombre
                             setShowStatusModal(false);
                             setSelectedTask(null);
                         }
@@ -297,7 +300,7 @@ export default function KanbanBoard() {
     );
 }
 
-function getInitials(name: string): string {
+function getInitials(name: string | undefined): string {
     if (!name) return '';
     return name
         .split(' ')

@@ -13,17 +13,18 @@ export interface INotificationSettings {
 
 export interface INotification {
   id: number;
+  userId: number;
   type: string;
-  data: any;
+  title?: string;
+  message?: string;
+  data: Record<string, any>;
   read: boolean;
-  relatedType: string | null;
-  relatedId: number | null;
   createdAt: string;
-  updatedAt: string | null;
+  updatedAt: string;
 }
 
-export interface DeviceTokenParams {
-  userId: string;
+export interface DeviceRegistration {
+  userId: number;
   deviceId: string;
   pushToken: string;
   deviceType: string;

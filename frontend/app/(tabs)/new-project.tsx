@@ -160,7 +160,7 @@ export default function NewProject() {
 
                     <View style={styles.datesContainer}>
                         <View style={styles.dateField}>
-                            <Text style={styles.label}>Date de début</Text>
+                            <Text style={styles.label}>{translations.projects.startDate}</Text>
                             <TouchableOpacity 
                                 style={[styles.dateButton, startDate && styles.dateButtonSelected]}
                                 onPress={() => setShowStartDatePicker(true)}
@@ -180,7 +180,7 @@ export default function NewProject() {
                         </View>
 
                         <View style={styles.dateField}>
-                            <Text style={styles.label}>Date de fin</Text>
+                            <Text style={styles.label}>{translations.projects.endDate}</Text>
                             <TouchableOpacity 
                                 style={[styles.dateButton, endDate && styles.dateButtonSelected]}
                                 onPress={() => setShowEndDatePicker(true)}
@@ -215,7 +215,7 @@ export default function NewProject() {
                     <View style={styles.modalContent}>
                         <View style={styles.modalHeader}>
                             <Text style={styles.modalTitle}>
-                                {showStartDatePicker ? 'Date de début' : 'Date de fin'}
+                                {showStartDatePicker ? translations.projects.startDate : translations.projects.endDate}
                             </Text>
                             <TouchableOpacity 
                                 onPress={() => {
@@ -243,7 +243,7 @@ export default function NewProject() {
                                 setShowEndDatePicker(false);
                             }}
                         >
-                            <Text style={styles.modalButtonText}>Confirmer</Text>
+                            <Text style={styles.modalButtonText}>{translations.common.confirm}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

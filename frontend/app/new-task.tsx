@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Platform, Modal } from "react-native";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import {useLocalSearchParams, useRouter} from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { shadowStyles } from '@/constants/CommonStyles';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCreateTask } from "@/services/queries/tasks";
+import { TaskCreateInput } from "@/types/project";
 
 interface Category {
     id: string;
@@ -23,13 +23,20 @@ export default function NewTask() {
     const router = useRouter();
     const { translations } = useLanguage();
     const createTask = useCreateTask();
+    
+    const params = useLocalSearchParams();
+    const projectId = params.projectId as string | undefined;
+    
     const [title, setTitle] = useState<string>('');
     const [date, setDate] = useState<string>('');
     const [details, setDetails] = useState<string>('');
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [alertEnabled, setAlertEnabled] = useState<boolean>(true);
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
+
+    console.log("Paramètres URL:", params);
+    console.log("projectId récupéré:", projectId);
 
     const categories: Category[] = [
         { id: 'design', label: translations.tasks.categories.design },
@@ -74,20 +81,23 @@ export default function NewTask() {
                 return;
             }
 
-            const taskData = {
+            const taskData: TaskCreateInput = {
                 title,
                 description: details,
                 dueDate: selectedDate.toISOString(),
                 status: 'todo',
-                priority: 'medium',
-                projectId: 1 // Ajouter un projectId par défaut pour test
+                priority: 'medium'
             };
+            
+            if (projectId && projectId !== 'undefined' && projectId !== 'null') {
+                taskData.projectId = Number(projectId); // Conversion explicite en nombre
+            }
 
             console.log('Sending task data:', taskData);
             await createTask.mutateAsync(taskData);
             console.log('Task created successfully');
             router.back();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Create task error details:', {
                 error,
                 message: error.message,
@@ -564,5 +574,16 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: '600',
+    },
+    label: {
+        fontSize: 14,
+        fontWeight: "500",
+        color: "#333",
+        marginBottom: 6,
+    },
+    saveButton: {
+        color: "#43d2c3",
+        fontSize: 16,
+        fontWeight: "600",
     },
 });

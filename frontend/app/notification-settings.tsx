@@ -55,7 +55,7 @@ export default function NotificationSettings() {
       console.error("Failed to load notification settings:", error);
       Alert.alert(
         "Erreur",
-        "Impossible de charger vos paramètres de notification."
+        translations.errors.loadNotificationSettings
       );
     } finally {
       setLoading(false);
@@ -74,7 +74,7 @@ export default function NotificationSettings() {
       console.error("Failed to update notification settings:", error);
       Alert.alert(
         "Erreur",
-        "Impossible de mettre à jour vos paramètres de notification."
+        translations.errors.updateNotificationSettings
       );
       // Revenir à l'état précédent en cas d'erreur
       loadSettings();
@@ -85,7 +85,7 @@ export default function NotificationSettings() {
     if (!user?.id || !expoPushToken) {
       Alert.alert(
         "Erreur",
-        "Token de notification non disponible. Assurez-vous d'avoir accordé les permissions requises."
+        translations.errors.tokenUnavailable
       );
       return;
     }
@@ -94,13 +94,13 @@ export default function NotificationSettings() {
       await sendTestNotification(user.id, expoPushToken);
       Alert.alert(
         "Succès",
-        "Une notification de test a été envoyée à votre appareil."
+        translations.errors.testNotificationSuccess
       );
     } catch (error) {
       console.error("Failed to send test notification:", error);
       Alert.alert(
         "Erreur",
-        "Impossible d'envoyer la notification de test."
+        translations.errors.sendTestNotification
       );
     }
   };
@@ -258,7 +258,7 @@ async function registerForPushNotificationsAsync() {
     if (finalStatus !== 'granted') {
       Alert.alert(
         'Permission requise',
-        'Les notifications push nécessitent une autorisation'
+        translations.errors.permissionRequired
       );
       return;
     }
@@ -267,7 +267,10 @@ async function registerForPushNotificationsAsync() {
       projectId: Constants.expoConfig?.extra?.eas?.projectId,
     })).data;
   } else {
-    Alert.alert('Appareil physique requis', 'Les notifications push ne fonctionnent pas sur un émulateur');
+    Alert.alert(
+      'Appareil physique requis', 
+      translations.errors.physicalDeviceRequired
+    );
   }
 
   return token;

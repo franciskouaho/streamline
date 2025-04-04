@@ -30,7 +30,12 @@ export default class Notifications {
       }
 
       const data = await request.validateUsing(markNotificationAsReadValidator)
-      await notification.merge({ read: data.read ?? true }).save()
+
+      // Utilisation d'un opérateur de coalescence nulle pour définir une valeur par défaut
+      // lorsque data.read est undefined
+      const readValue = data.read ?? true
+
+      await notification.merge({ read: readValue }).save()
 
       return response.ok(notification)
     } catch (error) {
@@ -89,7 +94,7 @@ export default class Notifications {
         userId: auth.user!.id,
         type: 'test_notification',
         data: { message: 'Ceci est une notification de test' },
-        read: false,
+        read: false, // Valeur explicite au lieu de compter sur un défaut
         relatedType: null,
         relatedId: null,
       })

@@ -5,84 +5,84 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-type FeatureProps = {
-    icon: string;
-    text: string;
-};
+interface FeatureItem {
+  text: string;
+  included: boolean;
+}
+
+interface SubscriptionPlan {
+  name: string;
+  price: string;
+  yearlyPrice?: string;
+  color: string;
+  recommended?: boolean;
+  features: FeatureItem[];
+}
+
+interface FeatureProps {
+  icon: string;
+  text: string;
+}
 
 const Feature = ({ icon, text }: FeatureProps) => (
-    <View style={styles.featureHighlight}>
-        <View style={styles.featureIconContainer}>
-            <Ionicons name={icon} size={24} color="#ff7a5c" />
-        </View>
-        <Text style={styles.featureHighlightText}>{text}</Text>
+  <View style={styles.featureHighlight}>
+    <View style={styles.featureIconContainer}>
+      <Ionicons name={icon} size={24} color="#ff7a5c" />
     </View>
+    <Text style={styles.featureHighlightText}>{text}</Text>
+  </View>
 );
-
-type PlanFeature = {
-    text: string;
-    included: boolean;
-};
-
-type SubscriptionPlan = {
-    name: string;
-    price: string;
-    yearlyPrice?: string;
-    features: PlanFeature[];
-    color: string;
-    recommended?: boolean;
-};
-
-const subscriptionPlans: SubscriptionPlan[] = [
-    {
-        name: "Free",
-        price: "0€",
-        color: "#6B7280",
-        features: [
-            { text: "Accès à 3 projets maximum", included: true },
-            { text: "Fonctionnalités de base (tâches, kanban simple)", included: true },
-            { text: "Collaboration avec 2 membres maximum", included: true },
-            { text: "Limitation à 50 tâches par projet", included: true },
-            { text: "Stockage limité (100 Mo)", included: true },
-        ]
-    },
-    {
-        name: "Pro",
-        price: "9,99€/mois",
-        yearlyPrice: "99€/an",
-        color: "#6366F1",
-        recommended: true,
-        features: [
-            { text: "Projets illimités", included: true },
-            { text: "Fonctionnalités avancées (Kanban complet, Gantt, tableaux de bord)", included: true },
-            { text: "Collaboration avec 5 membres", included: true },
-            { text: "Tâches illimitées", included: true },
-            { text: "Stockage de 5 Go", included: true },
-            { text: "Priorité au support client", included: true },
-            { text: "Exportation de données", included: true },
-        ]
-    },
-    {
-        name: "Business",
-        price: "19,99€/mois",
-        yearlyPrice: "199€/an",
-        color: "#0EA5E9",
-        features: [
-            { text: "Tout ce qui est inclus dans Pro", included: true },
-            { text: "Nombre illimité de membres", included: true },
-            { text: "Fonctionnalités d'administration d'équipe", included: true },
-            { text: "Contrôles d'accès avancés", included: true },
-            { text: "Stockage de 20 Go", included: true },
-            { text: "Intégrations avec d'autres outils d'entreprise", included: true },
-            { text: "Support dédié avec temps de réponse garanti", included: true },
-            { text: "Rapports et analyses avancés", included: true },
-        ]
-    }
-];
 
 export default function Premium() {
     const { translations } = useLanguage();
     const router = useRouter();
+
+    const subscriptionPlans: SubscriptionPlan[] = [
+        {
+            name: "Free",
+            price: "0€",
+            color: "#6B7280",
+            features: [
+                { text: "Accès à 3 projets maximum", included: true },
+                { text: "Fonctionnalités de base (tâches, kanban simple)", included: true },
+                { text: "Collaboration avec 2 membres maximum", included: true },
+                { text: "Limitation à 50 tâches par projet", included: true },
+                { text: "Stockage limité (100 Mo)", included: true },
+            ]
+        },
+        {
+            name: "Pro",
+            price: "9,99€/mois",
+            yearlyPrice: "99€/an",
+            color: "#6366F1",
+            recommended: true,
+            features: [
+                { text: translations.premium.features.unlimited, included: true },
+                { text: "Fonctionnalités avancées (Kanban complet, Gantt, tableaux de bord)", included: true },
+                { text: "Collaboration avec 5 membres", included: true },
+                { text: "Tâches illimitées", included: true },
+                { text: "Stockage de 5 Go", included: true },
+                { text: translations.premium.features.support, included: true },
+                { text: "Exportation de données", included: true },
+            ]
+        },
+        {
+            name: "Business",
+            price: "19,99€/mois",
+            yearlyPrice: "199€/an",
+            color: "#0EA5E9",
+            features: [
+                { text: "Tout ce qui est inclus dans Pro", included: true },
+                { text: "Nombre illimité de membres", included: true },
+                { text: "Fonctionnalités d'administration d'équipe", included: true },
+                { text: "Contrôles d'accès avancés", included: true },
+                { text: "Stockage de 20 Go", included: true },
+                { text: "Intégrations avec d'autres outils d'entreprise", included: true },
+                { text: translations.premium.features.support, included: true },
+                { text: translations.premium.features.analytics, included: true },
+            ]
+        }
+    ];
 
     const PlanCard = ({ plan }: { plan: SubscriptionPlan }) => (
         <View style={[
@@ -120,7 +120,7 @@ export default function Premium() {
                 onPress={() => {/* Logique de sélection du plan */}}
             >
                 <Text style={styles.selectButtonText}>
-                    Sélectionner {plan.name}
+                    {translations.premium.subscribe} {plan.name}
                 </Text>
             </TouchableOpacity>
         </View>

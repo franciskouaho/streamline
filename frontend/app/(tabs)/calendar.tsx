@@ -9,6 +9,21 @@ import { useTasks } from '@/services/queries/tasks';
 import { useProjects } from '@/services/queries/projects';
 import { getStatusColor, formatDueDate } from '@/utils/projectUtils';
 
+// Temporairement, définir ici les couleurs pour éviter des problèmes d'import
+const TEMP_COLORS = {
+  ONGOING: "#4d8efc",
+  IN_PROGRESS: "#ffb443",
+  COMPLETED: "#43d2c3",
+  CANCELED: "#ff7a5c",
+  PRIMARY: "#ff7a5c",
+  TODO: "#ffb443",
+  DONE: "#43d2c3",
+  LOW: "#43d2c3",
+  MEDIUM: "#ffb443",
+  HIGH: "#ff3b30",
+  DEFAULT: "#666666"
+};
+
 interface Day {
     day: string;
     date: number;
@@ -361,14 +376,14 @@ export default function Calendar() {
                                         new Date(event.date).toDateString() === item.fullDate.toDateString() && 
                                         event.type === 'task'
                                     ) && (
-                                        <View style={[styles.eventDot, { backgroundColor: '#4d8efc' }]} />
+                                        <View style={[styles.eventDot, { backgroundColor: TEMP_COLORS.ONGOING }]} />
                                     )}
                                     
                                     {filteredItems.some(event => 
                                         new Date(event.date).toDateString() === item.fullDate.toDateString() && 
                                         event.type === 'project'
                                     ) && (
-                                        <View style={[styles.eventDot, { backgroundColor: '#ff7a5c' }]} />
+                                        <View style={[styles.eventDot, { backgroundColor: TEMP_COLORS.CANCELED }]} />
                                     )}
                                 </View>
                             </TouchableOpacity>
@@ -495,7 +510,7 @@ export default function Calendar() {
                             <View style={styles.emptyContainer}>
                                 <Ionicons name="calendar-outline" size={50} color="#ccc" />
                                 <Text style={styles.emptyText}>
-                                    Aucun élément pour le {selectedDate.toLocaleDateString('fr-FR', {
+                                    {translations.calendar.emptyDate} {selectedDate.toLocaleDateString('fr-FR', {
                                         day: 'numeric',
                                         month: 'long',
                                         year: 'numeric'
@@ -591,11 +606,11 @@ export default function Calendar() {
 // Fonction pour obtenir la couleur en fonction de la priorité
 function getPriorityColor(priority: string): string {
     const colors = {
-        low: '#43d2c3',
-        medium: '#ffb443',
-        high: '#ff3b30',
+        low: TEMP_COLORS.LOW,
+        medium: TEMP_COLORS.MEDIUM,
+        high: TEMP_COLORS.HIGH,
     };
-    return colors[priority.toLowerCase()] || '#666';
+    return colors[priority.toLowerCase()] || TEMP_COLORS.DEFAULT;
 }
 
 const styles = StyleSheet.create({
@@ -604,7 +619,7 @@ const styles = StyleSheet.create({
         color: '#666',
     },
     activeViewText: {
-        color: '#ff7a5c',
+        color: TEMP_COLORS.PRIMARY,
         fontWeight: '600',
     },
     
@@ -850,7 +865,7 @@ const styles = StyleSheet.create({
         paddingVertical: 6,
         paddingHorizontal: 12,
         borderRadius: 16,
-        backgroundColor: '#ff7a5c',
+        backgroundColor: TEMP_COLORS.PRIMARY,
         marginHorizontal: 10,
     },
     todayButtonText: {

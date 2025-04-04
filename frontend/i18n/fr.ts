@@ -10,6 +10,10 @@ export default {
     delete: "Supprimer",
     edit: "Modifier",
     back: "Retour",
+    loading: "Chargement...",
+    retry: "Réessayer",
+    confirm: "Confirmer",
+    viewAll: "Voir tout"
   },
   auth: {
     login: "Connexion",
@@ -38,7 +42,7 @@ export default {
     security: "Sécurité",
     about: "À propos",
     help: "Aide",
-    premium: "Premium",
+    premium: "Premium"
   },
   profile: {
     editProfile: "Modifier le profil",
@@ -53,6 +57,13 @@ export default {
     goPremium: "Passer Premium",
     helpCenter: "Centre d'aide",
     role: "Product Designer",
+    deleteAccount: "Supprimer mon compte",
+    deleteAccountTitle: "Supprimer le compte",
+    deleteAccountConfirm: "Cette action est irréversible. Êtes-vous sûr de vouloir supprimer votre compte ?",
+    logoutTitle: "Déconnexion",
+    logoutConfirm: "Êtes-vous sûr de vouloir vous déconnecter ?",
+    delete: "Supprimer",
+    noProfile: "Aucun profil trouvé"
   },
   tasks: {
     newTask: "Nouvelle tâche",
@@ -74,6 +85,13 @@ export default {
     plural: "Tâches",
     todo: "À faire",
     done: "Terminée",
+    errors: {
+      creation: "Erreur lors de la création de la tâche",
+      update: "Erreur lors de la mise à jour de la tâche",
+      delete: "Erreur lors de la suppression de la tâche",
+      projectNotFound: "Le projet sélectionné n'existe pas",
+      requiredFields: "Veuillez remplir tous les champs obligatoires"
+    },
     categories: {
       design: "Design",
       development: "Développement",
@@ -93,6 +111,25 @@ export default {
     kanban: "Tableau Kanban",
     files: "Fichiers",
     recentProjects: "Projets récents",
+    noProjects: "Aucun projet pour le moment",
+    status: {
+      ongoing: "En cours",
+      in_progress: "En progression",
+      completed: "Terminé",
+      canceled: "Annulé",
+      active: "Actif"
+    },
+    changeStatus: "Changer le statut",
+    statusUpdated: "Statut mis à jour",
+    deleteConfirm: "Êtes-vous sûr de vouloir supprimer ce projet ?",
+    deleteTitle: "Supprimer le projet",
+    noTasks: "Aucune tâche pour ce projet",
+    teamAssign: "Équipe assignée",
+    deadline: "Date limite :",
+    progress: "Progrès",
+    startDate: "Date de début",
+    endDate: "Date de fin",
+    testNotification: "Envoyer une notification test"
   },
   calendar: {
     today: "Aujourd'hui",
@@ -100,6 +137,10 @@ export default {
     week: "Semaine",
     day: "Jour",
     schedule: "Planning",
+    title: "Calendrier",
+    emptyDate: "Aucun élément pour le",
+    startDate: "Date de début",
+    endDate: "Date de fin"
   },
   notifications: {
     title: "Notifications",
@@ -108,6 +149,29 @@ export default {
     newMessage: "Nouveau message",
     newTask: "Nouvelle tâche",
     reminder: "Rappel",
+    general: "Général",
+    projectActivities: "Activités de projet",
+    communications: "Communications",
+    today: "Aujourd'hui",
+    yesterday: "Hier",
+    thisWeek: "Cette semaine",
+    older: "Plus ancien",
+    empty: "Aucune notification",
+    all: "Tous",
+    unread: "Non lus",
+    settings: {
+      taskAssigned: "Attribution de tâches",
+      taskDeadline: "Rappels d'échéance",
+      taskComment: "Commentaires sur les tâches",
+      projectUpdate: "Mises à jour des projets",
+      teamMessage: "Messages d'équipe",
+      appUpdates: "Mises à jour de l'application",
+      subscriptionAlerts: "Alertes d'abonnement",
+      quietHours: "Heures silencieuses",
+      quietHoursEnabled: "Activer les heures silencieuses",
+      quietHoursStart: "Début",
+      quietHoursEnd: "Fin"
+    }
   },
   premium: {
     title: "Premium",
@@ -121,7 +185,9 @@ export default {
     monthly: "Mensuel",
     yearly: "Annuel",
     subscribe: "S'abonner",
-    current: "Votre plan actuel"
+    current: "Votre plan actuel",
+    selectPlan: "Sélectionner",
+    recommended: "Recommandé"
   },
   editProfile: {
     title: "Modifier le profil",
@@ -136,5 +202,29 @@ export default {
   splash: {
     welcome: "Bienvenue sur Streamline",
     subtitle: "Organisez vos projets efficacement"
+  },
+  errors: {
+    network: "Erreur de connexion réseau. Vérifiez votre connexion internet ou que le serveur est bien démarré.",
+    retryAttempt: "Tentative de reconnexion",
+    sessionExpired: "Session expirée ou non autorisée",
+    authStoreImport: "Erreur lors de l'import du store Auth:",
+    redirectionError: "Erreur de redirection:",
+    taskStatus: "Erreur lors de la mise à jour du statut de la tâche:",
+    deleteProject: "Erreur lors de la suppression du projet",
+    updateProjectStatus: "Impossible de mettre à jour le statut du projet",
+    loadProfile: "Impossible de charger votre profil. Veuillez réessayer.",
+    logout: "Une erreur est survenue lors de la déconnexion.",
+    deleteAccount: "Une erreur est survenue lors de la suppression du compte.",
+    loadNotifications: "Impossible de charger les notifications. Veuillez réessayer plus tard.",
+    markNotificationRead: "Impossible de marquer la notification comme lue.",
+    markAllNotificationsRead: "Impossible de marquer toutes les notifications comme lues.",
+    deleteNotification: "Impossible de supprimer la notification.",
+    loadNotificationSettings: "Impossible de charger vos paramètres de notification.",
+    updateNotificationSettings: "Impossible de mettre à jour vos paramètres de notification.",
+    sendTestNotification: "Impossible d'envoyer la notification de test.",
+    permissionRequired: "Les notifications push nécessitent une autorisation",
+    physicalDeviceRequired: "Les notifications push ne fonctionnent pas sur un émulateur",
+    tokenUnavailable: "Token de notification non disponible. Assurez-vous d'avoir accordé les permissions requises.",
+    testNotificationSuccess: "Une notification de test a été envoyée à votre appareil."
   }
 };

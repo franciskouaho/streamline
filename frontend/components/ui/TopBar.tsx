@@ -2,35 +2,53 @@ import React, { useEffect } from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import {useProfileStore} from "@/stores/profile";
+import { useProfileStore } from "@/stores/profile";
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export const TopBar = () => {
     const router = useRouter();
     const { profile } = useProfileStore();
+    const { translations } = useLanguage();
 
     useEffect(() => {
-        useProfileStore.getState().fetchProfile();
+        // Charge le profil au chargement du composant
+        const loadProfile = async () => {
+            try {
+                await useProfileStore.getState().fetchProfile();
+            } catch (error) {
+                console.error('Erreur lors du chargement du profil:', error);
+            }
+        };
+        
+        loadProfile();
     }, []);
 
     return (
         <View style={styles.headerContainer}>
             <View style={styles.header}>
-                <View style={styles.profileContainer}>
+                <TouchableOpacity 
+                    style={styles.profileContainer}
+                    onPress={() => router.push('/edit-profile')}
+                >
                     <Image
                         source={profile?.photoURL ? { uri: profile.photoURL } : require("../../assets/images/profile.jpeg")}
                         style={styles.profileImage}
                     />
                     <View>
                         <View style={styles.greetingContainer}>
-                            <Text style={styles.greeting}>Hi, {profile?.fullName ?? 'User'}</Text>
+                            <Text style={styles.greeting}>
+                                {translations.common.welcome}, {profile?.fullName?.split(' ')[0] ?? 'User'}
+                            </Text>
                             <Image
                                 source={require("../../assets/images/wave.jpeg")}
                                 style={styles.waveIcon}
                             />
                         </View>
-                        <Text style={styles.subtitle}>Your daily adventure starts now</Text>
+                        <Text style={styles.subtitle}>
+                            {translations.topBar?.dailyMessage}
+                        </Text>
                     </View>
-                </View>
+                </TouchableOpacity>
 
                 <TouchableOpacity 
                     onPress={() => router.push("/notification")}

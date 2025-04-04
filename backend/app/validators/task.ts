@@ -4,7 +4,7 @@ export const createTaskValidator = vine.compile(
   vine.object({
     title: vine.string().trim().minLength(1),
     description: vine.string().nullable().optional(),
-    projectId: vine.number(),
+    projectId: vine.number().optional(), // Rendre optionnel
     assigneeId: vine.number().nullable().optional(),
     status: vine.enum(['todo', 'in_progress', 'done']).optional(),
     priority: vine.enum(['low', 'medium', 'high']).optional(),

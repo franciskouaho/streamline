@@ -1,9 +1,7 @@
 import { create } from 'zustand';
-// Suppression de l'import direct pour éviter le cycle de dépendances
-// import { useAuthStore } from './auth';
-// import api from '@/services/api';
+import api from '@/services/api'; // Import normal au lieu d'import dynamique
 
-interface UserProfile {
+export interface UserProfile {
   id: number;
   email: string;
   fullName: string;
@@ -12,6 +10,8 @@ interface UserProfile {
   tasksInProgress?: number;
   tasksCompleted?: number;
   role?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface ProfileState {
@@ -31,9 +31,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       
-      // Import dynamique pour éviter le cycle de dépendances
-      const { default: api } = await import('@/services/api');
-      
+      // Utiliser l'API importée normalement
       const response = await api.get<{user: UserProfile}>('/auth/me');
       set({ 
         profile: response.data.user,
@@ -49,10 +47,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       
-      // Import dynamique pour éviter le cycle de dépendances
-      const { default: api } = await import('@/services/api');
-      
-      // Formatage des données si nécessaire pour l'API
+      // Utiliser l'API importée normalement
       const formattedData = {
         fullName: data.fullName,
         email: data.email,

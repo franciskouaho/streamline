@@ -1,9 +1,11 @@
 import { useColorScheme } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import {Tabs} from "expo-router";
+import { Tabs } from "expo-router";
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const TabsLayout = () => {
     const colorScheme = useColorScheme();
+    const { translations } = useLanguage();
 
     return (
         <Tabs
@@ -31,7 +33,7 @@ const TabsLayout = () => {
             <Tabs.Screen
                 name="index"
                 options={{
-                    title: "Home",
+                    title: translations.common.home,
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="home-outline" size={size} color={color} />
                     ),
@@ -40,7 +42,7 @@ const TabsLayout = () => {
             <Tabs.Screen
                 name="calendar"
                 options={{
-                    title: "Calendar",
+                    title: translations.calendar.title,
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="calendar-outline" size={size} color={color} />
                     ),
@@ -78,7 +80,7 @@ const TabsLayout = () => {
             <Tabs.Screen
                 name="docs"
                 options={{
-                    title: "Documents",
+                    title: translations.projects.files,
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="document-text-outline" size={size} color={color} />
                     ),
@@ -87,7 +89,7 @@ const TabsLayout = () => {
             <Tabs.Screen
                 name="profile"
                 options={{
-                    title: "Profile",
+                    title: translations.common.profile,
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="person-outline" size={size} color={color} />
                     ),

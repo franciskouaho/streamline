@@ -56,6 +56,23 @@ export const useUpdateProject = () => {
   });
 };
 
+// Mettre à jour uniquement le statut d'un projet
+export const useUpdateProjectStatus = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: number | string; status: string }) => {
+      const response = await api.patch(`/projects/${id}/status`, { status });
+      return response.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['projects', data.id] });
+      queryClient.invalidateQueries({ queryKey: ['project-stats'] });
+    }
+  });
+};
+
 // Supprimer un projet
 export const useDeleteProject = () => {
   const queryClient = useQueryClient();

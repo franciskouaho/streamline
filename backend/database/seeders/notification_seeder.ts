@@ -16,7 +16,6 @@ export default class NotificationSeeder extends BaseSeeder {
       }
     )
 
-    // Créer quelques notifications de test
     await Notification.createMany([
       {
         userId: user.id,

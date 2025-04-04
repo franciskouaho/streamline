@@ -1,103 +1,120 @@
-import React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import TaskStatusCard from "@/components/TaskStatusCard";
-import { TopBar } from "@/components/ui/TopBar";
-import DashboardCharts from "@/components/DashboardCharts";
+import React from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import { useProjects } from '@/services/queries/projects';
+import ProjectCard from '@/components/ProjectCard';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useProjects } from "@/services/queries/projects";
-import { ProjectCard } from "@/components/ProjectCard";
+import DashboardCharts from '@/components/DashboardCharts';
+import { calculateProjectProgress } from '@/utils/projectUtils';
 import { LoadingIndicator } from '@/components/ui/LoadingIndicator';
-import { useTasks } from "@/services/queries/tasks";
-import { calculateProjectStats, calculateTaskStats } from "@/utils/projectUtils";
+import { TopBar } from '@/components/ui/TopBar';
+import { CHART_COLORS } from '@/constants/StatusColors';
+import { Project } from '@/types/project';
 
-const Home = () => {
-    const { translations } = useLanguage();
-    const { data: projects, isLoading: isLoadingProjects } = useProjects({
-        refetchInterval: 5000, // Rafraîchir les données toutes les 5 secondes
-        staleTime: 2000,      // Considérer les données comme périmées après 2 secondes
+export default function Home() {
+  const router = useRouter();
+  const { translations } = useLanguage();
+  const { data: projects, isLoading } = useProjects();
+
+  const handleProjectPress = (project: Project) => {
+    router.push(`/project/${project.id}`);
+  };
+
+  const projectsWithProgress = React.useMemo(() => {
+    if (!projects) return [];
+    
+    return projects.map(project => {
+      const progressData = calculateProjectProgress(project);
+      return {
+        ...project,
+        progressPercentage: progressData.progress
+      };
     });
-    const { data: tasks, isLoading: isLoadingTasks } = useTasks();
+  }, [projects]);
 
-    const isLoading = isLoadingProjects || isLoadingTasks;
+  return (
+    <SafeAreaView style={styles.container}>
+      <TopBar />
 
-    // Calcul des statistiques basées sur les données réelles
-    const projectStats = projects ? calculateProjectStats(projects) : null;
-    const taskStats = tasks ? calculateTaskStats(tasks) : null;
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
+        <DashboardCharts />
 
-    // Ajouter du code de débogage pour vérifier les données
-    console.log('Projets disponibles dans Home:', projects?.length);
-    console.log('Statistiques de projets:', projectStats);
-    console.log('Statistiques des tâches:', taskStats);
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>{translations.projects.recentProjects}</Text>
+          <TouchableOpacity onPress={() => router.push('/projects')}>
+            <Text style={styles.viewAll}>{translations.common.viewAll}</Text>
+          </TouchableOpacity>
+        </View>
 
-    return (
-        <SafeAreaView style={styles.container}>
-            <TopBar title={translations.common.home} />
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.scrollContent}
-            >
-                <View style={styles.content}>
-                   
-                    <DashboardCharts />
-
-                    <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>
-                            {translations.projects.recentProjects}
-                        </Text>
-                    </View>
-
-                    {isLoading ? (
-                        <LoadingIndicator />
-                    ) : (
-                        <View style={styles.projectsContainer}>
-                            {projects?.map((project) => (
-                                <ProjectCard key={project.id} project={project} />
-                            ))}
-                        </View>
-                    )}
-                </View>
-            </ScrollView>
-        </SafeAreaView>
-    );
+        {isLoading ? (
+          <LoadingIndicator />
+        ) : (
+          <View style={styles.projectsContainer}>
+            {projects && projects.length > 0 ? (
+              <View>
+                {projects.map((project) => (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    onPress={handleProjectPress}
+                  />
+                ))}
+              </View>
+            ) : (
+              <Text style={styles.emptyText}>{translations.projects.noProjects}</Text>
+            )}
+          </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
 }
 
-export default Home;
-
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#f2f2f2",
-    },
-    statusCardsContainer: {
-        flexDirection: "row",
-        flexWrap: "wrap",
-        justifyContent: "space-between",
-        paddingHorizontal: 20,
-        marginTop: 20,
-    },
-    sectionHeader: {
-        paddingHorizontal: 20,
-        marginTop: 20,
-        marginBottom: 10,
-    },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: "700",
-    },
-    projectsContainer: {
-        paddingHorizontal: 20,
-        marginBottom: 80,
-        width: '100%',
-        gap: 10,
-        alignItems: 'center',
-    },
-    scrollContent: {
-        paddingTop: 85,
-    },
-    content: {
-        flex: 1,
-        width: '100%',
-        overflow: 'hidden',
-    },
+  container: {
+    flex: 1,
+    backgroundColor: '#f2f2f2',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    paddingTop: 50,
+  },
+  header: {
+    padding: 20,
+  },
+  greeting: {
+    fontSize: 28,
+    fontWeight: '700',
+    marginBottom: 5,
+  },
+  subGreeting: {
+    fontSize: 14,
+    color: '#666',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginVertical: 10,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  viewAll: {
+    color: CHART_COLORS.PRIMARY,
+    fontWeight: '500',
+  },
+  projectsContainer: {
+    paddingHorizontal: 20,
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 20,
+    color: '#666',
+  },
 });

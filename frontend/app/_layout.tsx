@@ -12,6 +12,7 @@ import { useNetInfo } from '@react-native-community/netinfo';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
+import { DeviceRegistration } from '@/types/notifications';
 
 // Empêcher le splash screen de se cacher automatiquement
 SplashScreen.preventAutoHideAsync();
@@ -69,17 +70,17 @@ const RootLayout = () => {
         
         registerForPushNotificationsAsync().then(token => {
             if (token && user?.id) {
-                import('@/services/notifications').then(({ registerDeviceToken }) => {
-                    registerDeviceToken({
-                        userId: user.id,
-                        deviceId: Device.deviceName || 'unknown',
-                        pushToken: token,
-                        deviceType: Platform.OS,
-                        deviceName: Device.deviceName || 'unknown',
-                        appVersion: Constants.expoConfig?.version || '1.0.0',
-                        osVersion: Device.osVersion || 'unknown'
-                    }).catch(err => console.error('Failed to register device token:', err));
-                });
+                // Remplacer l'import dynamique par un import régulier
+                const { registerDeviceToken } = require('@/services/notifications');
+                registerDeviceToken({
+                    userId: user.id,
+                    deviceId: Device.deviceName || 'unknown',
+                    pushToken: token,
+                    deviceType: Platform.OS,
+                    deviceName: Device.deviceName || 'unknown',
+                    appVersion: Constants.expoConfig?.version || '1.0.0',
+                    osVersion: Device.osVersion || 'unknown'
+                }).catch((err: any) => console.error('Failed to register device token:', err));
             }
         });
 
@@ -102,7 +103,7 @@ const RootLayout = () => {
     }, []);
 
     // Fonction pour demander et récupérer le token de notification
-    async function registerForPushNotificationsAsync() {
+    async function registerForPushNotificationsAsync(): Promise<string | undefined> {
         let token;
 
         if (Platform.OS === 'android') {
@@ -125,7 +126,7 @@ const RootLayout = () => {
 
             if (finalStatus !== 'granted') {
                 console.log('Failed to get push token for push notification!');
-                return;
+                return undefined;
             }
 
             token = (await Notifications.getExpoPushTokenAsync({

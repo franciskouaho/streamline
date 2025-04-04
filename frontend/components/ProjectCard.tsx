@@ -1,266 +1,175 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { useRouter } from "expo-router";
-import type { Project } from "@/types/project";
-import { calculateProjectProgress, getStatusColor } from "@/utils/projectUtils";
-import { Feather } from '@expo/vector-icons';
-import React, { useMemo } from 'react';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { shadowStyles } from '@/constants/CommonStyles';
+import { Project } from '@/types/project';
+import { formatDueDate, getStatusColor, getProjectStatusLabel, normalizeProjectStatus } from '@/utils/projectUtils';
 
 interface ProjectCardProps {
   project: Project;
+  onPress: (project: Project) => void;
 }
 
-export function ProjectCard({ project }: ProjectCardProps) {
-  const router = useRouter();
-  
-  const progress = useMemo(() => calculateProjectProgress(project), [
-    project, 
-    project.tasks?.map(t => t.status).join(',')
-  ]);
-  
-  const taskCount = project.tasks?.length || 0;
-  const angle = progress * 3.6;
-  
+const ProjectCard = ({ project, onPress }: ProjectCardProps) => {
+  // Calculer progression
+  const calculateProgress = () => {
+    if (!project.tasks || project.tasks.length === 0) return 0;
+    
+    const completedTasks = project.tasks.filter(task => 
+      task.status.toLowerCase() === 'done' || task.status.toLowerCase() === 'completed'
+    ).length;
+    
+    return Math.round((completedTasks / project.tasks.length) * 100);
+  };
+
+  // Limiter la description à 20 caractères
+  const truncateDescription = (text: string) => {
+    if (!text) return '';
+    return text.length > 20 ? text.substring(0, 20) + '...' : text;
+  };
+
+  // Obtenir la couleur du statut pour les éléments UI
+  const normalizedStatus = normalizeProjectStatus(project.status);
+  const statusColor = getStatusColor(project.status);
+
   return (
-    <TouchableOpacity 
-      style={styles.card}
-      onPress={() => router.push(`/project/${project.id}`)}
+    <TouchableOpacity
+      style={[styles.container, shadowStyles.card]}
+      onPress={() => onPress(project)}
     >
-      <View style={styles.cardContent}>
-        <View style={styles.leftSection}>
-          <Text style={styles.title} numberOfLines={1}>{project.name}</Text>
-          <Text style={styles.description} numberOfLines={1}>
-            {project.description}
-          </Text>
-          
-          <View style={styles.teamContainer}>
-            {project.members && project.members.slice(0, 3).map((member, index) => (
-              <View key={member.id} style={[styles.memberAvatar, { marginLeft: index > 0 ? -8 : 0 }]}>
-                {member.user?.avatar ? (
-                  <Text style={styles.memberInitial}>
-                    {member.user.fullName.charAt(0)}
-                  </Text>
-                ) : (
-                  <Text style={styles.memberInitial}>
-                    {member.user?.fullName?.charAt(0) || "U"}
-                  </Text>
-                )}
-              </View>
-            ))}
-            
-            {project.members && project.members.length > 3 && (
-              <View style={[styles.memberAvatar, styles.moreMembers]}>
-                <Text style={styles.moreMembersText}>+{project.members.length - 3}</Text>
-              </View>
-            )}
-            
-            <View style={styles.taskInfoContainer}>
-              <Feather name="check-square" size={10} color="#666" />
-              <Text style={styles.taskCount}>{taskCount} tâches</Text>
-            </View>
+      <View style={styles.mainInfo}>
+        <View style={styles.topRow}>
+          <View style={[styles.statusTag, { backgroundColor: statusColor }]}>
+            <Text style={styles.statusText}>{getProjectStatusLabel(project.status)}</Text>
           </View>
         </View>
         
-        <View style={styles.rightSection}>
-          <View style={styles.statusRow}>
-            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(project.status) }]}>
-              <Text style={styles.statusText}>{project.status}</Text>
-            </View>
-          </View>
-          
-          <View style={styles.progressContainer}>
-            <View style={styles.progressCircleOuter}>
-              {angle > 0 && (
-                <View style={[
-                  styles.progressQuarter,
-                  styles.progressFirstQuarter,
-                  { opacity: angle > 0 ? 1 : 0, transform: [{ rotate: `${Math.min(angle, 90)}deg` }] }
-                ]} />
-              )}
-              
-              {angle > 90 && (
-                <View style={[
-                  styles.progressQuarter,
-                  styles.progressSecondQuarter,
-                  { opacity: angle > 90 ? 1 : 0, transform: [{ rotate: `${Math.min(angle - 90, 90)}deg` }] }
-                ]} />
-              )}
-              
-              {angle > 180 && (
-                <View style={[
-                  styles.progressQuarter,
-                  styles.progressThirdQuarter,
-                  { opacity: angle > 180 ? 1 : 0, transform: [{ rotate: `${Math.min(angle - 180, 90)}deg` }] }
-                ]} />
-              )}
-              
-              {angle > 270 && (
-                <View style={[
-                  styles.progressQuarter,
-                  styles.progressFourthQuarter,
-                  { opacity: angle > 270 ? 1 : 0, transform: [{ rotate: `${Math.min(angle - 270, 90)}deg` }] }
-                ]} />
-              )}
-              
-              <View style={styles.progressValueContainer}>
-                <Text style={styles.progressText}>{progress}%</Text>
-              </View>
-            </View>
-          </View>
+        <Text style={styles.title} numberOfLines={1}>{project.name}</Text>
+        
+        {project.description && (
+          <Text style={styles.description} numberOfLines={1}>
+            {truncateDescription(project.description)}
+          </Text>
+        )}
+      </View>
+      
+      <View style={styles.rightInfo}>
+        {/* Date avec la bordure de couleur du statut */}
+        <View style={[styles.dateContainer, { borderColor: statusColor }]}>
+          <Ionicons name="calendar-outline" size={12} color="#666" />
+          <Text style={styles.dateText}>
+            {project.endDate ? formatDueDate(project.endDate) : 'Non définie'}
+          </Text>
         </View>
+        
+        {/* Cercle de progression avec la couleur du statut */}
+        <View style={[styles.progressCircle, { borderColor: statusColor }]}>
+          <Text style={[styles.progressText, { color: statusColor }]}>{calculateProgress()}%</Text>
+        </View>
+        
+        {/* Avatar des membres avec la couleur du statut */}
+        {project.members && project.members.length > 0 && (
+          <View style={[styles.memberAvatar, { backgroundColor: statusColor }]}>
+            <Text style={styles.memberCount}>{project.members.length}</Text>
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  card: {
+  container: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 10,
+    padding: 12,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: '#000',
-    shadowColor: '#000',
-    shadowOffset: { width: 3, height: 3 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 6,
-    marginBottom: 12,
     width: '100%',
-    alignSelf: 'center',
-    maxWidth: 500,
-  },
-  cardContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  leftSection: {
-    flex: 1,
-    marginRight: 10,
+  mainInfo: {
+    flex: 3,
   },
-  rightSection: {
-    width: 80,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 2,
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 6,
-  },
-  statusRow: {
-    flexDirection: 'row',
+  rightInfo: {
+    width: 100,
     alignItems: 'center',
     justifyContent: 'center',
+    marginLeft: 8,
+  },
+  topRow: {
+    flexDirection: 'row',
     marginBottom: 8,
   },
-  statusBadge: {
+  statusTag: {
     paddingVertical: 3,
     paddingHorizontal: 6,
-    borderRadius: 8,
+    borderRadius: 6,
   },
   statusText: {
     color: '#fff',
     fontSize: 10,
     fontWeight: '500',
   },
+  title: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
   description: {
     fontSize: 12,
     color: '#666',
-    marginBottom: 8,
-    maxWidth: '90%',
+    marginBottom: 4,
   },
-  progressContainer: {
-    marginTop: 0,
-  },
-  progressCircleOuter: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#E0E0E0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  progressQuarter: {
-    position: 'absolute',
-    width: '50%',
-    height: '50%',
-    backgroundColor: '#ff7a5c',
-  },
-  progressFirstQuarter: {
-    top: 0,
-    right: 0,
-    borderTopRightRadius: 18,
-    transformOrigin: 'bottom left',
-  },
-  progressSecondQuarter: {
-    top: 0,
-    left: 0,
-    borderTopLeftRadius: 18,
-    transformOrigin: 'bottom right',
-  },
-  progressThirdQuarter: {
-    bottom: 0,
-    left: 0,
-    borderBottomLeftRadius: 18,
-    transformOrigin: 'top right',
-  },
-  progressFourthQuarter: {
-    bottom: 0,
-    right: 0,
-    borderBottomRightRadius: 18,
-    transformOrigin: 'top left',
-  },
-  progressValueContainer: {
-    width: 30,
-    height: 30, 
-    borderRadius: 15,
-    backgroundColor: 'white',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'absolute',
-  },
-  progressText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#ff7a5c',
-  },
-  teamContainer: {
+  dateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#f8f8f8',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  dateText: {
+    fontSize: 9,
+    color: '#666',
+    marginLeft: 4,
+  },
+  progressCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#f0f0f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#43d2c3',
+    marginBottom: 8,
+  },
+  progressText: {
+    fontSize: 9,
+    fontWeight: '600',
+    color: '#43d2c3',
   },
   memberAvatar: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: '#f0f0f0',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#4d8efc',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#fff',
   },
-  memberInitial: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#333',
-  },
-  moreMembers: {
-    backgroundColor: '#e0e0e0',
-  },
-  moreMembersText: {
+  memberCount: {
     fontSize: 8,
-    color: '#555',
-  },
-  taskInfoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 8,
-  },
-  taskCount: {
-    fontSize: 10,
-    color: '#666',
-    marginLeft: 4,
+    fontWeight: '700',
+    color: '#fff',
   },
 });
+
+export default ProjectCard;

@@ -12,7 +12,7 @@ import { fr } from 'date-fns/locale';
 
 export default function Notification() {
     const router = useRouter();
-    const { translations } = useLanguage();
+    const { translations, language } = useLanguage();
     const [activeTab, setActiveTab] = useState<string>('all');
     const [loading, setLoading] = useState(true);
     const [notifications, setNotifications] = useState<INotification[]>([]);
@@ -30,7 +30,7 @@ export default function Notification() {
             console.error("Failed to load notifications:", error);
             Alert.alert(
                 "Erreur",
-                "Impossible de charger les notifications. Veuillez réessayer plus tard."
+                translations.errors.loadNotifications
             );
             // Initialiser avec un tableau vide pour éviter les erreurs
             setNotifications([]);
@@ -225,14 +225,14 @@ export default function Notification() {
                     style={[styles.tab, activeTab === 'all' && styles.activeTab]}
                     onPress={() => setActiveTab('all')}
                 >
-                    <Text style={[styles.tabText, activeTab === 'all' && styles.activeTabText]}>Tous</Text>
+                    <Text style={[styles.tabText, activeTab === 'all' && styles.activeTabText]}>{translations.notifications.all}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     style={[styles.tab, activeTab === 'unread' && styles.activeTab]}
                     onPress={() => setActiveTab('unread')}
                 >
-                    <Text style={[styles.tabText, activeTab === 'unread' && styles.activeTabText]}>Non lus</Text>
+                    <Text style={[styles.tabText, activeTab === 'unread' && styles.activeTabText]}>{translations.notifications.unread}</Text>
                 </TouchableOpacity>
             </View>
 
@@ -240,34 +240,34 @@ export default function Notification() {
                 {filteredNotifications.length === 0 ? (
                     <View style={styles.emptyState}>
                         <Ionicons name="notifications-off-outline" size={60} color="#888" />
-                        <Text style={styles.emptyStateText}>Aucune notification</Text>
+                        <Text style={styles.emptyStateText}>{translations.notifications.empty}</Text>
                     </View>
                 ) : (
                     <>
                         {notificationGroups.today.length > 0 && (
                             <>
-                                <Text style={styles.sectionTitle}>Aujourd'hui</Text>
+                                <Text style={styles.sectionTitle}>{translations.notifications.today}</Text>
                                 {notificationGroups.today.map(renderNotificationItem)}
                             </>
                         )}
 
                         {notificationGroups.yesterday.length > 0 && (
                             <>
-                                <Text style={styles.sectionTitle}>Hier</Text>
+                                <Text style={styles.sectionTitle}>{translations.notifications.yesterday}</Text>
                                 {notificationGroups.yesterday.map(renderNotificationItem)}
                             </>
                         )}
 
                         {notificationGroups.thisWeek.length > 0 && (
                             <>
-                                <Text style={styles.sectionTitle}>Cette semaine</Text>
+                                <Text style={styles.sectionTitle}>{translations.notifications.thisWeek}</Text>
                                 {notificationGroups.thisWeek.map(renderNotificationItem)}
                             </>
                         )}
 
                         {notificationGroups.older.length > 0 && (
                             <>
-                                <Text style={styles.sectionTitle}>Plus ancien</Text>
+                                <Text style={styles.sectionTitle}>{translations.notifications.older}</Text>
                                 {notificationGroups.older.map(renderNotificationItem)}
                             </>
                         )}

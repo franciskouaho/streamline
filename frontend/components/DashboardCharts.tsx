@@ -4,10 +4,23 @@ import React, { useEffect, useState } from "react"
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from "react-native"
 import { LineChart, BarChart, PieChart } from "react-native-chart-kit"
 import { useProjects, useProjectStats, useProjectTimeline } from "@/services/queries/projects"
+import { useTasks, calculateTaskStats } from "@/services/queries/tasks"
 import { LoadingIndicator } from "./ui/LoadingIndicator"
-import { calculateProjectStats } from "@/utils/projectUtils"
+import { calculateProjectStats, calculateProjectProgress } from "@/utils/projectUtils"
 import { Ionicons } from "@expo/vector-icons"
 import { shadowStyles } from "@/constants/CommonStyles"
+import { STATUS_COLORS, CHART_COLORS } from "@/constants/StatusColors"
+import { Project, Task } from "@/types/project"
+
+interface ChartData {
+  labels: string[];
+  datasets: {
+    data: number[];
+    color?: (opacity: number) => string;
+    strokeWidth?: number;
+  }[];
+  legend?: string[];
+}
 
 const screenWidth = Dimensions.get("window").width - 40
 
@@ -15,6 +28,9 @@ const DashboardCharts = () => {
   const { data: projects, isLoading: isLoadingProjects } = useProjects()
   const { data: projectStats, isLoading: isLoadingStats } = useProjectStats()
   const { data: timelineData, isLoading: isLoadingTimeline } = useProjectTimeline()
+  const { data: tasks, isLoading: isLoadingTasks } = useTasks() // Récupération des tâches
+  
+  const [taskStats, setTaskStats] = useState({ todo: 0, inProgress: 0, done: 0, total: 0 }) // État pour les statistiques de tâches
 
   const [activeChart, setActiveChart] = React.useState("pie")
   const [monthlyStats, setMonthlyStats] = useState<{
@@ -103,6 +119,13 @@ const DashboardCharts = () => {
     }
   }
 
+  // Calcul des statistiques de tâches quand les données sont disponibles
+  useEffect(() => {
+    if (tasks && tasks.length > 0) {
+      setTaskStats(calculateTaskStats(tasks))
+    }
+  }, [tasks])
+
   if (isLoadingProjects || isLoadingStats) {
     return <LoadingIndicator />
   }
@@ -117,40 +140,51 @@ const DashboardCharts = () => {
   )
   console.log("Statistiques calculées:", stats)
 
-  // Données pour le graphique circulaire (Pie) - Assurez-vous que tous les statuts sont bien comptés
+  // Si vous utilisez calculateProjectProgress dans ce fichier, assurez-vous d'extraire uniquement la valeur progress
+  const projectProgressData = projects?.map(project => {
+    const result = calculateProjectProgress(project);
+    return {
+      id: project.id,
+      name: project.name,
+      progress: typeof result === 'object' && 'progress' in result ? result.progress : 0,
+      status: project.status
+    };
+  });
+
+  // Données pour le graphique circulaire (Pie) - Utilisation des constantes de couleur
   const pieChartData = [
     {
       name: "Ongoing",
       population: stats?.ongoing || 0,
-      color: "#4d8efc",
+      color: STATUS_COLORS.ONGOING,
       legendFontColor: "#7F7F7F",
       legendFontSize: 12,
     },
     {
       name: "In Progress",
       population: stats?.inProgress || 0,
-      color: "#ffb443",
+      color: STATUS_COLORS.IN_PROGRESS,
       legendFontColor: "#7F7F7F",
       legendFontSize: 12,
     },
     {
       name: "Completed",
       population: stats?.completed || 0,
-      color: "#43d2c3",
+      color: STATUS_COLORS.COMPLETED,
       legendFontColor: "#7F7F7F",
       legendFontSize: 12,
     },
     {
       name: "Canceled",
       population: stats?.canceled || 0,
-      color: "#ff7a5c",
+      color: STATUS_COLORS.CANCELED,
       legendFontColor: "#7F7F7F",
       legendFontSize: 12,
     },
   ]
 
   // Données pour le graphique linéaire (Trend) avec les vraies données
-  const lineChartData = {
+  const lineChartData: ChartData = {
     labels: monthlyStats.labels.length > 0 ? monthlyStats.labels : ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin"],
     datasets: [
       {
@@ -210,43 +244,69 @@ const DashboardCharts = () => {
     <View style={styles.chartsContainer}>
       {/* Cartes de statistiques */}
       <View style={styles.statsContainer}>
-        <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: "#4d8efc" }]}>
-          <View style={styles.statContent}>
-            <Text style={styles.statValue}>{stats?.ongoing || 0}</Text>
-            <Text style={styles.statLabel}>En cours</Text>
+        {/* Statistiques de projets et tâches */}
+        <Text style={styles.sectionTitle}>Vue d'ensemble</Text>
+        
+        <View style={styles.statsGrid}>
+          {/* Statistiques des projets */}
+          <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: STATUS_COLORS.ONGOING }]}>
+            <View style={styles.statContent}>
+              <Text style={styles.statValue}>{stats?.ongoing || 0}</Text>
+              <Text style={styles.statLabel}>Projets en cours</Text>
+            </View>
+            <View style={[styles.statIcon, { backgroundColor: STATUS_COLORS.ONGOING }]}>
+              <Ionicons name="sync" size={18} color="#fff" />
+            </View>
           </View>
-          <View style={[styles.statIcon, { backgroundColor: "#4d8efc" }]}>
-            <Ionicons name="sync" size={18} color="#fff" />
-          </View>
-        </View>
 
-        <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: "#ffb443" }]}>
-          <View style={styles.statContent}>
-            <Text style={styles.statValue}>{stats?.inProgress || 0}</Text>
-            <Text style={styles.statLabel}>En progression</Text>
+          <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: STATUS_COLORS.IN_PROGRESS }]}>
+            <View style={styles.statContent}>
+              <Text style={styles.statValue}>{stats?.inProgress || 0}</Text>
+              <Text style={styles.statLabel}>En progression</Text>
+            </View>
+            <View style={[styles.statIcon, { backgroundColor: STATUS_COLORS.IN_PROGRESS }]}>
+              <Ionicons name="time" size={18} color="#fff" />
+            </View>
           </View>
-          <View style={[styles.statIcon, { backgroundColor: "#ffb443" }]}>
-            <Ionicons name="time" size={18} color="#fff" />
-          </View>
-        </View>
 
-        <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: "#43d2c3" }]}>
-          <View style={styles.statContent}>
-            <Text style={styles.statValue}>{stats?.completed || 0}</Text>
-            <Text style={styles.statLabel}>Terminés</Text>
+          <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: STATUS_COLORS.COMPLETED }]}>
+            <View style={styles.statContent}>
+              <Text style={styles.statValue}>{stats?.completed || 0}</Text>
+              <Text style={styles.statLabel}>Projets terminés</Text>
+            </View>
+            <View style={[styles.statIcon, { backgroundColor: STATUS_COLORS.COMPLETED }]}>
+              <Ionicons name="checkmark-circle" size={18} color="#fff" />
+            </View>
           </View>
-          <View style={[styles.statIcon, { backgroundColor: "#43d2c3" }]}>
-            <Ionicons name="checkmark-circle" size={18} color="#fff" />
-          </View>
-        </View>
 
-        <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: "#ff7a5c" }]}>
-          <View style={styles.statContent}>
-            <Text style={styles.statValue}>{stats?.canceled || 0}</Text>
-            <Text style={styles.statLabel}>Annulés</Text>
+          <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: STATUS_COLORS.TODO }]}>
+            <View style={styles.statContent}>
+              <Text style={styles.statValue}>{taskStats?.todo || 0}</Text>
+              <Text style={styles.statLabel}>Tâches à faire</Text>
+            </View>
+            <View style={[styles.statIcon, { backgroundColor: STATUS_COLORS.TODO }]}>
+              <Ionicons name="list" size={18} color="#fff" />
+            </View>
           </View>
-          <View style={[styles.statIcon, { backgroundColor: "#ff7a5c" }]}>
-            <Ionicons name="close-circle" size={18} color="#fff" />
+
+          <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: STATUS_COLORS.COMPLETED }]}>
+            <View style={styles.statContent}>
+              <Text style={styles.statValue}>{taskStats?.done || 0}</Text>
+              <Text style={styles.statLabel}>Tâches terminées</Text>
+            </View>
+            <View style={[styles.statIcon, { backgroundColor: STATUS_COLORS.COMPLETED }]}>
+              <Ionicons name="checkmark-circle" size={18} color="#fff" />
+            </View>
+          </View>
+
+          <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: STATUS_COLORS.DEFAULT }]}>
+            <View style={styles.statContent}>
+              <Text style={styles.statValue}>{taskStats?.total || 0}</Text>
+              <Text style={styles.statLabel}>Total des tâches</Text>
+            </View>
+            <View style={[styles.statIcon, { backgroundColor: STATUS_COLORS.DEFAULT }]}>
+              <Ionicons name="apps" size={18} color="#fff" />
+            </View>
           </View>
         </View>
       </View>
@@ -377,7 +437,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 2,
   },
   activeChartTypeButton: {
-    backgroundColor: "#ff7a5c",
+    backgroundColor: CHART_COLORS.PRIMARY,
   },
   chartWrapper: {
     alignItems: "center",
@@ -390,9 +450,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   statsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
     marginBottom: 20,
   },
   statCard: {
@@ -424,6 +481,28 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
+  },
+  statsSection: {
+    marginBottom: 15,
+    width: '100%',
+  },
+  
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 15,
+    marginLeft: 5,
+  },
+  
+  cardsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  statsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
   },
 })
 
