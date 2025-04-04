@@ -3,17 +3,20 @@ FROM node:21-alpine as base
 RUN corepack enable
 RUN corepack prepare yarn@latest --activate
 
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV YARN_NETWORK_TIMEOUT=300000
+
 # All deps stage
 FROM base AS deps
 WORKDIR /app
 ADD package.json yarn.lock ./
-RUN yarn install
+RUN yarn install --network-timeout 300000
 
 # Production only deps stage
 FROM base AS production-deps
 WORKDIR /app
 ADD package.json yarn.lock ./
-RUN yarn install --production
+RUN yarn install
 
 # Build stage
 FROM base AS build
@@ -27,8 +30,9 @@ FROM base
 ENV NODE_ENV=production
 WORKDIR /app
 
-# Installer FFmpeg
-RUN apk add --no-cache ffmpeg
+# Installer FFmpeg avec une pause entre les commandes pour éviter les problèmes de mémoire
+RUN apk update && \
+    apk add --no-cache ffmpeg
 
 COPY --from=production-deps /app/node_modules /app/node_modules
 COPY --from=build /app/build /app
