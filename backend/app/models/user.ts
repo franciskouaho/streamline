@@ -6,6 +6,7 @@ import Project from '#models/project'
 import Task from '#models/task'
 import Comment from '#models/comment'
 import Notification from '#models/notification'
+import NotificationSetting from '#models/notification_setting'
 import ProjectMember from '#models/project_member'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 
@@ -58,6 +59,9 @@ export default class User extends BaseModel {
 
   @hasMany(() => Notification)
   declare notifications: HasMany<typeof Notification>
+
+  @hasOne(() => NotificationSetting)
+  declare notificationSettings: HasOne<typeof NotificationSetting>
 
   @hasMany(() => ProjectMember)
   declare projectMemberships: HasMany<typeof ProjectMember>

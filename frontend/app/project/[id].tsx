@@ -240,12 +240,6 @@ export default function ProjectDetails() {
                                         </Text>
                                     )}
                                 </View>
-                                <TouchableOpacity 
-                                    style={styles.moreButton}
-                                    onPress={() => router.push(`/task/${task.id}`)}
-                                >
-                                    <Ionicons name="ellipsis-horizontal" size={18} color="#888" />
-                                </TouchableOpacity>
                             </View>
                         ))
                     )}

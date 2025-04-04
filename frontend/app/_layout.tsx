@@ -3,12 +3,15 @@ import { Stack, Redirect } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { useAuthStore } from "@/stores/auth";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { AuthProvider } from "@/contexts/AuthContext"; // Ajouter l'import
 import { useNetInfo } from '@react-native-community/netinfo';
 import * as Device from 'expo-device';
+import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 
 // Empêcher le splash screen de se cacher automatiquement
 SplashScreen.preventAutoHideAsync();
@@ -60,6 +63,81 @@ const RootLayout = () => {
         prepare();
     }, [netInfo.isConnected]);
 
+    // Configuration des notifications
+    useEffect(() => {
+        const { user } = useAuthStore.getState();
+        
+        registerForPushNotificationsAsync().then(token => {
+            if (token && user?.id) {
+                import('@/services/notifications').then(({ registerDeviceToken }) => {
+                    registerDeviceToken({
+                        userId: user.id,
+                        deviceId: Device.deviceName || 'unknown',
+                        pushToken: token,
+                        deviceType: Platform.OS,
+                        deviceName: Device.deviceName || 'unknown',
+                        appVersion: Constants.expoConfig?.version || '1.0.0',
+                        osVersion: Device.osVersion || 'unknown'
+                    }).catch(err => console.error('Failed to register device token:', err));
+                });
+            }
+        });
+
+        // Gestionnaire lorsqu'une notification est reçue pendant que l'app est au premier plan
+        const notificationListener = Notifications.addNotificationReceivedListener(notification => {
+            console.log('Notification reçue:', notification);
+            // Vous pouvez ajouter une logique ici pour mettre à jour l'interface utilisateur
+        });
+
+        // Gestionnaire lorsqu'une notification est tapée par l'utilisateur
+        const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+            console.log('Notification tapée:', response);
+            // Ajoutez ici la logique pour naviguer vers l'écran approprié en fonction du type de notification
+        });
+
+        return () => {
+            Notifications.removeNotificationSubscription(notificationListener);
+            Notifications.removeNotificationSubscription(responseListener);
+        };
+    }, []);
+
+    // Fonction pour demander et récupérer le token de notification
+    async function registerForPushNotificationsAsync() {
+        let token;
+
+        if (Platform.OS === 'android') {
+            await Notifications.setNotificationChannelAsync('default', {
+                name: 'default',
+                importance: Notifications.AndroidImportance.MAX,
+                vibrationPattern: [0, 250, 250, 250],
+                lightColor: '#FF231F7C',
+            });
+        }
+
+        if (Device.isDevice) {
+            const { status: existingStatus } = await Notifications.getPermissionsAsync();
+            let finalStatus = existingStatus;
+
+            if (existingStatus !== 'granted') {
+                const { status } = await Notifications.requestPermissionsAsync();
+                finalStatus = status;
+            }
+
+            if (finalStatus !== 'granted') {
+                console.log('Failed to get push token for push notification!');
+                return;
+            }
+
+            token = (await Notifications.getExpoPushTokenAsync({
+                projectId: Constants.expoConfig?.extra?.eas?.projectId,
+            })).data;
+        } else {
+            console.log('Must use physical device for Push Notifications');
+        }
+
+        return token;
+    }
+
     const handleRetry = () => {
         setInitError(null);
         setAppIsReady(false);
@@ -105,17 +183,19 @@ const RootLayout = () => {
     return (
         <QueryProvider>
             <LanguageProvider>
-                <GestureHandlerRootView style={{flex: 1}}>
-                    <StatusBar style="auto"/>
-                    <Stack
-                        screenOptions={{
-                            headerShown: false,
-                            contentStyle: {backgroundColor: "#f2f2f2"},
-                            animation: "slide_from_right",
-                        }}
-                    />
-                    {!isAuthenticated && <Redirect href="/login" />}
-                </GestureHandlerRootView>
+                <AuthProvider>
+                    <GestureHandlerRootView style={{flex: 1}}>
+                        <StatusBar style="auto"/>
+                        <Stack
+                            screenOptions={{
+                                headerShown: false,
+                                contentStyle: {backgroundColor: "#f2f2f2"},
+                                animation: "slide_from_right",
+                            }}
+                        />
+                        {!isAuthenticated && <Redirect href="/login" />}
+                    </GestureHandlerRootView>
+                </AuthProvider>
             </LanguageProvider>
         </QueryProvider>
     );

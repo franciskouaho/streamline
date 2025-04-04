@@ -84,8 +84,26 @@ router
                 router.get('/', [NotificationsController, 'index'])
                 router.put('/:id/read', [NotificationsController, 'markAsRead'])
                 router.delete('/:id', [NotificationsController, 'destroy'])
+                router.post('/mark-all-read', [NotificationsController, 'markAllAsRead'])
+                router.post('/send-test-notification', [
+                  NotificationsController,
+                  'sendTestNotification',
+                ])
               })
               .prefix('/notifications')
+
+            // Notification settings routes
+            router.get(
+              '/notification-settings/:id?',
+              '#controllers/notification_settings_controller.show'
+            )
+            router.put(
+              '/notification-settings/:id?',
+              '#controllers/notification_settings_controller.update'
+            )
+
+            // Device tokens route
+            router.post('/device-tokens', '#controllers/device_tokens_controller.store')
           })
           .use([middleware.auth()])
       })
