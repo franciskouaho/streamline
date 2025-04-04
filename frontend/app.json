@@ -8,14 +8,17 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "package": "com.emplica.streamline",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.streamline"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/splash.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.anonymous.streamline"
     },
     "web": {
       "bundler": "metro",
