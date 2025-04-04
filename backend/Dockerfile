@@ -13,14 +13,17 @@ WORKDIR /app
 # Copier uniquement les fichiers nécessaires pour installer les dépendances
 COPY package.json yarn.lock ./
 
-# Installer les dépendances avec des options compatibles avec Yarn
+# Installer les dépendances incluant les dépendances de développement
 RUN yarn install --frozen-lockfile --network-timeout 100000
+
+# Installer spécifiquement ts-node-maintained si nécessaire
+RUN yarn add ts-node-maintained --dev
 
 # Copier le reste des fichiers
 COPY . .
 
-# Build de l'application
-RUN node ace build
+# Build de l'application avec les variables d'environnement nécessaires
+RUN NODE_ENV=development node ace build
 
 # Stage de production
 FROM base as production
