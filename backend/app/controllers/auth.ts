@@ -29,7 +29,7 @@ export default class AuthController {
       const token: AccessToken = await User.accessTokens.create(user)
 
       return response.ok({
-        token: token.value.release(),
+        token: token.value?.release(),
         user: {
           id: user.id,
           email: user.email,
@@ -73,7 +73,7 @@ export default class AuthController {
       const token: AccessToken = await User.accessTokens.create(user)
 
       return response.created({
-        token: token.value.release(),
+        token: token.value?.release(),
         user: {
           id: user.id,
           email: user.email,
@@ -91,18 +91,16 @@ export default class AuthController {
   /**
    * Déconnecte un utilisateur
    */
-  async logout({ auth, response }: HttpContext) {
-    try {
-      await auth.use('api').revoke()
-      return response.ok({
-        message: 'Déconnecté avec succès',
-      })
-    } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error)
-      return response.internalServerError({
-        message: 'Une erreur est survenue lors de la déconnexion',
-      })
-    }
+  public async logout({ auth, response }: HttpContext) {
+    const user = await auth.authenticate()
+
+    await User.accessTokens.delete(user, user.currentAccessToken.identifier)
+
+    return response.ok({
+      success: true,
+      message: 'User logged out',
+      data: user,
+    })
   }
 
   /**
@@ -162,8 +160,9 @@ export default class AuthController {
     const user = auth.user!
 
     try {
-      // Révoquer tous les tokens d'accès
-      await User.accessTokens.revokeForUser(user)
+      // Révoquer tous les tokens d'accès pour cet utilisateur
+
+      await User.accessTokens.delete(user, user.currentAccessToken.identifier)
 
       // Supprimer l'utilisateur
       await user.delete()

@@ -5,7 +5,10 @@ import ProjectMember from '#models/project_member'
 export default class ProjectMembers {
   async store({ request, response }: HttpContext) {
     const data = await request.validateUsing(projectMemberValidator)
-    const member = await ProjectMember.create(data)
+    const member = await ProjectMember.create({
+      ...data,
+      permissions: data.permissions ? JSON.parse(JSON.stringify(data.permissions)) : null,
+    })
     await member.load('user')
     return response.created(member)
   }
@@ -13,7 +16,14 @@ export default class ProjectMembers {
   async update({ params, request, response }: HttpContext) {
     const member = await ProjectMember.findOrFail(params.id)
     const data = await request.validateUsing(projectMemberValidator)
-    await member.merge(data).save()
+    await member
+      .merge({
+        ...data,
+        permissions: data.permissions
+          ? JSON.parse(JSON.stringify(data.permissions))
+          : member.permissions,
+      })
+      .save()
     await member.load('user')
     return response.ok(member)
   }

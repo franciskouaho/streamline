@@ -84,34 +84,4 @@ export default class Notifications {
       })
     }
   }
-
-  async sendTestNotification({ request, auth, response }: HttpContext) {
-    try {
-      const { device_token } = request.only(['device_token'])
-
-      // Créer une notification de test dans la base de données
-      await Notification.create({
-        userId: auth.user!.id,
-        type: 'test_notification',
-        data: { message: 'Ceci est une notification de test' },
-        read: false, // Valeur explicite au lieu de compter sur un défaut
-        relatedType: null,
-        relatedId: null,
-      })
-
-      // Note: l'envoi réel de la notification push nécessiterait une intégration avec
-      // Firebase Cloud Messaging ou un autre service similaire
-
-      return response.ok({
-        success: true,
-        message: 'Notification de test envoyée et enregistrée',
-      })
-    } catch (error) {
-      console.error("Erreur lors de l'envoi de la notification de test:", error)
-      return response.internalServerError({
-        message: "Une erreur est survenue lors de l'envoi de la notification de test",
-        error: error.message,
-      })
-    }
-  }
 }

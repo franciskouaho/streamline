@@ -1,6 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { createTaskValidator, updateTaskValidator } from '#validators/task'
 import Task from '#models/task'
+import { DateTime } from 'luxon'
 
 export default class Tasks {
   async index({ request, response }: HttpContext) {
@@ -32,18 +33,24 @@ export default class Tasks {
         return response.unauthorized('User not authenticated')
       }
 
-      const taskData = {
+      const taskDataTemp: any = {
         ...data,
         assigneeId: data.assigneeId || null,
         status: data.status || 'todo',
         priority: data.priority || 'medium',
-        projectId: data.projectId || 1, // Utiliser 1 comme valeur par défaut
+        projectId: data.projectId || 1,
         createdBy: auth.user.id,
       }
 
-      console.log('Creating task with data:', taskData)
+      // Conversion explicite de dueDate
+      if (taskDataTemp.dueDate) {
+        taskDataTemp.dueDate = DateTime.fromISO(taskDataTemp.dueDate)
+      }
 
-      const task = await Task.create(taskData)
+      console.log('Creating task with data:', taskDataTemp)
+
+      // Utilisation de la variable temporaire pour créer la tâche
+      const task = await Task.create(taskDataTemp)
       if (task.assigneeId) {
         await task.load('assignee')
       }
@@ -79,7 +86,15 @@ export default class Tasks {
 
       console.log('Updating task:', { taskId: params.id, updates: data })
 
-      await task.merge(data).save()
+      // Créer une copie des données pour la manipulation
+      const processedData: any = { ...data }
+
+      // Convertir dueDate de string à DateTime si elle existe
+      if (processedData.dueDate) {
+        processedData.dueDate = DateTime.fromISO(processedData.dueDate as string)
+      }
+
+      await task.merge(processedData).save()
       await task.load('assignee')
 
       console.log('Task updated successfully:', task)

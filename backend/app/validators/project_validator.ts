@@ -4,11 +4,11 @@ export const createProjectValidator = vine.compile(
   vine.object({
     name: vine.string(),
     description: vine.string().optional(),
-    status: vine.string().optional().default('active'),
+    status: vine.string().optional(),
     image: vine.string().optional(),
     startDate: vine.date().optional(),
     endDate: vine.date().optional(),
-    settings: vine.object().optional(),
+    settings: vine.object({}).optional(),
   })
 )
 
@@ -20,6 +20,6 @@ export const updateProjectValidator = vine.compile(
     image: vine.string().optional(),
     startDate: vine.date().optional(),
     endDate: vine.date().optional(),
-    settings: vine.object().optional(),
+    settings: vine.object({}).optional(),
   })
 )

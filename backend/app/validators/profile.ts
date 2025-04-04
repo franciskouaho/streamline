@@ -5,7 +5,7 @@ export const profileValidator = vine.compile(
     bio: vine.string().optional(),
     location: vine.string().optional(),
     website: vine.string().url().optional(),
-    preferences: vine.object().optional(),
-    socialLinks: vine.object().optional(),
+    preferences: vine.object({}).optional(),
+    socialLinks: vine.object({}).optional(),
   })
 )

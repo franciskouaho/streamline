@@ -1,25 +1,32 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import { commentValidator } from '#validators/comment'
 import Comment from '#models/comment'
+import { commentValidator } from '#validators/comment'
 
 export default class Comments {
   async index({ request, response }: HttpContext) {
     const { taskId, projectId } = request.qs()
-    const query = Comment.query().preload('user').preload('replies')
+    const query = Comment.query()
 
-    if (taskId) query.where('taskId', taskId)
-    if (projectId) query.where('projectId', projectId)
+    if (taskId) {
+      query.where('taskId', taskId)
+    } else if (projectId) {
+      query.where('projectId', projectId)
+    }
 
-    const comments = await query
+    const comments = await query.preload('user')
     return response.ok(comments)
   }
 
   async store({ request, auth, response }: HttpContext) {
     const data = await request.validateUsing(commentValidator)
+
     const comment = await Comment.create({
       ...data,
       userId: auth.user!.id,
+      // Conversion en JSON valide pour le stockage
+      attachments: data.attachments ? JSON.parse(JSON.stringify(data.attachments)) : null,
     })
+
     await comment.load('user')
     return response.created(comment)
   }
@@ -27,25 +34,37 @@ export default class Comments {
   async show({ params, response }: HttpContext) {
     const comment = await Comment.findOrFail(params.id)
     await comment.load('user')
-    await comment.load('replies')
+
+    // Charger les réponses si c'est un commentaire parent
+    if (!comment.parentCommentId) {
+      await comment.load('replies', (query) => {
+        query.preload('user')
+      })
+    }
+
     return response.ok(comment)
   }
 
-  async update({ params, request, auth, response }: HttpContext) {
+  async update({ params, request, response }: HttpContext) {
     const comment = await Comment.findOrFail(params.id)
-    if (comment.userId !== auth.user!.id) {
-      return response.forbidden()
-    }
     const data = await request.validateUsing(commentValidator)
-    await comment.merge(data).save()
+
+    await comment
+      .merge({
+        ...data,
+        // Conversion en JSON valide pour le stockage
+        attachments: data.attachments
+          ? JSON.parse(JSON.stringify(data.attachments))
+          : comment.attachments,
+      })
+      .save()
+
+    await comment.load('user')
     return response.ok(comment)
   }
 
-  async destroy({ params, auth, response }: HttpContext) {
+  async destroy({ params, response }: HttpContext) {
     const comment = await Comment.findOrFail(params.id)
-    if (comment.userId !== auth.user!.id) {
-      return response.forbidden()
-    }
     await comment.delete()
     return response.noContent()
   }

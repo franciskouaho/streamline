@@ -51,10 +51,35 @@ export default class Projects {
   }
 
   async update({ request, params, response }: HttpContext) {
-    const project = await Project.findOrFail(params.id)
-    const data = await request.validateUsing(updateProjectValidator)
-    await project.merge(data).save()
-    return response.ok(project)
+    try {
+      const project = await Project.findOrFail(params.id)
+      const data = await request.validateUsing(updateProjectValidator)
+
+      // Préparer les données à mettre à jour
+      const updateData: any = { ...data }
+
+      // Convertir les dates si elles sont présentes
+      if (data.startDate) {
+        updateData.startDate = DateTime.fromISO(data.startDate)
+      } else if (data.startDate === null) {
+        updateData.startDate = null
+      }
+
+      if (data.endDate) {
+        updateData.endDate = DateTime.fromISO(data.endDate)
+      } else if (data.endDate === null) {
+        updateData.endDate = null
+      }
+
+      await project.merge(updateData).save()
+      return response.ok(project)
+    } catch (error) {
+      console.error('Project update error:', error)
+      return response.internalServerError({
+        message: 'Error updating project',
+        error: error.message,
+      })
+    }
   }
 
   async destroy({ params, response }: HttpContext) {

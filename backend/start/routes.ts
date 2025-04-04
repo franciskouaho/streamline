@@ -17,8 +17,6 @@ const CommentsController = () => import('#controllers/comments')
 const NotificationsController = () => import('#controllers/notifications')
 const ProjectMembersController = () => import('#controllers/project_members')
 
-// Appliquer le préfixe global à toutes les routes
-// Correction: Utiliser .group() au lieu de .prefix() pour définir un préfixe global
 router
   .group(() => {
     // Routes de santé
@@ -85,10 +83,6 @@ router
                 router.put('/:id/read', [NotificationsController, 'markAsRead'])
                 router.delete('/:id', [NotificationsController, 'destroy'])
                 router.post('/mark-all-read', [NotificationsController, 'markAllAsRead'])
-                router.post('/send-test-notification', [
-                  NotificationsController,
-                  'sendTestNotification',
-                ])
               })
               .prefix('/notifications')
 
@@ -109,4 +103,4 @@ router
       })
       .use([middleware.auth()])
   })
-  .prefix('/api/v1') // Utilisation correcte du préfixe global avec prefix()
+  .prefix('/api/v1')
