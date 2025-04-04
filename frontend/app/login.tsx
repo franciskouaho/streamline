@@ -51,7 +51,7 @@ export default function Login() {
                             <View style={styles.titleContainer}>
                                 <Text style={[styles.title, { color: '#000' }]}>{translations.auth.login}</Text>
                                 <Image
-                                    source={require('../assets/images/wave.jpeg')}
+                                    source={require('../assets/images/wave.png')}
                                     style={styles.waveIcon}
                                 />
                             </View>

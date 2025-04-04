@@ -1,24 +1,23 @@
 {
   "expo": {
-    "name": "streamline",
-    "slug": "streamline",
+    "name": "Streamline",
+    "slug": "Streamline",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/splash.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "package": "com.emplica.streamline",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.streamline"
+      "bundleIdentifier": "com.emplica.streamline"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/splash.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.anonymous.streamline"
+      "package": "com.emplica.streamline"
     },
     "web": {
       "bundler": "metro",

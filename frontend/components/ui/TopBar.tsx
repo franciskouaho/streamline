@@ -40,7 +40,7 @@ export const TopBar = () => {
                                 {translations.common.welcome}, {profile?.fullName?.split(' ')[0] ?? 'User'}
                             </Text>
                             <Image
-                                source={require("../../assets/images/wave.jpeg")}
+                                source={require("../../assets/images/wave.png")}
                                 style={styles.waveIcon}
                             />
                         </View>

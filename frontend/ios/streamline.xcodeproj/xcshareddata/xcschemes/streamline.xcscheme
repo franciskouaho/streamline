@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "streamline.app"
-               BlueprintName = "streamline"
-               ReferencedContainer = "container:streamline.xcodeproj">
+               BuildableName = "Streamline.app"
+               BlueprintName = "Streamline"
+               ReferencedContainer = "container:Streamline.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "streamlineTests.xctest"
-               BlueprintName = "streamlineTests"
-               ReferencedContainer = "container:streamline.xcodeproj">
+               BuildableName = "StreamlineTests.xctest"
+               BlueprintName = "StreamlineTests"
+               ReferencedContainer = "container:Streamline.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "streamline.app"
-            BlueprintName = "streamline"
-            ReferencedContainer = "container:streamline.xcodeproj">
+            BuildableName = "Streamline.app"
+            BlueprintName = "Streamline"
+            ReferencedContainer = "container:Streamline.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "streamline.app"
-            BlueprintName = "streamline"
-            ReferencedContainer = "container:streamline.xcodeproj">
+            BuildableName = "Streamline.app"
+            BlueprintName = "Streamline"
+            ReferencedContainer = "container:Streamline.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

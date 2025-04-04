@@ -1,4 +1,4 @@
-packagecom.emplica.streamline
+package com.emplica.streamline
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

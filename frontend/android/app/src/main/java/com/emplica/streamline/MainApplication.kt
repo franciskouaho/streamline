@@ -1,4 +1,4 @@
-packagecom.emplica.streamline
+package com.emplica.streamline
 
 import android.app.Application
 import android.content.res.Configuration
