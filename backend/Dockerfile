@@ -3,14 +3,11 @@ FROM node:21-alpine as base
 RUN corepack enable
 RUN corepack prepare yarn@latest --activate
 
-ENV NODE_OPTIONS="--max-old-space-size=4096"
-ENV YARN_NETWORK_TIMEOUT=300000
-
 # All deps stage
 FROM base AS deps
 WORKDIR /app
 ADD package.json yarn.lock ./
-RUN yarn install --network-timeout 300000
+RUN yarn install
 
 # Production only deps stage
 FROM base AS production-deps
