@@ -1,38 +1,36 @@
 FROM node:21-alpine as base
 
-RUN corepack enable
-RUN corepack prepare yarn@latest --activate
+# Configurer l'environnement pour limiter la mémoire
+ENV NODE_OPTIONS="--max-old-space-size=512"
 
-# All deps stage
-FROM base AS deps
-WORKDIR /app
-COPY package.json yarn.lock ./
-RUN yarn install --verbose && ls -la /app
+# Activer corepack sans verbosité excessive
+RUN corepack enable && corepack prepare yarn@stable --activate
 
-# Production only deps stage
-FROM base AS production-deps
+# Stage de build unique
+FROM base as build
 WORKDIR /app
-COPY package.json yarn.lock ./
-RUN yarn install --verbose && ls -la /app
 
-# Build stage
-FROM base AS build
-WORKDIR /app
+# Copier uniquement les fichiers nécessaires pour installer les dépendances
 COPY package.json yarn.lock ./
-COPY --from=deps /app/node_modules ./node_modules
+
+# Installer les dépendances avec des options pour économiser la mémoire
+RUN yarn install --immutable --network-concurrency=1 --network-timeout=100000
+
+# Copier le reste des fichiers
 COPY . .
+
+# Build de l'application
 RUN node ace build
 
-# Production stage
-FROM base
+# Stage de production
+FROM base as production
 ENV NODE_ENV=production
 WORKDIR /app
 
-# Installer FFmpeg avec une pause entre les commandes pour éviter les problèmes de mémoire
-RUN apk update && \
-    apk add --no-cache ffmpeg
+RUN apk update && apk add --no-cache ffmpeg
 
-COPY --from=production-deps /app/node_modules ./node_modules
 COPY --from=build /app/build .
+COPY --from=build /app/node_modules ./node_modules
+
 EXPOSE 8080
 CMD ["node", "./bin/server.js"]
