@@ -1,10 +1,10 @@
 FROM node:21-alpine as base
 
 # Configurer l'environnement pour limiter la mémoire
-ENV NODE_OPTIONS="--max-old-space-size=512"
+ENV NODE_OPTIONS="--max-old-space-size=256"
 
-# Activer corepack sans verbosité excessive
-RUN corepack enable && corepack prepare yarn@stable --activate
+# Activer corepack avec une version spécifique plus stable
+RUN corepack enable && corepack prepare yarn@1.22.19 --activate
 
 # Stage de build unique
 FROM base as build
@@ -13,8 +13,8 @@ WORKDIR /app
 # Copier uniquement les fichiers nécessaires pour installer les dépendances
 COPY package.json yarn.lock ./
 
-# Installer les dépendances avec des options pour économiser la mémoire
-RUN yarn install --immutable --network-concurrency=1 --network-timeout=100000
+# Installer les dépendances avec des options compatibles avec Yarn
+RUN yarn install --frozen-lockfile --network-timeout 100000
 
 # Copier le reste des fichiers
 COPY . .
@@ -27,7 +27,9 @@ FROM base as production
 ENV NODE_ENV=production
 WORKDIR /app
 
-RUN apk update && apk add --no-cache ffmpeg
+# Augmenter la limite de mémoire disponible pour apk
+RUN apk update && \
+    apk add --no-cache ffmpeg
 
 COPY --from=build /app/build .
 COPY --from=build /app/node_modules ./node_modules
