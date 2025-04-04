@@ -16,8 +16,7 @@ const getApiUrl = () => {
       return 'http://localhost:3333/api/v1';  // Pour le web
     }
   } else {
-    // En production, utiliser l'URL réelle de votre API
-    return 'https://votre-api-de-production.com/api/v1';
+    return 'https://api.emplica.fr/api/v1';
   }
 };
 
