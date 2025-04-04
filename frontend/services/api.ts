@@ -4,16 +4,14 @@ import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import i18n from '@/i18n';
 
-// Fonction améliorée pour obtenir l'URL de l'API selon la plateforme
 const getApiUrl = () => {
   if (__DEV__) {
-    // En développement
     if (Platform.OS === 'ios') {
-      return 'http://localhost:3333/api/v1';  // Pour iOS Simulator
+      return 'http://localhost:3333/api/v1';
     } else if (Platform.OS === 'android') {
-      return 'http://10.0.2.2:3333/api/v1';  // Pour Android Emulator
+      return 'http://10.0.2.2:3333/api/v1';
     } else {
-      return 'http://localhost:3333/api/v1';  // Pour le web
+      return 'http://localhost:3333/api/v1';
     }
   } else {
     return 'https://api.emplica.fr/api/v1';
