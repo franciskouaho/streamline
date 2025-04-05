@@ -11,6 +11,7 @@ import { Ionicons } from "@expo/vector-icons"
 import { shadowStyles } from "@/constants/CommonStyles"
 import { STATUS_COLORS, CHART_COLORS } from "@/constants/StatusColors"
 import { Project, Task } from "@/types/project"
+import { useLanguage } from "@/contexts/LanguageContext"
 
 interface ChartData {
   labels: string[];
@@ -29,6 +30,7 @@ const DashboardCharts = () => {
   const { data: projectStats, isLoading: isLoadingStats } = useProjectStats()
   const { data: timelineData, isLoading: isLoadingTimeline } = useProjectTimeline()
   const { data: tasks, isLoading: isLoadingTasks } = useTasks() // Récupération des tâches
+  const { translations } = useLanguage() // Ajout de l'accès aux traductions
   
   const [taskStats, setTaskStats] = useState({ todo: 0, inProgress: 0, done: 0, total: 0 }) // État pour les statistiques de tâches
 
@@ -245,14 +247,14 @@ const DashboardCharts = () => {
       {/* Cartes de statistiques */}
       <View style={styles.statsContainer}>
         {/* Statistiques de projets et tâches */}
-        <Text style={styles.sectionTitle}>Vue d'ensemble</Text>
+        <Text style={styles.sectionTitle}>{translations.dashboardCharts.overview}</Text>
         
         <View style={styles.statsGrid}>
           {/* Statistiques des projets */}
           <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: STATUS_COLORS.ONGOING }]}>
             <View style={styles.statContent}>
               <Text style={styles.statValue}>{stats?.ongoing || 0}</Text>
-              <Text style={styles.statLabel}>Projets en cours</Text>
+              <Text style={styles.statLabel}>{translations.dashboardCharts.ongoingProjects}</Text>
             </View>
             <View style={[styles.statIcon, { backgroundColor: STATUS_COLORS.ONGOING }]}>
               <Ionicons name="sync" size={18} color="#fff" />
@@ -262,7 +264,7 @@ const DashboardCharts = () => {
           <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: STATUS_COLORS.IN_PROGRESS }]}>
             <View style={styles.statContent}>
               <Text style={styles.statValue}>{stats?.inProgress || 0}</Text>
-              <Text style={styles.statLabel}>En progression</Text>
+              <Text style={styles.statLabel}>{translations.dashboardCharts.inProgress}</Text>
             </View>
             <View style={[styles.statIcon, { backgroundColor: STATUS_COLORS.IN_PROGRESS }]}>
               <Ionicons name="time" size={18} color="#fff" />
@@ -272,7 +274,7 @@ const DashboardCharts = () => {
           <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: STATUS_COLORS.COMPLETED }]}>
             <View style={styles.statContent}>
               <Text style={styles.statValue}>{stats?.completed || 0}</Text>
-              <Text style={styles.statLabel}>Projets terminés</Text>
+              <Text style={styles.statLabel}>{translations.dashboardCharts.completedProjects}</Text>
             </View>
             <View style={[styles.statIcon, { backgroundColor: STATUS_COLORS.COMPLETED }]}>
               <Ionicons name="checkmark-circle" size={18} color="#fff" />
@@ -282,7 +284,7 @@ const DashboardCharts = () => {
           <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: STATUS_COLORS.TODO }]}>
             <View style={styles.statContent}>
               <Text style={styles.statValue}>{taskStats?.todo || 0}</Text>
-              <Text style={styles.statLabel}>Tâches à faire</Text>
+              <Text style={styles.statLabel}>{translations.dashboardCharts.todoTasks}</Text>
             </View>
             <View style={[styles.statIcon, { backgroundColor: STATUS_COLORS.TODO }]}>
               <Ionicons name="list" size={18} color="#fff" />
@@ -292,7 +294,7 @@ const DashboardCharts = () => {
           <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: STATUS_COLORS.COMPLETED }]}>
             <View style={styles.statContent}>
               <Text style={styles.statValue}>{taskStats?.done || 0}</Text>
-              <Text style={styles.statLabel}>Tâches terminées</Text>
+              <Text style={styles.statLabel}>{translations.dashboardCharts.completedTasks}</Text>
             </View>
             <View style={[styles.statIcon, { backgroundColor: STATUS_COLORS.COMPLETED }]}>
               <Ionicons name="checkmark-circle" size={18} color="#fff" />
@@ -302,7 +304,7 @@ const DashboardCharts = () => {
           <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: STATUS_COLORS.DEFAULT }]}>
             <View style={styles.statContent}>
               <Text style={styles.statValue}>{taskStats?.total || 0}</Text>
-              <Text style={styles.statLabel}>Total des tâches</Text>
+              <Text style={styles.statLabel}>{translations.dashboardCharts.totalTasks}</Text>
             </View>
             <View style={[styles.statIcon, { backgroundColor: STATUS_COLORS.DEFAULT }]}>
               <Ionicons name="apps" size={18} color="#fff" />
@@ -313,7 +315,7 @@ const DashboardCharts = () => {
 
       <View style={styles.chartCard}>
         <View style={styles.chartHeader}>
-          <Text style={styles.chartTitle}>Aperçu des projets</Text>
+          <Text style={styles.chartTitle}>{translations.dashboardCharts.projectOverview}</Text>
 
           <View style={styles.chartTypesContainer}>
             <TouchableOpacity

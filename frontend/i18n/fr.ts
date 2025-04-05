@@ -129,7 +129,18 @@ export default {
     progress: "Progrès",
     startDate: "Date de début",
     endDate: "Date de fin",
-    testNotification: "Envoyer une notification test"
+    testNotification: "Envoyer une notification test",
+    // Ajouts pour l'écran d'accueil
+    dashboard: "Tableau de bord",
+    statistics: "Statistiques",
+    completedProjects: "Projets terminés",
+    ongoingProjects: "Projets en cours",
+    pendingTasks: "Tâches en attente",
+    completedTasks: "Tâches terminées",
+    projectProgress: "Progression du projet",
+    tasksOverview: "Aperçu des tâches",
+    activityFeed: "Activités récentes",
+    upcomingDeadlines: "Échéances à venir"
   },
   calendar: {
     today: "Aujourd'hui",
@@ -226,5 +237,30 @@ export default {
     physicalDeviceRequired: "Les notifications push ne fonctionnent pas sur un émulateur",
     tokenUnavailable: "Token de notification non disponible. Assurez-vous d'avoir accordé les permissions requises.",
     testNotificationSuccess: "Une notification de test a été envoyée à votre appareil."
+  },
+  dashboard: {
+    welcomeBack: "Bon retour",
+    todaysOverview: "Aperçu du jour",
+    tasksDueToday: "Tâches dues aujourd'hui",
+    newNotifications: "Nouvelles notifications",
+    activeProjects: "Projets actifs",
+    yourPerformance: "Votre performance",
+    weeklyActivity: "Activité hebdomadaire",
+    monthlyProgress: "Progression mensuelle",
+    recentActivity: "Activité récente",
+    moreDetails: "Plus de détails"
+  },
+  topBar: {
+    dailyMessage: "Passez une bonne journée !",
+  },
+  dashboardCharts: {
+    overview: "Vue d'ensemble",
+    ongoingProjects: "Projets en cours",
+    inProgress: "En progression",
+    completedProjects: "Projets terminés",
+    todoTasks: "Tâches à faire",
+    completedTasks: "Tâches terminées",
+    totalTasks: "Total des tâches",
+    projectOverview: "Aperçu des projets",
   }
 };

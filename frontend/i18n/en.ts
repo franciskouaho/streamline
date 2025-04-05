@@ -1,5 +1,3 @@
-import { create } from "zustand";
-
 export default {
   common: {
     welcome: "Welcome",
@@ -124,7 +122,18 @@ export default {
     progress: "Progress",
     startDate: "Start Date",
     endDate: "End Date",
-    testNotification: "Send test notification"
+    testNotification: "Send test notification",
+    // Additions for home screen
+    dashboard: "Dashboard",
+    statistics: "Statistics",
+    completedProjects: "Completed Projects",
+    ongoingProjects: "Ongoing Projects",
+    pendingTasks: "Pending Tasks",
+    completedTasks: "Completed Tasks",
+    projectProgress: "Project Progress",
+    tasksOverview: "Tasks Overview",
+    activityFeed: "Recent Activities",
+    upcomingDeadlines: "Upcoming Deadlines"
   },
   calendar: {
     today: "Today",
@@ -221,5 +230,30 @@ export default {
     physicalDeviceRequired: "Push notifications don't work on an emulator",
     tokenUnavailable: "Notification token not available. Make sure you have granted the required permissions.",
     testNotificationSuccess: "A test notification has been sent to your device."
+  },
+  dashboard: {
+    welcomeBack: "Welcome Back",
+    todaysOverview: "Today's Overview",
+    tasksDueToday: "Tasks Due Today",
+    newNotifications: "New Notifications",
+    activeProjects: "Active Projects",
+    yourPerformance: "Your Performance",
+    weeklyActivity: "Weekly Activity",
+    monthlyProgress: "Monthly Progress",
+    recentActivity: "Recent Activity",
+    moreDetails: "More Details"
+  },
+  topBar: {
+    dailyMessage: "Have a great day!",
+  },
+  dashboardCharts: {
+    overview: "Overview",
+    ongoingProjects: "Ongoing projects",
+    inProgress: "In progress",
+    completedProjects: "Completed projects",
+    todoTasks: "Todo tasks",
+    completedTasks: "Completed tasks",
+    totalTasks: "Total tasks",
+    projectOverview: "Project overview",
   }
 };
