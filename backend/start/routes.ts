@@ -17,12 +17,11 @@ const CommentsController = () => import('#controllers/comments')
 const NotificationsController = () => import('#controllers/notifications')
 const ProjectMembersController = () => import('#controllers/project_members')
 
+router.get('/', async ({ response }) => response.ok({ uptime: process.uptime() }))
+router.get('/health', ({ response }) => response.noContent())
+
 router
   .group(() => {
-    // Routes de santé
-    router.get('/', async ({ response }) => response.ok({ uptime: process.uptime() }))
-    router.get('/health', ({ response }) => response.noContent())
-
     // Routes publiques (sans authentification)
     router.post('/auth/login', [AuthController, 'login'])
     router.post('/auth/register', [AuthController, 'register'])
