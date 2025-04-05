@@ -16,11 +16,11 @@ export default function Docs() {
     const { translations } = useLanguage();
 
     const documents: Document[] = [
-        { id: '1', title: 'Project Proposal', date: '2024-01-15', type: 'pdf' },
-        { id: '2', title: 'User Research', date: '2024-01-18', type: 'doc' },
-        { id: '3', title: 'Design Guidelines', date: '2024-01-20', type: 'pdf' },
-        { id: '4', title: 'Sprint Planning', date: '2024-01-22', type: 'xls' },
-        { id: '5', title: 'Marketing Assets', date: '2024-01-25', type: 'zip' },
+        { id: '1', title: translations.docs.projectProposal, date: '2024-01-15', type: 'pdf' },
+        { id: '2', title: translations.docs.userResearch, date: '2024-01-18', type: 'doc' },
+        { id: '3', title: translations.docs.designGuidelines, date: '2024-01-20', type: 'pdf' },
+        { id: '4', title: translations.docs.sprintPlanning, date: '2024-01-22', type: 'xls' },
+        { id: '5', title: translations.docs.marketingAssets, date: '2024-01-25', type: 'zip' },
     ];
 
     const getIcon = (type: string) => {
@@ -56,7 +56,7 @@ export default function Docs() {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>{translations.projects.files}</Text>
+                <Text style={styles.headerTitle}>{translations.docs.title}</Text>
                 <TouchableOpacity style={[styles.sortButton, shadowStyles.button]}>
                     <Ionicons name="filter" size={20} color="#000" />
                 </TouchableOpacity>
@@ -64,13 +64,13 @@ export default function Docs() {
 
             <View style={styles.filterContainer}>
                 <TouchableOpacity style={[styles.filterButton, styles.activeFilter]}>
-                    <Text style={styles.activeFilterText}>Tous</Text>
+                    <Text style={styles.activeFilterText}>{translations.docs.filter.all}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.filterButton}>
-                    <Text style={styles.filterText}>Partagés</Text>
+                    <Text style={styles.filterText}>{translations.docs.filter.shared}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.filterButton}>
-                    <Text style={styles.filterText}>Favoris</Text>
+                    <Text style={styles.filterText}>{translations.docs.filter.favorites}</Text>
                 </TouchableOpacity>
             </View>
 
@@ -82,7 +82,10 @@ export default function Docs() {
                 showsVerticalScrollIndicator={false}
             />
 
-            <TouchableOpacity style={[styles.uploadButton, shadowStyles.button]}>
+            <TouchableOpacity 
+                style={[styles.uploadButton, shadowStyles.button]}
+                accessibilityLabel={translations.docs.upload}
+            >
                 <Ionicons name="cloud-upload" size={24} color="#fff" />
             </TouchableOpacity>
         </SafeAreaView>

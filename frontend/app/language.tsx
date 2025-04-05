@@ -17,7 +17,10 @@ export default function Language() {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()}>
+                <TouchableOpacity 
+                    onPress={() => router.back()}
+                    style={styles.backButton}
+                >
                     <Ionicons name="arrow-back" size={24} color="#000" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>{translations.settings.language}</Text>
@@ -25,6 +28,7 @@ export default function Language() {
             </View>
 
             <View style={styles.content}>
+                <Text style={styles.subtitle}>{translations.settings.selectLanguage}</Text>
                 {languages.map((lang) => (
                     <TouchableOpacity
                         key={lang.code}
@@ -61,8 +65,29 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: "700",
     },
+    backButton: {
+        backgroundColor: '#fff',
+        width: 40,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+        elevation: 8,
+    },
     content: {
         padding: 20,
+    },
+    subtitle: {
+        fontSize: 16,
+        fontWeight: "500",
+        marginBottom: 15,
+        color: "#555",
     },
     languageItem: {
         flexDirection: "row",

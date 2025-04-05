@@ -270,5 +270,19 @@ export default {
     completedTasks: "Completed tasks",
     totalTasks: "Total tasks",
     projectOverview: "Project overview",
+  },
+  docs: {
+    title: "Files",
+    filter: {
+      all: "All",
+      shared: "Shared",
+      favorites: "Favorites"
+    },
+    upload: "Upload file",
+    projectProposal: "Project Proposal",
+    userResearch: "User Research",
+    designGuidelines: "Design Guidelines",
+    sprintPlanning: "Sprint Planning",
+    marketingAssets: "Marketing Assets"
   }
 };

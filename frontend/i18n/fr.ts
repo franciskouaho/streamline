@@ -277,5 +277,19 @@ export default {
     completedTasks: "Tâches terminées",
     totalTasks: "Total des tâches",
     projectOverview: "Aperçu des projets",
+  },
+  docs: {
+    title: "Fichiers",
+    filter: {
+      all: "Tous",
+      shared: "Partagés",
+      favorites: "Favoris"
+    },
+    upload: "Téléverser un fichier",
+    projectProposal: "Proposition de projet",
+    userResearch: "Recherche utilisateur",
+    designGuidelines: "Guide de conception",
+    sprintPlanning: "Planification de sprint",
+    marketingAssets: "Ressources marketing"
   }
 };
