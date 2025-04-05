@@ -11,7 +11,7 @@ const getApiUrl = () => {
     } else if (Platform.OS === 'android') {
       return 'http://10.0.2.2:3333/api/v1';
     } else {
-      return 'http://localhost:3333/api/v1';
+      return 'https://api.emplica.fr/api/v1';
     }
   } else {
     return 'https://api.emplica.fr/api/v1';
