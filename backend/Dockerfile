@@ -1,4 +1,4 @@
-FROM node:21-alpine as base
+FROM node:20-alpine as base
 
 # Configurer l'environnement pour limiter la mémoire
 ENV NODE_OPTIONS="--max-old-space-size=256"
