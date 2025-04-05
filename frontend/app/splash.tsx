@@ -5,6 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuthStore } from '@/stores/auth';
 
 const { width } = Dimensions.get('window');
+const APP_VERSION = '1.0.0'; // Définition de la version de l'application
 
 export default function Splash() {
     const { translations } = useLanguage();
@@ -111,6 +112,8 @@ export default function Splash() {
                     ]}
                 />
             </View>
+            
+            <Text style={styles.versionText}>v{APP_VERSION}</Text>
         </SafeAreaView>
     );
 }
@@ -185,5 +188,13 @@ const styles = StyleSheet.create({
         backgroundColor: '#ff7a5c',
         borderRadius: 2,
         borderColor: '#fff',
+    },
+    versionText: {
+        position: 'absolute',
+        bottom: 20,
+        alignSelf: 'center',
+        fontSize: 14,
+        color: 'rgba(255, 255, 255, 0.7)',
+        fontWeight: '500',
     },
 });
