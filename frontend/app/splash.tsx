@@ -18,8 +18,9 @@ export default function Splash() {
     const progressWidth = new Animated.Value(0);
 
     useEffect(() => {
+        const splashDuration = 2500;
+
         Animated.sequence([
-            // Animation du logo
             Animated.parallel([
                 Animated.timing(logoScale, {
                     toValue: 1,
@@ -34,7 +35,6 @@ export default function Splash() {
                     easing: Easing.out(Easing.back(1.7))
                 })
             ]),
-            // Animation du texte
             Animated.parallel([
                 Animated.timing(textOpacity, {
                     toValue: 1,
@@ -51,22 +51,20 @@ export default function Splash() {
             ])
         ]).start();
 
-        // Barre de progression
         Animated.timing(progressWidth, {
             toValue: 1,
-            duration: 2000,
+            duration: splashDuration,
             useNativeDriver: false,
             easing: Easing.inOut(Easing.ease)
         }).start();
 
         const timer = setTimeout(() => {
-            // Rediriger vers la page d'accueil si l'utilisateur est connecté, sinon vers la page de connexion
             if (isAuthenticated) {
-                router.replace('/');
+                router.replace('/(tabs)');
             } else {
                 router.replace('/login');
             }
-        }, 2500);
+        }, splashDuration);
 
         return () => clearTimeout(timer);
     }, [isAuthenticated]);
@@ -120,7 +118,7 @@ export default function Splash() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f2f2f2',
+        backgroundColor: '#ff7a5c',
     },
     content: {
         flex: 1,
@@ -162,13 +160,13 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 32,
         fontWeight: '800',
-        color: '#000',
+        color: '#fff',
         marginBottom: 12,
         textAlign: 'center',
     },
     subtitle: {
         fontSize: 16,
-        color: '#666',
+        color: '#fff',
         textAlign: 'center',
         maxWidth: width * 0.8,
     },
@@ -180,10 +178,12 @@ const styles = StyleSheet.create({
         left: 30,
         right: 30,
         borderRadius: 2,
+        borderColor: '#fff',
     },
     progressBar: {
         height: '100%',
         backgroundColor: '#ff7a5c',
         borderRadius: 2,
+        borderColor: '#fff',
     },
 });

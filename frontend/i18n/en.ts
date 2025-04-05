@@ -204,7 +204,7 @@ export default {
     save: "Save Changes"
   },
   splash: {
-    welcome: "Welcome to Streamline",
+    welcome: "Streamline",
     subtitle: "Organize your projects efficiently"
   },
   errors: {

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Stack, Redirect } from "expo-router";
+import React, { useEffect, useState, useCallback } from 'react';
+import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -7,15 +7,15 @@ import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity, Platform }
 import { useAuthStore } from "@/stores/auth";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import { AuthProvider } from "@/contexts/AuthContext"; // Ajouter l'import
+import { AuthProvider } from "@/contexts/AuthContext";
 import { useNetInfo } from '@react-native-community/netinfo';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { DeviceRegistration } from '@/types/notifications';
 
-// Empêcher le splash screen de se cacher automatiquement
-SplashScreen.preventAutoHideAsync();
+// On n'a plus besoin de prévenir le splash screen natif de se cacher
+// SplashScreen.preventAutoHideAsync();
 
 const RootLayout = () => {
     const [appIsReady, setAppIsReady] = useState(false);
@@ -57,7 +57,6 @@ const RootLayout = () => {
                 setInitError("Une erreur s'est produite lors du chargement de l'application. Vérifiez votre connexion au serveur.");
             } finally {
                 setAppIsReady(true);
-                await SplashScreen.hideAsync();
             }
         }
 
@@ -153,6 +152,13 @@ const RootLayout = () => {
             });
     };
 
+    const onLayoutRootView = useCallback(async () => {
+        if (appIsReady) {
+            // Cela garantit que le splash screen natif ne disparaît que lorsque l'application est prête
+            await SplashScreen.hideAsync();
+        }
+    }, [appIsReady]);
+
     // Afficher le splash screen tant que l'app n'est pas prête
     if (!appIsReady) {
         return null; // Le splash screen est toujours visible
@@ -172,7 +178,7 @@ const RootLayout = () => {
     }
 
     // Afficher un indicateur de chargement pendant l'authentification
-    if (isLoading) {
+    if (isLoading || !appIsReady) {
         return (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#ff7a5c" />
@@ -185,7 +191,7 @@ const RootLayout = () => {
         <QueryProvider>
             <LanguageProvider>
                 <AuthProvider>
-                    <GestureHandlerRootView style={{flex: 1}}>
+                    <GestureHandlerRootView style={{flex: 1}} onLayout={onLayoutRootView}>
                         <StatusBar style="auto"/>
                         <Stack
                             screenOptions={{
@@ -194,7 +200,6 @@ const RootLayout = () => {
                                 animation: "slide_from_right",
                             }}
                         />
-                        {/* Supprimer la redirection forcée ici pour laisser l'écran splash gérer cela */}
                     </GestureHandlerRootView>
                 </AuthProvider>
             </LanguageProvider>
