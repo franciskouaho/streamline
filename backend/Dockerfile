@@ -39,5 +39,5 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/.yarn ./.yarn
 COPY --from=build /app/.yarnrc.yml ./
 
-EXPOSE 8080
+EXPOSE 3333
 CMD ["node", "./bin/server.js"]
