@@ -20,7 +20,6 @@ export default function Login() {
     const router = useRouter();
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
-    const [rememberMe, setRememberMe] = useState<boolean>(false);
     const { translations } = useLanguage();
     const login = useLogin();
 
@@ -98,18 +97,7 @@ export default function Login() {
                                     placeholderTextColor="#666"
                                 />
 
-                                <View style={styles.rememberForgotContainer}>
-                                    <TouchableOpacity 
-                                        style={styles.rememberContainer}
-                                        onPress={() => setRememberMe(!rememberMe)}
-                                    >
-                                        <View style={styles.checkbox}>
-                                            {rememberMe && <View style={styles.checkboxInner} />}
-                                        </View>
-                                        <Text style={styles.rememberText}>
-                                            {translations.auth.rememberMe}
-                                        </Text>
-                                    </TouchableOpacity>
+                                <View style={styles.forgotPasswordContainer}>
                                     <TouchableOpacity>
                                         <Text style={[styles.forgotPasswordText, { color: '#ff7a5c' }]}>
                                             {translations.auth.forgotPassword}
@@ -251,35 +239,11 @@ const styles = StyleSheet.create({
         shadowRadius: 0,
         elevation: 8,
     },
-    rememberForgotContainer: {
+    forgotPasswordContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: 'flex-end',
         alignItems: 'center',
         marginBottom: 20,
-    },
-    rememberContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    checkbox: {
-        width: 22,
-        height: 22,
-        borderRadius: 5,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        marginRight: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    checkboxInner: {
-        width: 14,
-        height: 14,
-        borderRadius: 3,
-        backgroundColor: '#ff7a5c',
-    },
-    rememberText: {
-        fontSize: 14,
-        color: '#666',
     },
     forgotPasswordText: {
         fontSize: 14,

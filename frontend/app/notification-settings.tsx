@@ -109,7 +109,7 @@ export default function NotificationSettings() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color="black" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>
@@ -127,7 +127,7 @@ export default function NotificationSettings() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
@@ -137,15 +137,6 @@ export default function NotificationSettings() {
       </View>
 
       <ScrollView style={styles.content}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {translations.notifications.general}
-          </Text>
-          <TouchableOpacity style={styles.testButton} onPress={sendTestPush}>
-            <Text style={styles.testButtonText}>Envoyer une notification test</Text>
-          </TouchableOpacity>
-        </View>
-
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
             {translations.notifications.projectActivities}
@@ -290,6 +281,20 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#000',
+    shadowColor: '#000',
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#000',
+    backgroundColor: 'white',
     shadowColor: '#000',
     shadowOffset: { width: 2, height: 2 },
     shadowOpacity: 1,
