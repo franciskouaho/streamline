@@ -229,7 +229,22 @@ export default {
     permissionRequired: "Push notifications require permission",
     physicalDeviceRequired: "Push notifications don't work on an emulator",
     tokenUnavailable: "Notification token not available. Make sure you have granted the required permissions.",
-    testNotificationSuccess: "A test notification has been sent to your device."
+    testNotificationSuccess: "A test notification has been sent to your device.",
+    validation: {
+      title: "Validation Error",
+      requiredFields: "Please fill in all required fields",
+      invalidEmail: "Please enter a valid email address",
+      passwordTooShort: "Password must be at least 6 characters long",
+      passwordMismatch: "Passwords do not match"
+    },
+    login: {
+      title: "Login Error",
+      message: "Login failed. Please check your credentials and try again."
+    },
+    registration: {
+      title: "Registration Error",
+      message: "Registration failed. Please try again or use a different email address."
+    }
   },
   dashboard: {
     welcomeBack: "Welcome Back",

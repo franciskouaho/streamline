@@ -4590,7 +4590,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"expo-constants@npm:~17.0.5, expo-constants@npm:~17.0.8":
+"expo-constants@npm:17.0.8, expo-constants@npm:~17.0.5, expo-constants@npm:~17.0.8":
   version: 17.0.8
   resolution: "expo-constants@npm:17.0.8"
   dependencies:
@@ -4851,7 +4851,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"expo@npm:^52.0.42":
+"expo@npm:^52.0.44":
   version: 52.0.44
   resolution: "expo@npm:52.0.44"
   dependencies:
@@ -9584,9 +9584,9 @@ __metadata:
     "@types/react-test-renderer": "npm:^18.3.0"
     axios: "npm:^1.6.7"
     date-fns: "npm:^4.1.0"
-    expo: "npm:^52.0.42"
+    expo: "npm:^52.0.44"
     expo-blur: "npm:~14.0.3"
-    expo-constants: "npm:~17.0.8"
+    expo-constants: "npm:17.0.8"
     expo-device: "npm:^7.0.3"
     expo-font: "npm:~13.0.4"
     expo-haptics: "npm:~14.0.1"

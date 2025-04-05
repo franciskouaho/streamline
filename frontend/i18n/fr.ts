@@ -236,7 +236,22 @@ export default {
     permissionRequired: "Les notifications push nécessitent une autorisation",
     physicalDeviceRequired: "Les notifications push ne fonctionnent pas sur un émulateur",
     tokenUnavailable: "Token de notification non disponible. Assurez-vous d'avoir accordé les permissions requises.",
-    testNotificationSuccess: "Une notification de test a été envoyée à votre appareil."
+    testNotificationSuccess: "Une notification de test a été envoyée à votre appareil.",
+    validation: {
+      title: "Erreur de validation",
+      requiredFields: "Veuillez remplir tous les champs obligatoires",
+      invalidEmail: "Veuillez entrer une adresse email valide",
+      passwordTooShort: "Le mot de passe doit contenir au moins 6 caractères",
+      passwordMismatch: "Les mots de passe ne correspondent pas"
+    },
+    login: {
+      title: "Erreur de connexion",
+      message: "La connexion a échoué. Veuillez vérifier vos identifiants et réessayer."
+    },
+    registration: {
+      title: "Erreur d'inscription",
+      message: "L'inscription a échoué. Veuillez réessayer ou utiliser une autre adresse email."
+    }
   },
   dashboard: {
     welcomeBack: "Bon retour",

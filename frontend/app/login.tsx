@@ -8,7 +8,8 @@ import {
     Image,
     KeyboardAvoidingView,
     Platform,
-    ScrollView
+    ScrollView,
+    Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Link } from 'expo-router';
@@ -24,6 +25,14 @@ export default function Login() {
     const login = useLogin();
 
     const handleSignIn = async () => {
+        if (!email || !password) {
+            Alert.alert(
+                translations.errors.validation?.title || "Erreur",
+                translations.errors.validation?.requiredFields || "Veuillez remplir tous les champs obligatoires"
+            );
+            return;
+        }
+        
         try {
             await login.mutateAsync({
                 email,
@@ -32,6 +41,10 @@ export default function Login() {
             router.replace('/');
         } catch (error) {
             console.error('Login failed:', error);
+            Alert.alert(
+                translations.errors.login?.title || "Erreur de connexion",
+                translations.errors.login?.message || "La connexion a échoué. Veuillez vérifier vos identifiants."
+            );
         }
     };
 

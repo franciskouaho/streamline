@@ -3,9 +3,10 @@ import { View, Text, StyleSheet, Animated, Easing, SafeAreaView, Dimensions } fr
 import { useRouter } from 'expo-router';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuthStore } from '@/stores/auth';
+import Constants from 'expo-constants';
 
 const { width } = Dimensions.get('window');
-const APP_VERSION = '1.0.0'; // Définition de la version de l'application
+const APP_VERSION = Constants.expoConfig?.version;
 
 export default function Splash() {
     const { translations } = useLanguage();

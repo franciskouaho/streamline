@@ -8,7 +8,8 @@ import {
     KeyboardAvoidingView,
     Platform,
     ScrollView,
-    Image
+    Image,
+    Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Link } from 'expo-router';
@@ -25,6 +26,14 @@ export default function Register() {
     const register = useRegister();
 
     const handleRegister = async () => {
+        if (!email || !password || !fullName) {
+            Alert.alert(
+                translations.errors.validation?.title || "Erreur", 
+                translations.errors.validation?.requiredFields || "Veuillez remplir tous les champs obligatoires"
+            );
+            return;
+        }
+        
         try {
             await register.mutateAsync({
                 email,
@@ -34,6 +43,10 @@ export default function Register() {
             router.replace('/login');
         } catch (error) {
             console.error('Registration failed:', error);
+            Alert.alert(
+                translations.errors.registration?.title || "Erreur d'inscription",
+                translations.errors.registration?.message || "L'inscription a échoué. Veuillez réessayer."
+            );
         }
     };
 
@@ -50,7 +63,10 @@ export default function Register() {
                     <View style={styles.content}>
                         {/* Section du haut */}
                         <View style={styles.topSection}>
-                            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                            <TouchableOpacity 
+                                onPress={() => router.back()} 
+                                style={styles.backButton}
+                            >
                                 <Ionicons name="arrow-back" size={24} color="#000" />
                             </TouchableOpacity>
                             <Text style={styles.title}>{translations.auth.register}</Text>
@@ -176,6 +192,19 @@ const styles = StyleSheet.create({
     },
     backButton: {
         marginBottom: 30,
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        backgroundColor: '#fff',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+        elevation: 8,
     },
     header: {
         paddingHorizontal: 20,
