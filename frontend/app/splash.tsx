@@ -2,12 +2,14 @@ import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Animated, Easing, SafeAreaView, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuthStore } from '@/stores/auth';
 
 const { width } = Dimensions.get('window');
 
 export default function Splash() {
     const { translations } = useLanguage();
     const router = useRouter();
+    const { isAuthenticated } = useAuthStore();
     
     const logoScale = new Animated.Value(0);
     const logoTranslateY = new Animated.Value(50);
@@ -58,11 +60,16 @@ export default function Splash() {
         }).start();
 
         const timer = setTimeout(() => {
-            router.replace('/login');
+            // Rediriger vers la page d'accueil si l'utilisateur est connecté, sinon vers la page de connexion
+            if (isAuthenticated) {
+                router.replace('/');
+            } else {
+                router.replace('/login');
+            }
         }, 2500);
 
         return () => clearTimeout(timer);
-    }, []);
+    }, [isAuthenticated]);
 
     return (
         <SafeAreaView style={styles.container}>

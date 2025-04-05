@@ -194,7 +194,7 @@ const RootLayout = () => {
                                 animation: "slide_from_right",
                             }}
                         />
-                        {!isAuthenticated && <Redirect href="/login" />}
+                        {/* Supprimer la redirection forcée ici pour laisser l'écran splash gérer cela */}
                     </GestureHandlerRootView>
                 </AuthProvider>
             </LanguageProvider>
