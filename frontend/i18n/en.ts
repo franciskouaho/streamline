@@ -42,7 +42,8 @@ export default {
     security: "Security",
     about: "About",
     help: "Help",
-    premium: "Premium"
+    premium: "Premium",
+    selectLanguage: "Select Language"
   },
   profile: {
     editProfile: "Edit Profile",
