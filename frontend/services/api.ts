@@ -102,7 +102,7 @@ api.interceptors.response.use(
           await clearAuth();
         }
       } catch (importError) {
-        console.error('Erreur lors de l\'import du store Auth:', importError);
+        console.error("Erreur lors de l'import du store Auth:", importError);
       }
       
       // Éviter les redirections multiples
