@@ -23,6 +23,7 @@ export default function Register() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [fullName, setFullName] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const register = useRegister();
 
     const handleRegister = async () => {
@@ -94,14 +95,26 @@ export default function Register() {
                                 placeholderTextColor="#666"
                             />
 
-                            <TextInput
-                                style={styles.input}
-                                placeholder={translations.auth.password}
-                                value={password}
-                                onChangeText={setPassword}
-                                secureTextEntry
-                                placeholderTextColor="#666"
-                            />
+                            <View style={styles.passwordContainer}>
+                                <TextInput
+                                    style={styles.passwordInput}
+                                    placeholder={translations.auth.password}
+                                    value={password}
+                                    onChangeText={setPassword}
+                                    secureTextEntry={!showPassword}
+                                    placeholderTextColor="#666"
+                                />
+                                <TouchableOpacity 
+                                    style={styles.passwordVisibilityButton}
+                                    onPress={() => setShowPassword(!showPassword)}
+                                >
+                                    <Ionicons 
+                                        name={showPassword ? 'eye-off' : 'eye'} 
+                                        size={22} 
+                                        color="#666" 
+                                    />
+                                </TouchableOpacity>
+                            </View>
                         </View>
 
                         {/* Section du bas */}
@@ -316,5 +329,32 @@ const styles = StyleSheet.create({
         width: 25,
         height: 25,
         resizeMode: 'contain',
+    },
+    passwordContainer: {
+        position: 'relative',
+        width: '100%',
+        marginBottom: 15,
+    },
+    passwordInput: {
+        backgroundColor: '#fff',
+        width: '100%',
+        borderRadius: 15,
+        padding: 18,
+        fontSize: 16,
+        color: '#000',
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+        elevation: 8,
+        paddingRight: 50, // Espace pour le bouton
+    },
+    passwordVisibilityButton: {
+        position: 'absolute',
+        right: 15,
+        top: 18,
+        padding: 5,
     },
 });

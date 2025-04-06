@@ -15,11 +15,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, Link } from 'expo-router';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useLogin } from '@/services/queries/auth';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function Login() {
     const router = useRouter();
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
+    const [showPassword, setShowPassword] = useState<boolean>(false);
     const { translations } = useLanguage();
     const login = useLogin();
 
@@ -87,15 +89,27 @@ export default function Login() {
                                     placeholderTextColor="#666"
                                 />
 
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder={translations.auth.password}
-                                    value={password}
-                                    onChangeText={setPassword}
-                                    secureTextEntry
-                                    autoComplete="password"
-                                    placeholderTextColor="#666"
-                                />
+                                <View style={styles.passwordContainer}>
+                                    <TextInput
+                                        style={styles.passwordInput}
+                                        placeholder={translations.auth.password}
+                                        value={password}
+                                        onChangeText={setPassword}
+                                        secureTextEntry={!showPassword}
+                                        autoComplete="password"
+                                        placeholderTextColor="#666"
+                                    />
+                                    <TouchableOpacity 
+                                        style={styles.passwordVisibilityButton}
+                                        onPress={() => setShowPassword(!showPassword)}
+                                    >
+                                        <Ionicons 
+                                            name={showPassword ? 'eye-off' : 'eye'} 
+                                            size={22} 
+                                            color="#666" 
+                                        />
+                                    </TouchableOpacity>
+                                </View>
 
                                 <View style={styles.forgotPasswordContainer}>
                                     <TouchableOpacity>
@@ -238,6 +252,33 @@ const styles = StyleSheet.create({
         shadowOpacity: 1,
         shadowRadius: 0,
         elevation: 8,
+    },
+    passwordContainer: {
+        position: 'relative',
+        width: '100%',
+        marginBottom: 15,
+    },
+    passwordInput: {
+        backgroundColor: '#fff',
+        width: '100%',
+        borderRadius: 15,
+        padding: 18,
+        fontSize: 16,
+        color: '#000',
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+        elevation: 8,
+        paddingRight: 50, // Espace pour le bouton
+    },
+    passwordVisibilityButton: {
+        position: 'absolute',
+        right: 15,
+        top: 18,
+        padding: 5,
     },
     forgotPasswordContainer: {
         flexDirection: 'row',
