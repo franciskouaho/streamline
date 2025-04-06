@@ -274,7 +274,7 @@ export default function ProjectDetails() {
                         style={[styles.tabButton, activeTab === 'kanban' && styles.activeTab]}
                         onPress={() => {
                             setActiveTab('kanban');
-                            router.push(`/project/kanban/${id}`);
+                            router.push(`/project/kanban/${projectId}`);
                         }}
                     >
                         <Text style={[styles.tabText, activeTab === 'kanban' && styles.activeTabText]}>

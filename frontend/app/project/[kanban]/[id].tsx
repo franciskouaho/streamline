@@ -108,7 +108,7 @@ export default function KanbanBoard() {
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity 
-                    onPress={() => router.back()}
+                    onPress={() => router.push(`/project/${projectId}`)}
                     style={[styles.backButton, shadowStyles.button]}
                 >
                     <Ionicons name="chevron-back" size={24} color="#000" />

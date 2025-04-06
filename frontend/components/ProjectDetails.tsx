@@ -222,7 +222,10 @@ export default function ProjectDetails() {
 
                     <TouchableOpacity
                         style={[styles.tabButton, activeTab === 'kanban' && styles.activeTab]}
-                        onPress={() => router.push(`/project/kanban/${id}`)}
+                        onPress={() => {
+                            setActiveTab('kanban'); 
+                            router.push(`/project/kanban/${projectId}`);
+                        }}
                     >
                         <Text style={[styles.tabText, activeTab === 'kanban' && styles.activeTabText]}>
                             Kanban
