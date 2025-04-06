@@ -1,21 +1,18 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { TeamMember, TeamInvitation, InviteUserInput, TeamMemberUpdateInput } from '@/types/team';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/services/api';
+import { TeamMember, TeamMemberUpdateInput, TeamInvitation, TeamInvitationInput } from '@/types/team';
 import { useAuthStore } from '@/stores/auth'; // Ajouter cette ligne pour accéder à l'utilisateur connecté
 
 // Récupérer tous les membres de l'équipe
 export const useTeamMembers = () => {
-  return useQuery({
+  return useQuery<TeamMember[]>({
     queryKey: ['team-members'],
-    queryFn: async (): Promise<TeamMember[]> => {
-      try {
-        const response = await api.get('/team/members');
-        return response.data;
-      } catch (error) {
-        console.error("Erreur lors de la récupération des membres:", error);
-        return [];
-      }
-    }
+    queryFn: async () => {
+      console.log('Fetching team members...');
+      const response = await api.get('/team/members');
+      console.log('Team members response:', response.data);
+      return response.data;
+    },
   });
 };
 
@@ -31,13 +28,13 @@ export const useTeamMember = (id: number) => {
   });
 };
 
-// Récupérer toutes les invitations
+// Récupérer les invitations envoyées
 export const useTeamInvitations = () => {
   const { user } = useAuthStore(); // Ajouter cette ligne pour accéder à l'utilisateur connecté
 
-  return useQuery({
+  return useQuery<TeamInvitation[]>({
     queryKey: ['team-invitations'],
-    queryFn: async (): Promise<TeamInvitation[]> => {
+    queryFn: async () => {
       const response = await api.get('/team/invitations');
       // Filtrer les invitations pour exclure celles de l'utilisateur connecté
       return response.data.filter((invitation: TeamInvitation) => 
@@ -47,18 +44,18 @@ export const useTeamInvitations = () => {
   });
 };
 
-// Inviter un utilisateur
+// Inviter un nouveau membre
 export const useInviteUser = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (inviteData: InviteUserInput) => {
-      const response = await api.post('/team/invite', inviteData);
+    mutationFn: async (inviteData: TeamInvitationInput) => {
+      const response = await api.post('/team/invitations', inviteData);
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['team-invitations'] });
       queryClient.invalidateQueries({ queryKey: ['team-members'] });
+      queryClient.invalidateQueries({ queryKey: ['team-invitations'] });
     }
   });
 };
@@ -84,11 +81,12 @@ export const useCancelInvitation = () => {
   
   return useMutation({
     mutationFn: async (invitationId: number) => {
-      await api.delete(`/team/invitations/${invitationId}`);
-      return invitationId;
+      const response = await api.delete(`/team/invitations/${invitationId}`);
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-invitations'] });
+      queryClient.invalidateQueries({ queryKey: ['team-members'] });
     }
   });
 };

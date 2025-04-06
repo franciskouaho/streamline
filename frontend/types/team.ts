@@ -1,13 +1,21 @@
 import { useAuthStore } from '@/stores/auth';
 
 export interface TeamMember {
-  id: number | string;
+  id: number | string; // string pour les invitations en attente, avec préfixe 'inv_'
+  userId?: number;
   fullName: string;
   email: string;
-  photoURL?: string | null;
+  photoURL?: string;
   role?: string;
   status?: 'active' | 'pending' | 'inactive';
   projectCount?: number;
+  invitationId?: number; // Pour les invitations en attente
+}
+
+export interface TeamMemberUpdateInput {
+  id: number;
+  role?: string;
+  status?: string;
 }
 
 export interface TeamInvitation {
@@ -15,21 +23,22 @@ export interface TeamInvitation {
   email: string;
   name?: string;
   role: string;
-  status: 'pending' | 'accepted' | 'declined' | 'expired';
   invitedBy: number;
+  status: 'pending' | 'accepted' | 'declined' | 'expired';
   expiresAt?: string;
-  createdAt: string;
   token: string;
+  createdAt: string;
+  updatedAt?: string;
+  userId?: number;
 }
 
-export interface InviteUserInput {
+export interface TeamInvitationInput {
   email: string;
   name?: string;
   role?: string;
   sendNotification?: boolean;
 }
 
-export interface TeamMemberUpdateInput {
-  id: number;
-  role?: string;
+export interface TeamInvitationResponseInput {
+  notificationId?: number;
 }

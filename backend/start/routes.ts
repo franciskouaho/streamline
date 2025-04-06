@@ -17,6 +17,7 @@ const CommentsController = () => import('#controllers/comments')
 const NotificationsController = () => import('#controllers/notifications')
 const ProjectMembersController = () => import('#controllers/project_members')
 const TeamInvitationsController = () => import('#controllers/team_invitations')
+const TeamMembersController = () => import('#controllers/team_members')
 
 router.get('/', async ({ response }) => response.ok({ uptime: process.uptime() }))
 router.get('/health', ({ response }) => response.noContent())
@@ -59,8 +60,8 @@ router
                 router.delete('/:projectId/members/:id', [ProjectMembersController, 'destroy'])
 
                 // Ajouter ces routes à l'intérieur du groupe protégé par auth
-                router.get('/debug/memberships', '#controllers/project_members.debug')
-                router.get('/:projectId/members', '#controllers/project_members.index')
+                router.get('/debug/memberships', [ProjectMembersController, 'debug'])
+                router.get('/:projectId/members', [ProjectMembersController, 'index'])
               })
               .prefix('/projects')
 
@@ -97,17 +98,11 @@ router
               .prefix('/notifications')
 
             // Notification settings routes
-            router.get(
-              '/notification-settings/:id?',
-              '#controllers/notification_settings_controller.show'
-            )
-            router.put(
-              '/notification-settings/:id?',
-              '#controllers/notification_settings_controller.update'
-            )
+            router.get('/notification-settings/:id?', '#controllers/notification_settings.show')
+            router.put('/notification-settings/:id?', '#controllers/notification_settings.update')
 
             // Device tokens route
-            router.post('/device-tokens', '#controllers/device_tokens_controller.store')
+            router.post('/device-tokens', '#controllers/device_tokens.store')
 
             // Team invitations routes
             router
@@ -125,10 +120,10 @@ router
             // Team members routes
             router
               .group(() => {
-                router.get('/', '#controllers/team_members_controller.index')
-                router.get('/:id', '#controllers/team_members_controller.show')
-                router.put('/:id', '#controllers/team_members_controller.update')
-                router.delete('/:id', '#controllers/team_members_controller.destroy')
+                router.get('/', [TeamMembersController, 'index'])
+                router.get('/:id', [TeamMembersController, 'show'])
+                router.put('/:id', [TeamMembersController, 'update'])
+                router.delete('/:id', [TeamMembersController, 'destroy'])
               })
               .prefix('/team/members')
 

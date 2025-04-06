@@ -2,7 +2,6 @@ import type { HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
 import ProjectMember from '#models/project_member'
 import TeamInvitation from '#models/team_invitation'
-import Project from '#models/project'
 
 export default class TeamMembersController {
   async index({ auth, response }: HttpContext) {

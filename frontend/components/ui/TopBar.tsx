@@ -1,14 +1,16 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useProfileStore } from "@/stores/profile";
 import { useLanguage } from '@/contexts/LanguageContext';
+import { fetchNotifications } from '@/services/notifications';
 
 export const TopBar = () => {
     const router = useRouter();
     const { profile } = useProfileStore();
     const { translations } = useLanguage();
+    const [unreadCount, setUnreadCount] = useState(0);
 
     useEffect(() => {
         // Charge le profil au chargement du composant
@@ -21,7 +23,23 @@ export const TopBar = () => {
         };
         
         loadProfile();
+        loadNotifications();
+
+        // Rafraîchir le compteur toutes les 30 secondes
+        const intervalId = setInterval(loadNotifications, 30000);
+        
+        return () => clearInterval(intervalId);
     }, []);
+
+    const loadNotifications = async () => {
+        try {
+            const notifications = await fetchNotifications();
+            const unread = notifications.filter(n => !n.read).length;
+            setUnreadCount(unread);
+        } catch (error) {
+            console.error('Erreur lors du chargement des notifications:', error);
+        }
+    };
 
     return (
         <View style={styles.headerContainer}>
@@ -55,6 +73,13 @@ export const TopBar = () => {
                     style={styles.notificationContainer}
                 >
                     <Ionicons name="notifications-outline" size={24} color="#000" />
+                    {unreadCount > 0 && (
+                        <View style={styles.badgeContainer}>
+                            <Text style={styles.badgeText}>
+                                {unreadCount > 99 ? '99+' : unreadCount}
+                            </Text>
+                        </View>
+                    )}
                 </TouchableOpacity>
             </View>
         </View>
@@ -116,5 +141,25 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 10,
         elevation: 8,
+        position: 'relative',
+    },
+    badgeContainer: {
+        position: 'absolute',
+        top: -5,
+        right: -5,
+        backgroundColor: '#FF3B30',
+        borderRadius: 10,
+        minWidth: 20,
+        height: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#fff',
+    },
+    badgeText: {
+        color: '#fff',
+        fontSize: 10,
+        fontWeight: 'bold',
+        paddingHorizontal: 4,
     },
 });

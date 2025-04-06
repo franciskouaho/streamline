@@ -5,7 +5,6 @@ export const teamInvitationValidator = vine.compile(
     email: vine.string().email(),
     name: vine.string().optional(),
     role: vine.string().optional(),
-    message: vine.string().optional(),
     sendNotification: vine.boolean().optional(),
   })
 )

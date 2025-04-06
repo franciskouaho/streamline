@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Alert, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { shadowStyles } from '@/constants/CommonStyles';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -27,6 +27,15 @@ export default function Notification() {
     useEffect(() => {
         loadNotifications();
     }, []);
+    
+    // Utiliser useFocusEffect pour s'assurer que les notifications sont 
+    // rechargées quand l'utilisateur revient à cet écran
+    useFocusEffect(
+        React.useCallback(() => {
+            loadNotifications();
+            return () => {}; // cleanup function
+        }, [])
+    );
 
     const loadNotifications = async () => {
         try {
