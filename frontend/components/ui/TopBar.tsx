@@ -57,10 +57,6 @@ export const TopBar = () => {
                             <Text style={styles.greeting}>
                                 {translations.common.welcome}, {profile?.fullName?.split(' ')[0] ?? 'User'}
                             </Text>
-                            <Image
-                                source={require("../../assets/images/wave.png")}
-                                style={styles.waveIcon}
-                            />
                         </View>
                         <Text style={styles.subtitle}>
                             {translations.topBar?.dailyMessage}
