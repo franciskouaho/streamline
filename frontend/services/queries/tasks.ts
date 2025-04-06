@@ -132,7 +132,7 @@ export const useUpdateTask = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ id, ...data }: { id: number } & Partial<Task>) => {
+    mutationFn: async ({ id, ...data }: TaskStatusUpdateInput) => {
       const response = await api.put(`/tasks/${id}`, data);
       return response.data;
     },

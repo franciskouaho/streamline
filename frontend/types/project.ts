@@ -1,3 +1,5 @@
+import { TaskStatusUpdateInput as TaskStatusUpdate } from './task';  // Importer depuis task.ts
+
 export interface ProjectData {
     id: number;
     name: string;
@@ -95,13 +97,8 @@ export interface ProjectStatusUpdateInput {
   status: string;
 }
 
-export interface TaskStatusUpdateInput {
-  id: number;
-  status: string;
-  priority?: string;
-  dueDate?: string;
-  assigneeId?: number;
-}
+// Réutiliser l'interface de task.ts au lieu de la redéfinir
+export type TaskStatusUpdateInput = TaskStatusUpdate;
 
 export interface ProjectStats {
   total: number;

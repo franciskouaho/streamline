@@ -7,6 +7,7 @@ import { shadowStyles } from '@/constants/CommonStyles';
 import { useProjectTasks, useUpdateTask, useDeleteTask } from '@/services/queries/tasks';
 import { useProject } from '@/services/queries/projects';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { TaskStatusUpdateInput } from '@/types/task';  // Importer depuis task.ts
 
 interface TaskAssignee {
     id: number;
@@ -21,12 +22,6 @@ interface TaskData {
     dueDate?: string;
     assignee?: TaskAssignee;
     projectId?: number | string;
-}
-
-// Définir l'interface pour la mise à jour du statut
-interface TaskStatusUpdateInput {
-    id: number;
-    status: string;
 }
 
 export default function KanbanBoard() {
