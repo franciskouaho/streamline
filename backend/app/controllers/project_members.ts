@@ -9,7 +9,7 @@ export default class ProjectMembersController {
    */
   async index({ params, auth, response }: HttpContext) {
     try {
-      const projectId = params.projectId
+      const projectId = Number.parseInt(params.projectId, 10)
 
       // Vérifier si le projet existe et si l'utilisateur y a accès
       const project = await Project.findOrFail(projectId)
@@ -42,8 +42,8 @@ export default class ProjectMembersController {
    */
   async store({ request, params, auth, response }: HttpContext) {
     try {
-      const projectId = params.projectId
-      const { userId, role = 'member' } = request.body()
+      const projectId = Number.parseInt(params.projectId, 10)
+      const { userId, role = 'member' } = request.body() as { userId: number; role?: string }
 
       // Vérifier si le projet existe
       const project = await Project.findOrFail(projectId)
@@ -77,7 +77,7 @@ export default class ProjectMembersController {
 
       // Créer le membre
       const member = await ProjectMember.create({
-        projectId: Number.parseInt(projectId),
+        projectId,
         userId,
         role,
       })

@@ -1,5 +1,25 @@
 import vine from '@vinejs/vine'
 
+export interface CreateTaskData {
+  title: string
+  description?: string | null
+  projectId?: number
+  assigneeId?: number | null
+  status?: 'todo' | 'in_progress' | 'done'
+  priority?: 'low' | 'medium' | 'high'
+  dueDate?: string | null
+}
+
+export interface UpdateTaskData {
+  title?: string
+  description?: string | null
+  projectId?: number
+  assigneeId?: number | null
+  status?: 'todo' | 'in_progress' | 'done'
+  priority?: 'low' | 'medium' | 'high'
+  dueDate?: string | null
+}
+
 export const createTaskValidator = vine.compile(
   vine.object({
     title: vine.string().trim().minLength(1),

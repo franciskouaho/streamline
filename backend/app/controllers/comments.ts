@@ -1,10 +1,10 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Comment from '#models/comment'
-import { commentValidator } from '#validators/comment'
+import { commentValidator, CommentData } from '#validators/comment'
 
 export default class Comments {
   async index({ request, response }: HttpContext) {
-    const { taskId, projectId } = request.qs()
+    const { taskId, projectId } = request.qs() as { taskId?: number; projectId?: number }
     const query = Comment.query()
 
     if (taskId) {
@@ -18,11 +18,14 @@ export default class Comments {
   }
 
   async store({ request, auth, response }: HttpContext) {
-    const data = await request.validateUsing(commentValidator)
+    const data = (await request.validateUsing(commentValidator)) as CommentData
 
     const comment = await Comment.create({
-      ...data,
+      content: data.content,
       userId: auth.user!.id,
+      taskId: data.taskId || null,
+      projectId: data.projectId || null,
+      parentCommentId: data.parentCommentId || null,
       // Conversion en JSON valide pour le stockage
       attachments: data.attachments ? JSON.parse(JSON.stringify(data.attachments)) : null,
     })

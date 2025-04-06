@@ -1,9 +1,23 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import NotificationSetting from '#models/notification_setting'
 
+// Interface pour les données de notification settings
+interface NotificationSettingsData {
+  taskAssigned?: boolean
+  taskDeadline?: boolean
+  taskComment?: boolean
+  projectUpdate?: boolean
+  teamMessage?: boolean
+  appUpdates?: boolean
+  subscriptionAlerts?: boolean
+  quietHoursEnabled?: boolean
+  quietHoursStart?: string
+  quietHoursEnd?: string
+}
+
 export default class NotificationSettingsController {
   async show({ params, auth, response }: HttpContext) {
-    const userId = params.id || auth.user!.id
+    const userId = params.id ? Number.parseInt(params.id, 10) : auth.user!.id
 
     // Vérifier que l'utilisateur ne demande que ses propres paramètres
     if (userId !== auth.user!.id && auth.user!.role !== 'admin') {
@@ -33,7 +47,7 @@ export default class NotificationSettingsController {
   }
 
   async update({ params, request, auth, response }: HttpContext) {
-    const userId = params.id || auth.user!.id
+    const userId = params.id ? Number.parseInt(params.id, 10) : auth.user!.id
 
     // Vérifier que l'utilisateur ne modifie que ses propres paramètres
     if (userId !== auth.user!.id && auth.user!.role !== 'admin') {
@@ -51,7 +65,7 @@ export default class NotificationSettingsController {
       'quietHoursEnabled',
       'quietHoursStart',
       'quietHoursEnd',
-    ])
+    ]) as NotificationSettingsData
 
     let settings = await NotificationSetting.findBy('userId', userId)
 

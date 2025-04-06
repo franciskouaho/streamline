@@ -1,5 +1,17 @@
 import vine from '@vinejs/vine'
 
+export interface NotificationData {
+  type: string
+  data: Record<string, any>
+  read?: boolean
+  relatedType?: string
+  relatedId?: number
+}
+
+export interface MarkNotificationAsReadData {
+  read?: boolean
+}
+
 export const notificationValidator = vine.compile(
   vine.object({
     type: vine.string().trim(),

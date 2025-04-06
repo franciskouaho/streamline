@@ -11,10 +11,10 @@ export default class TeamMembersController {
         .where('invited_by', auth.user!.id)
         .whereIn('status', ['pending', 'accepted'])
         .preload('user')
-        .debug(true) // Pour le debugging
+        .debug(true)
 
       // Créer un Map pour éviter les doublons
-      const membersMap = new Map()
+      const membersMap = new Map<string | number, any>()
 
       // Ajouter les invitations en attente et acceptées
       for (const invitation of invitations) {

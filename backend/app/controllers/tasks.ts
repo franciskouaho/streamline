@@ -1,12 +1,17 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import { createTaskValidator, updateTaskValidator } from '#validators/task'
+import {
+  createTaskValidator,
+  updateTaskValidator,
+  CreateTaskData,
+  UpdateTaskData,
+} from '#validators/task'
 import Task from '#models/task'
 import { DateTime } from 'luxon'
 
 export default class Tasks {
   async index({ request, response }: HttpContext) {
     try {
-      const { projectId } = request.qs()
+      const { projectId } = request.qs() as { projectId?: number }
       const query = Task.query().preload('assignee').orderBy('createdAt', 'desc')
 
       if (projectId) {
@@ -27,14 +32,15 @@ export default class Tasks {
 
   async store({ request, auth, response }: HttpContext) {
     try {
-      const data = await request.validateUsing(createTaskValidator)
+      const data = (await request.validateUsing(createTaskValidator)) as CreateTaskData
 
       if (!auth.user) {
         return response.unauthorized('User not authenticated')
       }
 
-      const taskDataTemp: any = {
-        ...data,
+      const taskData: Partial<Task> = {
+        title: data.title,
+        description: data.description || null,
         assigneeId: data.assigneeId || null,
         status: data.status || 'todo',
         priority: data.priority || 'medium',
@@ -43,14 +49,13 @@ export default class Tasks {
       }
 
       // Conversion explicite de dueDate
-      if (taskDataTemp.dueDate) {
-        taskDataTemp.dueDate = DateTime.fromISO(taskDataTemp.dueDate)
+      if (data.dueDate) {
+        taskData.dueDate = DateTime.fromISO(data.dueDate)
       }
 
-      console.log('Creating task with data:', taskDataTemp)
+      console.log('Creating task with data:', taskData)
 
-      // Utilisation de la variable temporaire pour créer la tâche
-      const task = await Task.create(taskDataTemp)
+      const task = await Task.create(taskData)
       if (task.assigneeId) {
         await task.load('assignee')
       }
@@ -82,16 +87,16 @@ export default class Tasks {
   async update({ params, request, response }: HttpContext) {
     try {
       const task = await Task.findOrFail(params.id)
-      const data = await request.validateUsing(updateTaskValidator)
+      const data = (await request.validateUsing(updateTaskValidator)) as UpdateTaskData
 
       console.log('Updating task:', { taskId: params.id, updates: data })
 
       // Créer une copie des données pour la manipulation
-      const processedData: any = { ...data }
+      const processedData: Partial<Task> = { ...data }
 
       // Convertir dueDate de string à DateTime si elle existe
-      if (processedData.dueDate) {
-        processedData.dueDate = DateTime.fromISO(processedData.dueDate as string)
+      if (data.dueDate) {
+        processedData.dueDate = DateTime.fromISO(data.dueDate)
       }
 
       await task.merge(processedData).save()

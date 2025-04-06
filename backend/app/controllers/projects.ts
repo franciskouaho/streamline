@@ -1,6 +1,11 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { DateTime } from 'luxon'
-import { createProjectValidator, updateProjectValidator } from '#validators/project'
+import {
+  createProjectValidator,
+  updateProjectValidator,
+  CreateProjectData,
+  UpdateProjectData,
+} from '#validators/project'
 import Project from '#models/project'
 import ProjectMember from '#models/project_member'
 import Notification from '#models/notification'
@@ -9,10 +14,10 @@ import User from '#models/user'
 export default class Projects {
   async index({ request, auth, response }: HttpContext) {
     try {
-      const filter = request.input('filter', 'all')
+      const filter = request.input('filter', 'all') as 'all' | 'owned' | 'member'
       console.log('Filter requested:', filter, 'User ID:', auth.user!.id)
 
-      let projects = []
+      let projects: Project[] = []
 
       // Vérification: est-ce que la table project_members contient des entrées pour cet utilisateur?
       const allMemberships = await ProjectMember.query().where('user_id', auth.user!.id).exec()
@@ -56,7 +61,8 @@ export default class Projects {
           projects = await Project.query().whereIn('id', projectIds)
 
           // Filtrer après si nécessaire
-          if (request.input('excludeOwned', false) === true) {
+          const excludeOwned = request.input('excludeOwned', false) === true
+          if (excludeOwned) {
             projects = projects.filter((p) => p.ownerId !== auth.user!.id)
           }
         }
@@ -178,16 +184,16 @@ export default class Projects {
 
   async store({ request, auth, response }: HttpContext) {
     try {
-      const data = await request.validateUsing(createProjectValidator)
+      const data = (await request.validateUsing(createProjectValidator)) as CreateProjectData
       console.log('Received project data:', data)
 
       if (!auth.user) {
         return response.unauthorized('User not authenticated')
       }
 
-      const projectData = {
+      const projectData: Partial<Project> = {
         name: data.name,
-        description: data.description,
+        description: data.description || null,
         status: data.status || 'active',
         ownerId: auth.user.id,
         startDate: data.startDate ? DateTime.fromISO(data.startDate) : null,
@@ -249,10 +255,10 @@ export default class Projects {
   async update({ request, params, response }: HttpContext) {
     try {
       const project = await Project.findOrFail(params.id)
-      const data = await request.validateUsing(updateProjectValidator)
+      const data = (await request.validateUsing(updateProjectValidator)) as UpdateProjectData
 
       // Préparer les données à mettre à jour
-      const updateData: any = { ...data }
+      const updateData: Partial<Project> = { ...data }
 
       // Convertir les dates si elles sont présentes
       if (data.startDate) {
