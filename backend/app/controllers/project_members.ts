@@ -7,25 +7,15 @@ export default class ProjectMembersController {
   /**
    * Liste tous les membres d'un projet
    */
-  async index({ params, auth, response }: HttpContext) {
+  async index({ params, response }: HttpContext) {
     try {
-      const projectId = Number.parseInt(params.projectId, 10)
+      const projectId = params.projectId
+      if (!projectId) {
+        return response.badRequest({ message: 'Project ID is required' })
+      }
 
-      // Vérifier si le projet existe et si l'utilisateur y a accès
-      const project = await Project.findOrFail(projectId)
-
-      // Récupérer tous les membres de ce projet
-      const members = await ProjectMember.query().where('project_id', projectId).preload('user')
-
-      console.log(
-        `DEBUG - Membres du projet ${projectId}:`,
-        members.map((m) => ({
-          id: m.id,
-          userId: m.userId,
-          userEmail: m.user?.email,
-          role: m.role,
-        }))
-      )
+      // Au lieu de récupérer le projet, nous allons simplement l'utiliser dans la requête
+      const members = await ProjectMember.query().where('projectId', projectId).preload('user')
 
       return response.ok(members)
     } catch (error) {
@@ -129,6 +119,49 @@ export default class ProjectMembersController {
       console.error('Error in debug route:', error)
       return response.internalServerError({
         message: 'Error in debug route',
+        error: error.message,
+      })
+    }
+  }
+
+  async updateMember({ params, request, response }: HttpContext) {
+    try {
+      const { projectId, id } = params
+      const { role } = request.only(['role'])
+
+      const member = await ProjectMember.query()
+        .where('projectId', projectId)
+        .where('userId', id)
+        .firstOrFail()
+
+      await member.merge({ role }).save()
+
+      return response.ok(member)
+    } catch (error) {
+      console.error('Error updating project member:', error)
+      return response.internalServerError({
+        message: 'Error updating project member',
+        error: error.message,
+      })
+    }
+  }
+
+  async removeMember({ params, response }: HttpContext) {
+    try {
+      const { projectId, id } = params
+
+      const member = await ProjectMember.query()
+        .where('projectId', projectId)
+        .where('userId', id)
+        .firstOrFail()
+
+      await member.delete()
+
+      return response.noContent()
+    } catch (error) {
+      console.error('Error removing project member:', error)
+      return response.internalServerError({
+        message: 'Error removing project member',
         error: error.message,
       })
     }

@@ -90,7 +90,7 @@ export default class Projects {
         )
 
         // 3. Récupérer ces projets
-        let memberProjects = []
+        let memberProjects: Project[] = []
         if (memberProjectIds && memberProjectIds.length > 0) {
           const projectIds = memberProjectIds.map((m) => m.projectId)
 
@@ -223,10 +223,11 @@ export default class Projects {
                 userId: Number(memberId),
                 type: 'project_invitation',
                 data: {
-                  projectId: project.id,
+                  // Conversion explicite en JSON pour éviter l'erreur de typage
+                  projectId: String(project.id),
                   projectName: project.name,
                   inviterName: auth.user.fullName || auth.user.email,
-                },
+                } as unknown as JSON,
                 read: false,
                 relatedType: 'project',
                 relatedId: project.id,
@@ -257,8 +258,14 @@ export default class Projects {
       const project = await Project.findOrFail(params.id)
       const data = (await request.validateUsing(updateProjectValidator)) as UpdateProjectData
 
-      // Préparer les données à mettre à jour
-      const updateData: Partial<Project> = { ...data }
+      // Préparer les données à mettre à jour (avec typage partiel)
+      const updateData: Partial<Project> = {}
+
+      // Copier les propriétés simples
+      if (data.name !== undefined) updateData.name = data.name
+      if (data.description !== undefined) updateData.description = data.description
+      if (data.status !== undefined) updateData.status = data.status
+      if (data.image !== undefined) updateData.image = data.image
 
       // Convertir les dates si elles sont présentes
       if (data.startDate) {
@@ -273,6 +280,7 @@ export default class Projects {
         updateData.endDate = null
       }
 
+      // Merger les données avec le projet
       await project.merge(updateData).save()
       return response.ok(project)
     } catch (error) {
@@ -373,7 +381,7 @@ export default class Projects {
         .where('user_id', auth.user!.id)
         .exec()
 
-      let memberProjects = []
+      let memberProjects: Project[] = []
       if (memberProjectIds.length > 0) {
         // Récupérer les projets correspondants
         memberProjects = await Project.query()

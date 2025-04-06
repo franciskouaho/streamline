@@ -91,14 +91,25 @@ export default class Tasks {
 
       console.log('Updating task:', { taskId: params.id, updates: data })
 
-      // Créer une copie des données pour la manipulation
-      const processedData: Partial<Task> = { ...data }
+      // Créer un objet pour les mises à jour avec le bon typage
+      const processedData: Partial<Task> = {}
+
+      // Copier les propriétés simples
+      if (data.title !== undefined) processedData.title = data.title
+      if (data.description !== undefined) processedData.description = data.description
+      if (data.projectId !== undefined) processedData.projectId = data.projectId
+      if (data.assigneeId !== undefined) processedData.assigneeId = data.assigneeId
+      if (data.status !== undefined) processedData.status = data.status
+      if (data.priority !== undefined) processedData.priority = data.priority
 
       // Convertir dueDate de string à DateTime si elle existe
       if (data.dueDate) {
         processedData.dueDate = DateTime.fromISO(data.dueDate)
+      } else if (data.dueDate === null) {
+        processedData.dueDate = null
       }
 
+      // Merger avec le typage approprié
       await task.merge(processedData).save()
       await task.load('assignee')
 

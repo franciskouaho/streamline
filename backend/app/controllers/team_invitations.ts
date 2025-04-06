@@ -66,10 +66,11 @@ export default class TeamInvitationsController {
           userId: existingUser.id,
           type: 'team_invitation',
           data: {
-            invitationId: invitation.id,
+            // Conversion appropriée pour les propriétés JSON
+            invitationId: String(invitation.id),
             inviterName: auth.user!.fullName || auth.user!.email,
             message: `Vous avez été invité à rejoindre l'équipe par ${auth.user!.fullName || auth.user!.email}`,
-          },
+          } as unknown as JSON,
           read: false,
           relatedType: 'team_invitation',
           relatedId: invitation.id,
@@ -244,10 +245,11 @@ export default class TeamInvitationsController {
           userId: existingUser.id,
           type: 'team_invitation',
           data: {
-            invitationId: invitation.id,
+            // Conversion appropriée pour les propriétés JSON
+            invitationId: String(invitation.id),
             inviterName: auth.user!.fullName || auth.user!.email,
             message: `Vous avez été invité à rejoindre l'équipe par ${auth.user!.fullName || auth.user!.email}`,
-          },
+          } as unknown as JSON,
           read: false,
           relatedType: 'team_invitation',
           relatedId: invitation.id,

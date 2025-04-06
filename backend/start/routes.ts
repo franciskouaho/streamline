@@ -45,7 +45,7 @@ router
                 // Special project routes (must be before the route with parameter :id)
                 router.get('/stats', [ProjectsController, 'stats'])
                 router.get('/timeline', [ProjectsController, 'timeline'])
-                router.get('/progress', [ProjectsController, 'progress'])
+                router.get('/progress', [ProjectsController, 'stats'])
 
                 // CRUD project routes
                 router.get('/', [ProjectsController, 'index'])
@@ -56,8 +56,8 @@ router
 
                 // Project members routes
                 router.post('/:projectId/members', [ProjectMembersController, 'store'])
-                router.put('/:projectId/members/:id', [ProjectMembersController, 'update'])
-                router.delete('/:projectId/members/:id', [ProjectMembersController, 'destroy'])
+                router.put('/:projectId/members/:id', [ProjectMembersController, 'updateMember'])
+                router.delete('/:projectId/members/:id', [ProjectMembersController, 'removeMember'])
 
                 // Ajouter ces routes à l'intérieur du groupe protégé par auth
                 router.get('/debug/memberships', [ProjectMembersController, 'debug'])
