@@ -223,8 +223,12 @@ export default function ProjectDetails() {
                     <TouchableOpacity
                         style={[styles.tabButton, activeTab === 'kanban' && styles.activeTab]}
                         onPress={() => {
-                            setActiveTab('kanban'); 
-                            router.push(`/project/kanban/${projectId}`);
+                            setActiveTab('kanban');
+                            // Utilisation de la navigation plus robuste avec params
+                            router.push({
+                                pathname: `/project/kanban/[id]`,
+                                params: { id: projectId }
+                            });
                         }}
                     >
                         <Text style={[styles.tabText, activeTab === 'kanban' && styles.activeTabText]}>

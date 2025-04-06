@@ -7,7 +7,27 @@ import { shadowStyles } from '@/constants/CommonStyles';
 import { useProjectTasks, useUpdateTask, useDeleteTask } from '@/services/queries/tasks';
 import { useProject } from '@/services/queries/projects';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Task, TaskStatusUpdateInput } from '@/types/project';
+
+interface TaskAssignee {
+    id: number;
+    fullName: string;
+}
+
+interface TaskData {
+    id: number;
+    title: string;
+    description?: string;
+    status: string;
+    dueDate?: string;
+    assignee?: TaskAssignee;
+    projectId?: number | string;
+}
+
+// Définir l'interface pour la mise à jour du statut
+interface TaskStatusUpdateInput {
+    id: number;
+    status: string;
+}
 
 export default function KanbanBoard() {
     const router = useRouter();
@@ -20,24 +40,24 @@ export default function KanbanBoard() {
     const updateTask = useUpdateTask();
     const deleteTask = useDeleteTask();
 
-    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+    const [selectedTask, setSelectedTask] = useState<TaskData | null>(null);
     const [showStatusModal, setShowStatusModal] = useState<boolean>(false);
 
     // Filtrer les tâches par statut
-    const getTasksByStatus = (status: string): Task[] => {
+    const getTasksByStatus = (status: string): TaskData[] => {
         if (!tasks) return [];
         return tasks.filter(task => {
             if (status === 'todo' && task.status === 'todo') return true;
             if (status === 'inProgress' && task.status === 'in_progress') return true;
             if (status === 'done' && task.status === 'done') return true;
             return false;
-        });
+        }) as TaskData[];
     };
 
     const handleTaskStatusChange = async (taskId: number | string, newStatus: string) => {
         try {
             const updateData: TaskStatusUpdateInput = {
-                id: Number(taskId), // Conversion explicite en nombre
+                id: Number(taskId),
                 status: newStatus
             };
             await updateTask.mutateAsync(updateData);
@@ -46,7 +66,7 @@ export default function KanbanBoard() {
         }
     };
 
-    const openStatusModal = (task: Task) => {
+    const openStatusModal = (task: TaskData) => {
         setSelectedTask(task);
         setShowStatusModal(true);
     };
@@ -56,7 +76,7 @@ export default function KanbanBoard() {
         
         try {
             const updateData: TaskStatusUpdateInput = {
-                id: Number(selectedTask.id), // Conversion explicite en nombre
+                id: Number(selectedTask.id),
                 status: newStatus
             };
             await updateTask.mutateAsync(updateData);
@@ -82,7 +102,7 @@ export default function KanbanBoard() {
                         text: "Supprimer",
                         style: "destructive",
                         onPress: async () => {
-                            await deleteTask.mutateAsync(Number(taskId)); // Conversion explicite en nombre
+                            await deleteTask.mutateAsync(Number(taskId));
                             setShowStatusModal(false);
                             setSelectedTask(null);
                         }
@@ -93,6 +113,10 @@ export default function KanbanBoard() {
             console.error("Error deleting task:", error);
             Alert.alert("Erreur", "Impossible de supprimer la tâche");
         }
+    };
+
+    const navigateToTaskDetails = (taskId: number | string) => {
+        router.push(`/task/${taskId}` as any);
     };
 
     if (isLoadingProject || isLoadingTasks) {
@@ -108,12 +132,16 @@ export default function KanbanBoard() {
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity 
-                    onPress={() => router.push(`/project/${projectId}`)}
+                    onPress={() => {
+                        router.push({
+                            pathname: `/project/${projectId}` as any
+                        });
+                    }}
                     style={[styles.backButton, shadowStyles.button]}
                 >
                     <Ionicons name="chevron-back" size={24} color="#000" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>{translations.projects.kanban}</Text>
+                <Text style={styles.headerTitle}>{translations.projects?.kanban || "Kanban"}</Text>
                 <View style={{ width: 40 }} />
             </View>
 
@@ -130,7 +158,7 @@ export default function KanbanBoard() {
                             key={task.id} 
                             style={[styles.taskCard, shadowStyles.card]}
                             onPress={() => openStatusModal(task)}
-                            onLongPress={() => router.push(`/task/${task.id}`)}
+                            onLongPress={() => navigateToTaskDetails(task.id)}
                         >
                             <Text style={styles.taskTitle}>{task.title}</Text>
                             {task.dueDate && (
@@ -169,7 +197,7 @@ export default function KanbanBoard() {
                             key={task.id} 
                             style={[styles.taskCard, shadowStyles.card]}
                             onPress={() => openStatusModal(task)}
-                            onLongPress={() => router.push(`/task/${task.id}`)}
+                            onLongPress={() => navigateToTaskDetails(task.id)}
                         >
                             <Text style={styles.taskTitle}>{task.title}</Text>
                             {task.dueDate && (
@@ -208,7 +236,7 @@ export default function KanbanBoard() {
                             key={task.id} 
                             style={[styles.taskCard, shadowStyles.card]}
                             onPress={() => openStatusModal(task)}
-                            onLongPress={() => router.push(`/task/${task.id}`)}
+                            onLongPress={() => navigateToTaskDetails(task.id)}
                         >
                             <Text style={styles.taskTitle}>{task.title}</Text>
                             {task.dueDate && (
@@ -292,7 +320,10 @@ export default function KanbanBoard() {
 
             <TouchableOpacity 
                 style={[styles.addButton, shadowStyles.button]}
-                onPress={() => router.push('/new-task')}
+                onPress={() => router.push({
+                    pathname: "/new-task",
+                    params: { projectId: projectId }
+                })}
             >
                 <Ionicons name="add" size={24} color="#fff" />
             </TouchableOpacity>
@@ -526,3 +557,4 @@ const styles = StyleSheet.create({
         fontWeight: '500',
     }
 });
+

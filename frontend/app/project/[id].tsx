@@ -4,41 +4,45 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { shadowStyles } from '@/constants/CommonStyles';
-import { useProject, useDeleteProject, useUpdateProjectStatus, useProjectMembers, useRemoveProjectMember } from '@/services/queries/projects';
+import { useProject, useDeleteProject, useUpdateProjectStatusr, useRemoveProjectMember } from '@/services/queries/projects';
 import { useProjectTasks, useUpdateTask } from '@/services/queries/tasks';
 import { useQueryClient } from '@tanstack/react-query';
 import { shouldUpdateProjectStatus } from '@/utils/projectUtils';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Project, Task, TaskStatusUpdateInput } from '@/types/project';
 
-interface ChecklistItem {
+// Définir des interfaces locales pour éviter les problèmes de compatibilité
+interface ProjectMember {
     id: number;
-    title: string;
-    completed: boolean;
+    fullName?: string;
+    photoURL?: string;
 }
 
-interface TeamMember {
-    id: number;
-    image: any;
+interface ProjectTask {
+    id: number | string;
+    title: string;
+    status: string;
+    dueDate?: string;
+    projectId?: number | string;
 }
 
-interface TodayTask {
-    id: number;
-    title: string;
-    assignee: string;
-    completed: boolean;
+interface Project {
+    id: number | string;
+    name: string;
+    description?: string;
+    status: string;
+    startDate?: string;
+    endDate?: string;
+    members?: ProjectMember[];
+    tasks?: ProjectTask[];
 }
 
-interface ProjectData {
-    id: string | number;
-    title: string;
-    description: string;
-    deadline: string;
-    progress: number;
-    team: TeamMember[];
-    checklist: ChecklistItem[];
-    todaysTasks: TodayTask[];
+interface TaskStatusUpdateInput {
+    id: number | string;
+    status: string;
 }
+
+// Autres interfaces
+// ...existing code...
 
 function formatDeadline(dateString: string) {
     if (!dateString) return '';
@@ -54,7 +58,7 @@ export default function ProjectDetails() {
     const { id } = useLocalSearchParams();
     const projectId = Array.isArray(id) ? id[0] : id as string;
     const { translations } = useLanguage();
-    
+
     const { data: project, isLoading: isLoadingProject } = useProject(projectId);
     const { data: tasks, isLoading: isLoadingTasks } = useProjectTasks(projectId);
     const queryClient = useQueryClient();
@@ -68,11 +72,11 @@ export default function ProjectDetails() {
     const [showStatusMenu, setShowStatusMenu] = useState(false);
     const [statusAutoUpdated, setStatusAutoUpdated] = useState(false);
 
-    const handleTaskToggle = async (task: Task) => {
+    const handleTaskToggle = async (task: ProjectTask) => {
         try {
             console.log('Toggling task:', task.id);
             const updateData: TaskStatusUpdateInput = {
-                id: Number(task.id), // Conversion explicite en nombre
+                id: Number(task.id),
                 status: task.status === 'done' ? 'todo' : 'done'
             };
             await updateTask.mutateAsync(updateData);
@@ -104,33 +108,20 @@ export default function ProjectDetails() {
         } catch (error) {
             console.error('Error deleting project:', error);
             Alert.alert(
-                'Erreur', 
+                'Erreur',
                 translations.errors.deleteProject
             );
         }
     };
 
-    const handleStatusChange = async (newStatus: string) => {
-        try {
-            await updateProjectStatus.mutateAsync({
-                id: projectId,
-                status: newStatus
-            });
-            setShowStatusMenu(false);
-            Alert.alert('Succès', 'Le statut du projet a été mis à jour');
-        } catch (error) {
-            console.error('Error updating project status:', error);
-            Alert.alert('Erreur', 'Impossible de mettre à jour le statut du projet');
-        }
-    };
 
     const handleRemoveMember = async (memberId: number) => {
         Alert.alert(
             "Retirer un membre",
             "Êtes-vous sûr de vouloir retirer ce membre du projet ? Cette action ne peut pas être annulée.",
             [
-                { 
-                    text: "Annuler", 
+                {
+                    text: "Annuler",
                     style: 'cancel',
                     onPress: () => console.log('Annulation du retrait du membre')
                 },
@@ -153,33 +144,23 @@ export default function ProjectDetails() {
                                             console.log('Membre supprimé avec succès');
                                         }
                                     }
-                                ],
-                                {
-                                    icon: require('@/assets/images/streamline.jpeg')
-                                }
+                                ]
                             );
                         } catch (error) {
                             console.error('Error removing member:', error);
                             Alert.alert(
-                                'Erreur', 
+                                'Erreur',
                                 'Une erreur est survenue lors du retrait du membre. Veuillez réessayer.',
                                 [
                                     {
                                         text: 'OK'
                                     }
-                                ],
-                                {
-                                    icon: require('@/assets/images/streamline.jpeg')
-                                }
+                                ]
                             );
                         }
                     }
                 }
-            ],
-            {
-                icon: require('@/assets/images/streamline.jpeg'),
-                cancelable: true
-            }
+            ]
         );
     };
 
@@ -188,7 +169,7 @@ export default function ProjectDetails() {
     useEffect(() => {
         if (project && tasks && !statusAutoUpdated) {
             const { shouldUpdate, newStatus, progress } = shouldUpdateProjectStatus(project, tasks);
-            
+
             if (shouldUpdate && newStatus) {
                 // Mettre à jour le statut du projet automatiquement
                 updateProjectStatus.mutate(
@@ -223,15 +204,15 @@ export default function ProjectDetails() {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity 
-                    style={styles.backButton} 
+                <TouchableOpacity
+                    style={styles.backButton}
                     onPress={() => router.back()}
                 >
                     <Ionicons name="chevron-back" size={24} color="#000" />
                 </TouchableOpacity>
 
                 <View style={styles.headerIcons}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={styles.iconButton}
                         onPress={() => {
                             if (project && project.id) {
@@ -241,7 +222,7 @@ export default function ProjectDetails() {
                     >
                         <Ionicons name="add-circle-outline" size={22} color="#000" />
                     </TouchableOpacity>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={[styles.iconButton, styles.deleteButton]}
                         onPress={handleDeleteProject}
                     >
@@ -269,12 +250,16 @@ export default function ProjectDetails() {
                             Attachment
                         </Text>
                     </TouchableOpacity>
-                    
+
                     <TouchableOpacity
                         style={[styles.tabButton, activeTab === 'kanban' && styles.activeTab]}
                         onPress={() => {
                             setActiveTab('kanban');
-                            router.push(`/project/kanban/${projectId}`);
+                            // Correction du chemin de navigation ici - assurez-vous que le chemin correspond à la structure des répertoires
+                            router.push({
+                                pathname: `/project/kanban/[id]`,
+                                params: { id: projectId }
+                            });
                         }}
                     >
                         <Text style={[styles.tabText, activeTab === 'kanban' && styles.activeTabText]}>
@@ -290,15 +275,15 @@ export default function ProjectDetails() {
                             <View style={styles.teamContainer}>
                                 {project.members?.map((member) => (
                                     <View key={member.id} style={styles.teamMember}>
-                                        <Image 
-                                            source={member.photoURL ? 
-                                                { uri: member.photoURL } : 
+                                        <Image
+                                            source={member.photoURL ?
+                                                { uri: member.photoURL } :
                                                 require('@/assets/images/streamline.jpeg')
-                                            } 
-                                            style={styles.memberAvatar} 
+                                            }
+                                            style={styles.memberAvatar}
                                         />
-                                        <TouchableOpacity 
-                                            style={styles.removeMemberButton} 
+                                        <TouchableOpacity
+                                            style={styles.removeMemberButton}
                                             onPress={() => handleRemoveMember(member.id)}
                                         >
                                             <Ionicons name="close-circle" size={20} color="#FF3B30" />
@@ -310,7 +295,7 @@ export default function ProjectDetails() {
                                 </TouchableOpacity>
                             </View>
                         </View>
-                        
+
                         <View style={[styles.progressCircle, shadowStyles.card]}>
                             <Text style={styles.progressPercentage}>
                                 {calculateProgress(project)}%
@@ -329,7 +314,7 @@ export default function ProjectDetails() {
 
                 <View style={styles.checklistSection}>
                     <Text style={styles.sectionTitle}>{translations.tasks.plural} ({tasks?.length || 0})</Text>
-                    
+
                     {!tasks?.length ? (
                         <Text style={styles.emptyText}>{translations.projects.noTasks}</Text>
                     ) : (
@@ -340,7 +325,7 @@ export default function ProjectDetails() {
                                         styles.checkbox,
                                         task.status === 'done' && styles.checkboxCompleted
                                     ]}
-                                    onPress={() => handleTaskToggle(task)}
+                                    onPress={() => handleTaskToggle(task as ProjectTask)}
                                 >
                                     {task.status === 'done' && (
                                         <Ionicons name="checkmark" size={18} color="#fff" />
@@ -356,7 +341,7 @@ export default function ProjectDetails() {
                                         {task.title}
                                     </Text>
                                     {task.dueDate && (
-                                        <Text style={styles.dueDateText}>
+                                        <Text style={styles.taskDueDateText}>
                                             {new Date(task.dueDate).toLocaleDateString('fr-FR', {
                                                 day: 'numeric',
                                                 month: 'long',
@@ -391,11 +376,11 @@ export default function ProjectDetails() {
 
 function calculateProgress(project: Project | null): number {
     if (!project || !project.tasks || project.tasks.length === 0) return 0;
-    
-    const completedTasks = project.tasks.filter(task => 
+
+    const completedTasks = project.tasks.filter(task =>
         task.status.toLowerCase() === 'done' || task.status.toLowerCase() === 'completed'
     ).length;
-    
+
     return Math.round((completedTasks / project.tasks.length) * 100);
 }
 
@@ -707,10 +692,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 8,
     },
-    dueDateText: {
+    taskDueDateText: { // Renommé pour éviter le doublon
         fontSize: 12,
         color: '#666',
-        marginLeft: 4,
+        marginTop: 4,
     },
     assigneeContainer: {
         flexDirection: 'row',
@@ -744,11 +729,6 @@ const styles = StyleSheet.create({
         flex: 1,
         marginLeft: 15,
     },
-    dueDateText: {
-        fontSize: 12,
-        color: '#666',
-        marginTop: 4,
-    },
     deleteButton: {
         borderColor: '#ff3b30',
     },
@@ -765,12 +745,6 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 2, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 0,
-    },
-    statusText: {
-        color: '#fff',
-        fontSize: 14,
-        fontWeight: '600',
-        marginRight: 5,
     },
     modalOverlay: {
         flex: 1,
