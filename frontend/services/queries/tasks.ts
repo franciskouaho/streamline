@@ -202,7 +202,7 @@ export const useUpdateSubTask = () => {
 
 // Calculer les statistiques des tâches
 export const calculateTaskStats = (tasks: Task[]) => {
-  if (!tasks || !tasks.length) {
+  if (!tasks || !Array.isArray(tasks)) {
     return { todo: 0, inProgress: 0, done: 0, total: 0 };
   }
 
