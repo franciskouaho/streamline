@@ -108,6 +108,11 @@ export default {
     files: "Files",
     recentProjects: "Recent Projects",
     noProjects: "No projects yet",
+    filters: {
+      all: "All",
+      owned: "My projects",
+      member: "Member"
+    },
     status: {
       ongoing: "Ongoing",
       in_progress: "In Progress",
@@ -136,7 +141,8 @@ export default {
     projectProgress: "Project Progress",
     tasksOverview: "Tasks Overview",
     activityFeed: "Recent Activities",
-    upcomingDeadlines: "Upcoming Deadlines"
+    upcomingDeadlines: "Upcoming Deadlines",
+    allProjects: "All Projects"
   },
   calendar: {
     today: "Today",
@@ -295,11 +301,28 @@ export default {
     members: "Members",
     invitations: "Invitations",
     invite: "Invite",
-    invitation: "Team invitation",
-    invitationAccepted: "Invitation accepted successfully",
-    invitationDeclined: "Invitation declined",
-    errorAcceptingInvitation: "Unable to accept invitation. Please try again.",
-    errorDecliningInvitation: "Unable to decline invitation. Please try again.",
+    noMembers: "No members in your team yet",
+    noInvitations: "No pending invitations",
+    searchPlaceholder: "Search for a member...",
+    memberDetails: "Member Details",
+    inviteMember: "Invite a Member",
+    resendInvite: "Resend",
+    cancelInvite: "Cancel",
+    removeMember: "Remove from Team",
+    confirmRemove: "Are you sure you want to remove this member from the team?",
+    confirmCancel: "Cancel Invitation",
+    confirmCancelMessage: "Are you sure you want to cancel this invitation?",
+    invitationSent: "Invitation sent successfully",
+    invitationResent: "Invitation resent successfully",
+    invitationCanceled: "Invitation canceled successfully",
+    memberRemoved: "Member removed successfully",
+    emailPlaceholder: "email@example.com",
+    namePlaceholder: "Full Name",
+    roles: {
+      admin: "Administrator",
+      member: "Member",
+      viewer: "Observer"
+    },
     status: {
       active: "Active",
       pending: "Pending",
@@ -307,6 +330,19 @@ export default {
       declined: "Declined",
       expired: "Expired",
       inactive: "Inactive"
-    }
+    },
+    errorInviting: "Unable to send invitation. Please try again.",
+    errorRemoving: "Unable to remove member. Please try again.",
+    errorResending: "Unable to resend invitation. Please try again.",
+    errorCanceling: "Unable to cancel invitation. Please try again.",
+    contactInfo: "Contact Information",
+    projects: "Projects",
+    noProjects: "No associated projects",
+    sendInvitation: "Send Invitation",
+    invitation: "Team invitation",
+    invitationAccepted: "Invitation accepted successfully",
+    invitationDeclined: "Invitation declined",
+    errorAcceptingInvitation: "Unable to accept invitation. Please try again.",
+    errorDecliningInvitation: "Unable to decline invitation. Please try again."
   }
 };

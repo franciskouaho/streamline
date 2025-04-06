@@ -115,6 +115,11 @@ export default {
     files: "Fichiers",
     recentProjects: "Projets récents",
     noProjects: "Aucun projet pour le moment",
+    filters: {
+      all: "Tous",
+      owned: "Mes projets",
+      member: "Membre"
+    },
     status: {
       ongoing: "En cours",
       in_progress: "En progression",
@@ -143,7 +148,8 @@ export default {
     projectProgress: "Progression du projet",
     tasksOverview: "Aperçu des tâches",
     activityFeed: "Activités récentes",
-    upcomingDeadlines: "Échéances à venir"
+    upcomingDeadlines: "Échéances à venir",
+    allProjects: "Tous les projets"
   },
   calendar: {
     today: "Aujourd'hui",

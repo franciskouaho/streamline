@@ -19,9 +19,9 @@ export default function Home() {
   const { data: projects, isLoading } = useProjects(filter);
 
   const filterOptions = [
-    { value: 'all', label: 'Tous' },
-    { value: 'owned', label: 'Mes projets' },
-    { value: 'member', label: 'Membre' }
+    { value: 'all', label: translations.projects.filters.all },
+    { value: 'owned', label: translations.projects.filters.owned },
+    { value: 'member', label: translations.projects.filters.member }
   ];
 
   const handleProjectPress = (project: Project) => {
@@ -69,7 +69,10 @@ export default function Home() {
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>{translations.projects.recentProjects}</Text>
-          <TouchableOpacity onPress={() => router.push('/projects')}>
+          <TouchableOpacity 
+            style={styles.viewAllButton}
+            onPress={() => router.push('/projects')}
+          >
             <Text style={styles.viewAll}>{translations.common.viewAll}</Text>
           </TouchableOpacity>
         </View>
@@ -169,5 +172,8 @@ const styles = StyleSheet.create({
   filterTextActive: {
     color: '#fff',
     fontWeight: '600',
+  },
+  viewAllButton: {
+    padding: 5, // Ajouter un padding pour une meilleure zone tactile
   },
 });
