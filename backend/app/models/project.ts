@@ -19,29 +19,30 @@ export default class Project extends BaseModel {
   @column()
   declare status: string
 
-  @column()
+  @column({ columnName: 'owner_id' })
   declare ownerId: number
 
   @column()
   declare image: string | null
 
-  @column.date()
+  @column.date({ columnName: 'start_date' })
   declare startDate: DateTime | null
 
-  @column.date()
+  @column.date({ columnName: 'end_date' })
   declare endDate: DateTime | null
 
   @column()
   declare settings: JSON | null
 
-  @column.dateTime({ autoCreate: true })
+  @column.dateTime({ autoCreate: true, columnName: 'created_at' })
   declare createdAt: DateTime
 
-  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  @column.dateTime({ autoCreate: true, autoUpdate: true, columnName: 'updated_at' })
   declare updatedAt: DateTime | null
 
   @belongsTo(() => User, {
     foreignKey: 'ownerId',
+    localKey: 'id',
   })
   declare owner: BelongsTo<typeof User>
 

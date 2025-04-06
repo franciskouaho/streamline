@@ -3,15 +3,21 @@ import { Project, ProjectStats, ProjectProgress, ProjectTimeline } from '@/types
 import api from '@/services/api';
 
 // Récupérer tous les projets
-export const useProjects = () => {
+export const useProjects = (filter: 'all' | 'owned' | 'member' = 'all') => {
   return useQuery({
-    queryKey: ['projects'],
-    queryFn: async (): Promise<Project[]> => {
-      const response = await api.get('/projects');
-      return response.data;
+    queryKey: ['projects', filter],
+    queryFn: async () => {
+      try {
+        const response = await api.get(`/projects?filter=${filter}`)
+        console.log('Projects response:', response.data)
+        return response.data
+      } catch (error) {
+        console.error('Error fetching projects:', error)
+        throw error
+      }
     }
-  });
-};
+  })
+}
 
 // Récupérer un projet spécifique par ID
 export const useProject = (id: string | number) => {
@@ -84,6 +90,22 @@ export const useDeleteProject = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+    }
+  });
+};
+
+// Supprimer un membre d'un projet
+export const useRemoveProjectMember = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ projectId, memberId }: { projectId: number; memberId: number }) => {
+      const response = await api.delete(`/projects/${projectId}/members/${memberId}`);
+      return response.data;
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['projects', variables.projectId] });
     }
   });
 };

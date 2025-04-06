@@ -2,11 +2,12 @@ import vine from '@vinejs/vine'
 
 export const createProjectValidator = vine.compile(
   vine.object({
-    name: vine.string().trim().minLength(1),
-    description: vine.string().nullable().optional(),
-    status: vine.string().optional(),
-    startDate: vine.string().nullable().optional(),
-    endDate: vine.string().nullable().optional(),
+    name: vine.string().trim().minLength(1).maxLength(255),
+    description: vine.string().trim().nullable(),
+    status: vine.string().optional().nullable(),
+    startDate: vine.string().optional().nullable(),
+    endDate: vine.string().optional().nullable(),
+    members: vine.array(vine.number()).optional(),
   })
 )
 

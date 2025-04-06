@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -15,7 +15,14 @@ import { Project } from '@/types/project';
 export default function Home() {
   const router = useRouter();
   const { translations } = useLanguage();
-  const { data: projects, isLoading } = useProjects();
+  const [filter, setFilter] = useState<'all' | 'owned' | 'member'>('all');
+  const { data: projects, isLoading } = useProjects(filter);
+
+  const filterOptions = [
+    { value: 'all', label: 'Tous' },
+    { value: 'owned', label: 'Mes projets' },
+    { value: 'member', label: 'Membre' }
+  ];
 
   const handleProjectPress = (project: Project) => {
     router.push(`/project/${project.id}`);
@@ -39,6 +46,26 @@ export default function Home() {
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
         <DashboardCharts />
+
+        <View style={styles.filterContainer}>
+          {filterOptions.map((option) => (
+            <TouchableOpacity
+              key={option.value}
+              style={[
+                styles.filterButton,
+                filter === option.value && styles.filterButtonActive
+              ]}
+              onPress={() => setFilter(option.value as typeof filter)}
+            >
+              <Text style={[
+                styles.filterText,
+                filter === option.value && styles.filterTextActive
+              ]}>
+                {option.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>{translations.projects.recentProjects}</Text>
@@ -116,5 +143,31 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
     color: '#666',
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    marginBottom: 20,
+    gap: 10,
+  },
+  filterButton: {
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    backgroundColor: '#fff',
+  },
+  filterButtonActive: {
+    backgroundColor: '#ff7a5c',
+    borderColor: '#ff7a5c',
+  },
+  filterText: {
+    color: '#666',
+    fontSize: 14,
+  },
+  filterTextActive: {
+    color: '#fff',
+    fontWeight: '600',
   },
 });

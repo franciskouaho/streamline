@@ -9,6 +9,7 @@ import Notification from '#models/notification'
 import NotificationSetting from '#models/notification_setting'
 import ProjectMember from '#models/project_member'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
+import TeamInvitation from '#models/team_invitation'
 
 export default class User extends BaseModel {
   @column({ isPrimary: true })
@@ -45,12 +46,12 @@ export default class User extends BaseModel {
   declare profile: HasOne<typeof Profile>
 
   @hasMany(() => Project, {
-    foreignKey: 'ownerId',
+    foreignKey: 'owner_id',
   })
   declare ownedProjects: HasMany<typeof Project>
 
   @hasMany(() => Task, {
-    foreignKey: 'assigneeId',
+    foreignKey: 'assignee_id',
   })
   declare assignedTasks: HasMany<typeof Task>
 
@@ -63,8 +64,15 @@ export default class User extends BaseModel {
   @hasOne(() => NotificationSetting)
   declare notificationSettings: HasOne<typeof NotificationSetting>
 
-  @hasMany(() => ProjectMember)
+  @hasMany(() => ProjectMember, {
+    foreignKey: 'user_id',
+  })
   declare projectMemberships: HasMany<typeof ProjectMember>
+
+  @hasMany(() => TeamInvitation, {
+    foreignKey: 'invitedBy',
+  })
+  declare sentInvitations: HasMany<typeof TeamInvitation>
 
   static accessTokens = DbAccessTokensProvider.forModel(User)
 }

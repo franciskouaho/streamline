@@ -5,7 +5,14 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { shadowStyles } from '@/constants/CommonStyles';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification } from '@/services/notifications';
+import { 
+  fetchNotifications, 
+  markNotificationAsRead, 
+  markAllNotificationsAsRead, 
+  deleteNotification,
+  acceptInvitation,
+  declineInvitation 
+} from '@/services/notifications';
 import { INotification } from '@/types/notifications';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -72,6 +79,54 @@ export default function Notification() {
             Alert.alert(
                 "Erreur",
                 "Impossible de supprimer la notification."
+            );
+        }
+    };
+
+    const handleAcceptInvitation = async (notification: INotification) => {
+        try {
+            const invitationId = notification.data.invitationId;
+            if (!invitationId) {
+                console.error("ID d'invitation manquant");
+                return;
+            }
+            
+            await acceptInvitation(notification.id, invitationId);
+            // Rafraîchir les notifications après l'action
+            loadNotifications();
+            Alert.alert(
+                "Succès",
+                translations.team.invitationAccepted
+            );
+        } catch (error) {
+            console.error("Erreur lors de l'acceptation de l'invitation:", error);
+            Alert.alert(
+                "Erreur",
+                translations.team.errorAcceptingInvitation
+            );
+        }
+    };
+
+    const handleDeclineInvitation = async (notification: INotification) => {
+        try {
+            const invitationId = notification.data.invitationId;
+            if (!invitationId) {
+                console.error("ID d'invitation manquant");
+                return;
+            }
+            
+            await declineInvitation(notification.id, invitationId);
+            // Rafraîchir les notifications après l'action
+            loadNotifications();
+            Alert.alert(
+                "Succès",
+                translations.team.invitationDeclined
+            );
+        } catch (error) {
+            console.error("Erreur lors du refus de l'invitation:", error);
+            Alert.alert(
+                "Erreur",
+                translations.team.errorDecliningInvitation
             );
         }
     };
@@ -167,6 +222,18 @@ export default function Notification() {
                         <Ionicons name="folder-open" size={20} color="#fff" />
                     </View>
                 );
+            case 'team_invitation':
+                return (
+                    <View style={[styles.iconBg, { backgroundColor: '#FF9800' }]}>
+                        <Ionicons name="people" size={20} color="#fff" />
+                    </View>
+                );
+            case 'project_invitation':
+                return (
+                    <View style={[styles.iconBg, { backgroundColor: '#8E44AD' }]}>
+                        <Ionicons name="briefcase" size={20} color="#fff" />
+                    </View>
+                );
             default:
                 return (
                     <View style={[styles.iconBg, { backgroundColor: '#795548' }]}>
@@ -178,6 +245,97 @@ export default function Notification() {
 
     const renderNotificationItem = (notification: INotification) => {
         const data = notification.data as any;
+        
+        // Traitement pour les invitations de projet
+        if (notification.type === 'project_invitation') {
+            return (
+                <View
+                    key={notification.id}
+                    style={[styles.notificationItem, notification.read && styles.notificationRead]}
+                >
+                    <View style={styles.iconContainer}>
+                        {renderNotificationIcon(notification.type)}
+                    </View>
+
+                    <View style={styles.notificationContent}>
+                        <View style={styles.notificationHeader}>
+                            <Text style={styles.notificationType}>Invitation à un projet</Text>
+                            <Text style={styles.notificationTime}>{formatNotificationTime(notification.createdAt)}</Text>
+                        </View>
+                        <Text style={styles.notificationMessage}>
+                            {data.message || `${data.inviterName || "Quelqu'un"} vous a ajouté au projet "${data.projectName || ""}`}
+                        </Text>
+                        
+                        {!notification.read && (
+                            <View style={styles.invitationActions}>
+                                <TouchableOpacity 
+                                    style={styles.viewProjectButton}
+                                    onPress={() => {
+                                        handleMarkAsRead(notification.id);
+                                        router.push(`/project/${data.projectId}`);
+                                    }}
+                                >
+                                    <Text style={styles.viewProjectButtonText}>Voir le projet</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                    </View>
+                    
+                    {!notification.read && (
+                        <TouchableOpacity 
+                            style={styles.deleteButton}
+                            onPress={() => handleDelete(notification.id)}
+                        >
+                            <Ionicons name="trash-outline" size={20} color="#000" />
+                        </TouchableOpacity>
+                    )}
+                </View>
+            );
+        }
+        
+        // Traitement spécial pour les invitations d'équipe
+        if (notification.type === 'team_invitation') {
+            return (
+                <View
+                    key={notification.id}
+                    style={[styles.notificationItem, notification.read && styles.notificationRead]}
+                >
+                    <View style={styles.iconContainer}>
+                        {renderNotificationIcon(notification.type)}
+                    </View>
+
+                    <View style={styles.notificationContent}>
+                        <View style={styles.notificationHeader}>
+                            <Text style={styles.notificationType}>{translations.team.invitation}</Text>
+                            <Text style={styles.notificationTime}>{formatNotificationTime(notification.createdAt)}</Text>
+                        </View>
+                        <Text style={styles.notificationMessage}>
+                            {data.message || `${data.inviterName || "Quelqu'un"} vous a invité à rejoindre l'équipe ${data.teamName || ""}`}
+                        </Text>
+                        
+                        {!notification.read && (
+                            <View style={styles.invitationActions}>
+                                <TouchableOpacity 
+                                    style={styles.acceptButton}
+                                    onPress={() => handleAcceptInvitation(notification)}
+                                >
+                                    <Text style={styles.acceptButtonText}>{translations.common.accept}</Text>
+                                </TouchableOpacity>
+                                
+                                <TouchableOpacity 
+                                    style={styles.declineButton}
+                                    onPress={() => handleDeclineInvitation(notification)}
+                                >
+                                    <Text style={styles.declineButtonText}>{translations.common.decline}</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+                    </View>
+                </View>
+            );
+        }
+        
+        // Rendu normal pour les autres types de notifications
         return (
             <TouchableOpacity
                 key={notification.id}
@@ -421,5 +579,65 @@ const styles = StyleSheet.create({
         marginTop: 10,
         fontSize: 16,
         color: '#888',
+    },
+    invitationActions: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        marginTop: 10,
+    },
+    acceptButton: {
+        backgroundColor: '#4CAF50',
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 15,
+        marginRight: 10,
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 0,
+        elevation: 4,
+    },
+    acceptButtonText: {
+        color: '#fff',
+        fontWeight: '500',
+        fontSize: 12,
+    },
+    declineButton: {
+        backgroundColor: '#F44336',
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 15,
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 0,
+        elevation: 4,
+    },
+    declineButtonText: {
+        color: '#fff',
+        fontWeight: '500',
+        fontSize: 12,
+    },
+    viewProjectButton: {
+        backgroundColor: '#8E44AD',
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 15,
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 0,
+        elevation: 4,
+    },
+    viewProjectButtonText: {
+        color: '#fff',
+        fontWeight: '500',
+        fontSize: 12,
     },
 });

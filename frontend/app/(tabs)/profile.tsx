@@ -45,9 +45,15 @@ export default function Profile() {
                     text: translations.common.confirm,
                     onPress: async () => {
                         try {
+                            setIsLoading(true);
                             await logout();
-                            router.replace("/");
+                            setIsLoading(false);
+                            // Attendre que la déconnexion soit terminée avant de naviguer
+                            setTimeout(() => {
+                                router.replace("/login");
+                            }, 100);
                         } catch (error) {
+                            setIsLoading(false);
                             console.error("Erreur lors de la déconnexion:", error);
                             Alert.alert(
                                 "Erreur", 
@@ -74,7 +80,7 @@ export default function Profile() {
                     onPress: async () => {
                         try {
                             await deleteAccount();
-                            router.replace("/");
+                            router.replace("/login");
                         } catch (error) {
                             console.error("Erreur lors de la suppression du compte:", error);
                             Alert.alert(

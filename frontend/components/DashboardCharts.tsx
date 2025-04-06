@@ -31,7 +31,7 @@ const DashboardCharts = () => {
   const { data: timelineData, isLoading: isLoadingTimeline } = useProjectTimeline()
   const { data: tasks, isLoading: isLoadingTasks } = useTasks() // Récupération des tâches
   const { translations } = useLanguage() // Ajout de l'accès aux traductions
-  
+
   const [taskStats, setTaskStats] = useState({ todo: 0, inProgress: 0, done: 0, total: 0 }) // État pour les statistiques de tâches
 
   const [activeChart, setActiveChart] = React.useState("pie")
@@ -137,8 +137,8 @@ const DashboardCharts = () => {
 
   // Déboguer les données des projets pour vérifier les statuts
   console.log(
-    "Projets disponibles:",
-    projects?.map((p) => ({ id: p.id, status: p.status })),
+      "Projets disponibles:",
+      projects?.map((p) => ({ id: p.id, status: p.status })),
   )
   console.log("Statistiques calculées:", stats)
 
@@ -243,162 +243,162 @@ const DashboardCharts = () => {
   }
 
   return (
-    <View style={styles.chartsContainer}>
-      {/* Cartes de statistiques */}
-      <View style={styles.statsContainer}>
-        {/* Statistiques de projets et tâches */}
-        <Text style={styles.sectionTitle}>{translations.dashboardCharts.overview}</Text>
-        
-        <View style={styles.statsGrid}>
-          {/* Statistiques des projets */}
-          <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: STATUS_COLORS.ONGOING }]}>
-            <View style={styles.statContent}>
-              <Text style={styles.statValue}>{stats?.ongoing || 0}</Text>
-              <Text style={styles.statLabel}>{translations.dashboardCharts.ongoingProjects}</Text>
-            </View>
-            <View style={[styles.statIcon, { backgroundColor: STATUS_COLORS.ONGOING }]}>
-              <Ionicons name="sync" size={18} color="#fff" />
-            </View>
-          </View>
+      <View style={styles.chartsContainer}>
+        {/* Cartes de statistiques */}
+        <View style={styles.statsContainer}>
+          {/* Statistiques de projets et tâches */}
+          <Text style={styles.sectionTitle}>{translations.dashboardCharts.overview}</Text>
 
-          <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: STATUS_COLORS.IN_PROGRESS }]}>
-            <View style={styles.statContent}>
-              <Text style={styles.statValue}>{stats?.inProgress || 0}</Text>
-              <Text style={styles.statLabel}>{translations.dashboardCharts.inProgress}</Text>
+          <View style={styles.statsGrid}>
+            {/* Statistiques des projets */}
+            <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: STATUS_COLORS.ONGOING }]}>
+              <View style={styles.statContent}>
+                <Text style={styles.statValue}>{stats?.ongoing || 0}</Text>
+                <Text style={styles.statLabel}>{translations.dashboardCharts.ongoingProjects}</Text>
+              </View>
+              <View style={[styles.statIcon, { backgroundColor: STATUS_COLORS.ONGOING }]}>
+                <Ionicons name="sync" size={18} color="#fff" />
+              </View>
             </View>
-            <View style={[styles.statIcon, { backgroundColor: STATUS_COLORS.IN_PROGRESS }]}>
-              <Ionicons name="time" size={18} color="#fff" />
-            </View>
-          </View>
 
-          <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: STATUS_COLORS.COMPLETED }]}>
-            <View style={styles.statContent}>
-              <Text style={styles.statValue}>{stats?.completed || 0}</Text>
-              <Text style={styles.statLabel}>{translations.dashboardCharts.completedProjects}</Text>
+            <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: STATUS_COLORS.IN_PROGRESS }]}>
+              <View style={styles.statContent}>
+                <Text style={styles.statValue}>{stats?.inProgress || 0}</Text>
+                <Text style={styles.statLabel}>{translations.dashboardCharts.inProgress}</Text>
+              </View>
+              <View style={[styles.statIcon, { backgroundColor: STATUS_COLORS.IN_PROGRESS }]}>
+                <Ionicons name="time" size={18} color="#fff" />
+              </View>
             </View>
-            <View style={[styles.statIcon, { backgroundColor: STATUS_COLORS.COMPLETED }]}>
-              <Ionicons name="checkmark-circle" size={18} color="#fff" />
-            </View>
-          </View>
 
-          <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: STATUS_COLORS.TODO }]}>
-            <View style={styles.statContent}>
-              <Text style={styles.statValue}>{taskStats?.todo || 0}</Text>
-              <Text style={styles.statLabel}>{translations.dashboardCharts.todoTasks}</Text>
+            <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: STATUS_COLORS.COMPLETED }]}>
+              <View style={styles.statContent}>
+                <Text style={styles.statValue}>{stats?.completed || 0}</Text>
+                <Text style={styles.statLabel}>{translations.dashboardCharts.completedProjects}</Text>
+              </View>
+              <View style={[styles.statIcon, { backgroundColor: STATUS_COLORS.COMPLETED }]}>
+                <Ionicons name="checkmark-circle" size={18} color="#fff" />
+              </View>
             </View>
-            <View style={[styles.statIcon, { backgroundColor: STATUS_COLORS.TODO }]}>
-              <Ionicons name="list" size={18} color="#fff" />
+
+            <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: STATUS_COLORS.TODO }]}>
+              <View style={styles.statContent}>
+                <Text style={styles.statValue}>{taskStats?.todo || 0}</Text>
+                <Text style={styles.statLabel}>{translations.dashboardCharts.todoTasks}</Text>
+              </View>
+              <View style={[styles.statIcon, { backgroundColor: STATUS_COLORS.TODO }]}>
+                <Ionicons name="list" size={18} color="#fff" />
+              </View>
             </View>
-          </View>
 
-          <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: STATUS_COLORS.COMPLETED }]}>
-            <View style={styles.statContent}>
-              <Text style={styles.statValue}>{taskStats?.done || 0}</Text>
-              <Text style={styles.statLabel}>{translations.dashboardCharts.completedTasks}</Text>
+            <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: STATUS_COLORS.COMPLETED }]}>
+              <View style={styles.statContent}>
+                <Text style={styles.statValue}>{taskStats?.done || 0}</Text>
+                <Text style={styles.statLabel}>{translations.dashboardCharts.completedTasks}</Text>
+              </View>
+              <View style={[styles.statIcon, { backgroundColor: STATUS_COLORS.COMPLETED }]}>
+                <Ionicons name="checkmark-circle" size={18} color="#fff" />
+              </View>
             </View>
-            <View style={[styles.statIcon, { backgroundColor: STATUS_COLORS.COMPLETED }]}>
-              <Ionicons name="checkmark-circle" size={18} color="#fff" />
+
+            <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: STATUS_COLORS.DEFAULT }]}>
+              <View style={styles.statContent}>
+                <Text style={styles.statValue}>{taskStats?.total || 0}</Text>
+                <Text style={styles.statLabel}>{translations.dashboardCharts.totalTasks}</Text>
+              </View>
+              <View style={[styles.statIcon, { backgroundColor: STATUS_COLORS.DEFAULT }]}>
+                <Ionicons name="apps" size={18} color="#fff" />
+              </View>
             </View>
-          </View>
-
-          <View style={[styles.statCard, { backgroundColor: "#f9f9f9", borderLeftColor: STATUS_COLORS.DEFAULT }]}>
-            <View style={styles.statContent}>
-              <Text style={styles.statValue}>{taskStats?.total || 0}</Text>
-              <Text style={styles.statLabel}>{translations.dashboardCharts.totalTasks}</Text>
-            </View>
-            <View style={[styles.statIcon, { backgroundColor: STATUS_COLORS.DEFAULT }]}>
-              <Ionicons name="apps" size={18} color="#fff" />
-            </View>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.chartCard}>
-        <View style={styles.chartHeader}>
-          <Text style={styles.chartTitle}>{translations.dashboardCharts.projectOverview}</Text>
-
-          <View style={styles.chartTypesContainer}>
-            <TouchableOpacity
-              style={[styles.chartTypeButton, activeChart === "pie" && styles.activeChartTypeButton]}
-              onPress={() => setActiveChart("pie")}
-            >
-              <Ionicons name="pie-chart" size={18} color={activeChart === "pie" ? "#fff" : "#666"} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.chartTypeButton, activeChart === "bar" && styles.activeChartTypeButton]}
-              onPress={() => setActiveChart("bar")}
-            >
-              <Ionicons name="bar-chart" size={18} color={activeChart === "bar" ? "#fff" : "#666"} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.chartTypeButton, activeChart === "line" && styles.activeChartTypeButton]}
-              onPress={() => setActiveChart("line")}
-            >
-              <Ionicons name="trending-up" size={18} color={activeChart === "line" ? "#fff" : "#666"} />
-            </TouchableOpacity>
           </View>
         </View>
 
-        {/* Affichage du graphique selon le type choisi */}
-        {activeChart === "pie" && (
-          <View style={styles.chartWrapper}>
-            <PieChart
-              data={pieChartData}
-              width={screenWidth}
-              height={220}
-              chartConfig={chartConfig}
-              accessor="population"
-              backgroundColor="transparent"
-              paddingLeft="30"
-              absolute
-              hasLegend={true}
-              center={[5, 0]}
-              legendOffset={screenWidth / 2 + 100}
-            />
-          </View>
-        )}
+        <View style={styles.chartCard}>
+          <View style={styles.chartHeader}>
+            <Text style={styles.chartTitle}>{translations.dashboardCharts.projectOverview}</Text>
 
-        {activeChart === "bar" && (
-          <View style={styles.chartWrapper}>
-            <BarChart
-              data={barChartData}
-              width={screenWidth - 30}
-              height={200}
-              chartConfig={barChartConfig}
-              style={styles.chart}
-              flatColor={false}
-              showBarTops={false}
-              fromZero
-              withHorizontalLabels
-              withInnerLines={false}
-              showValuesOnTopOfBars
-            />
-          </View>
-        )}
+            <View style={styles.chartTypesContainer}>
+              <TouchableOpacity
+                  style={[styles.chartTypeButton, activeChart === "pie" && styles.activeChartTypeButton]}
+                  onPress={() => setActiveChart("pie")}
+              >
+                <Ionicons name="pie-chart" size={18} color={activeChart === "pie" ? "#fff" : "#666"} />
+              </TouchableOpacity>
 
-        {activeChart === "line" && (
-          <View style={styles.chartWrapper}>
-            <LineChart
-              data={lineChartData}
-              width={screenWidth - 30}
-              height={200}
-              chartConfig={chartConfig}
-              bezier
-              style={styles.chart}
-              withDots={true}
-              withShadow={false}
-              withInnerLines={false}
-              withOuterLines={false}
-              withVerticalLines={false}
-              withHorizontalLines={false}
-              fromZero
-            />
+              <TouchableOpacity
+                  style={[styles.chartTypeButton, activeChart === "bar" && styles.activeChartTypeButton]}
+                  onPress={() => setActiveChart("bar")}
+              >
+                <Ionicons name="bar-chart" size={18} color={activeChart === "bar" ? "#fff" : "#666"} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                  style={[styles.chartTypeButton, activeChart === "line" && styles.activeChartTypeButton]}
+                  onPress={() => setActiveChart("line")}
+              >
+                <Ionicons name="trending-up" size={18} color={activeChart === "line" ? "#fff" : "#666"} />
+              </TouchableOpacity>
+            </View>
           </View>
-        )}
+
+          {/* Affichage du graphique selon le type choisi */}
+          {activeChart === "pie" && (
+              <View style={styles.chartWrapper}>
+                <PieChart
+                    data={pieChartData}
+                    width={screenWidth}
+                    height={220}
+                    chartConfig={chartConfig}
+                    accessor="population"
+                    backgroundColor="transparent"
+                    paddingLeft="30"
+                    absolute
+                    hasLegend={true}
+                    center={[5, 0]}
+                    legendOffset={screenWidth / 2 + 100}
+                />
+              </View>
+          )}
+
+          {activeChart === "bar" && (
+              <View style={styles.chartWrapper}>
+                <BarChart
+                    data={barChartData}
+                    width={screenWidth - 30}
+                    height={200}
+                    chartConfig={barChartConfig}
+                    style={styles.chart}
+                    flatColor={false}
+                    showBarTops={false}
+                    fromZero
+                    withHorizontalLabels
+                    withInnerLines={false}
+                    showValuesOnTopOfBars
+                />
+              </View>
+          )}
+
+          {activeChart === "line" && (
+              <View style={styles.chartWrapper}>
+                <LineChart
+                    data={lineChartData}
+                    width={screenWidth - 30}
+                    height={200}
+                    chartConfig={chartConfig}
+                    bezier
+                    style={styles.chart}
+                    withDots={true}
+                    withShadow={false}
+                    withInnerLines={false}
+                    withOuterLines={false}
+                    withVerticalLines={false}
+                    withHorizontalLines={false}
+                    fromZero
+                />
+              </View>
+          )}
+        </View>
       </View>
-    </View>
   )
 }
 
@@ -488,14 +488,14 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     width: '100%',
   },
-  
+
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
     marginBottom: 15,
     marginLeft: 5,
   },
-  
+
   cardsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

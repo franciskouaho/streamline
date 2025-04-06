@@ -16,6 +16,7 @@ const TasksController = () => import('#controllers/tasks')
 const CommentsController = () => import('#controllers/comments')
 const NotificationsController = () => import('#controllers/notifications')
 const ProjectMembersController = () => import('#controllers/project_members')
+const TeamInvitationsController = () => import('#controllers/team_invitations')
 
 router.get('/', async ({ response }) => response.ok({ uptime: process.uptime() }))
 router.get('/health', ({ response }) => response.noContent())
@@ -40,6 +41,12 @@ router
             // Projects routes
             router
               .group(() => {
+                // Special project routes (must be before the route with parameter :id)
+                router.get('/stats', [ProjectsController, 'stats'])
+                router.get('/timeline', [ProjectsController, 'timeline'])
+                router.get('/progress', [ProjectsController, 'progress'])
+
+                // CRUD project routes
                 router.get('/', [ProjectsController, 'index'])
                 router.post('/', [ProjectsController, 'store'])
                 router.get('/:id', [ProjectsController, 'show'])
@@ -50,6 +57,10 @@ router
                 router.post('/:projectId/members', [ProjectMembersController, 'store'])
                 router.put('/:projectId/members/:id', [ProjectMembersController, 'update'])
                 router.delete('/:projectId/members/:id', [ProjectMembersController, 'destroy'])
+
+                // Ajouter ces routes à l'intérieur du groupe protégé par auth
+                router.get('/debug/memberships', '#controllers/project_members.debug')
+                router.get('/:projectId/members', '#controllers/project_members.index')
               })
               .prefix('/projects')
 
@@ -97,6 +108,32 @@ router
 
             // Device tokens route
             router.post('/device-tokens', '#controllers/device_tokens_controller.store')
+
+            // Team invitations routes
+            router
+              .group(() => {
+                router.get('/', [TeamInvitationsController, 'index'])
+                router.post('/', [TeamInvitationsController, 'store'])
+                router.get('/:id', [TeamInvitationsController, 'show'])
+                router.post('/:id/accept', [TeamInvitationsController, 'accept'])
+                router.post('/:id/decline', [TeamInvitationsController, 'decline'])
+                router.post('/:id/resend', [TeamInvitationsController, 'resend'])
+                router.delete('/:id', [TeamInvitationsController, 'destroy'])
+              })
+              .prefix('/team/invitations')
+
+            // Team members routes
+            router
+              .group(() => {
+                router.get('/', '#controllers/team_members_controller.index')
+                router.get('/:id', '#controllers/team_members_controller.show')
+                router.put('/:id', '#controllers/team_members_controller.update')
+                router.delete('/:id', '#controllers/team_members_controller.destroy')
+              })
+              .prefix('/team/members')
+
+            // Invite directly to the team
+            router.post('/team/invite', [TeamInvitationsController, 'store'])
           })
           .use([middleware.auth()])
       })

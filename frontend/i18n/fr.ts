@@ -13,7 +13,9 @@ export default {
     loading: "Chargement...",
     retry: "Réessayer",
     confirm: "Confirmer",
-    viewAll: "Voir tout"
+    viewAll: "Voir tout",
+    accept: "Accepter",
+    decline: "Refuser"
   },
   auth: {
     login: "Connexion",
@@ -106,7 +108,7 @@ export default {
     newProject: "Nouveau projet",
     projectName: "Nom du projet",
     description: "Description",
-    members: "Membres",
+    members: "Équipe",
     addMember: "Ajouter un membre",
     timeline: "Chronologie",
     kanban: "Tableau Kanban",
@@ -171,6 +173,8 @@ export default {
     empty: "Aucune notification",
     all: "Tous",
     unread: "Non lus",
+    projectInvitation: "Invitation à un projet",
+    viewProject: "Voir le projet",
     settings: {
       taskAssigned: "Attribution de tâches",
       taskDeadline: "Rappels d'échéance",
@@ -292,5 +296,54 @@ export default {
     designGuidelines: "Guide de conception",
     sprintPlanning: "Planification de sprint",
     marketingAssets: "Ressources marketing"
+  },
+  team: {
+    title: "Équipe",
+    members: "Membres",
+    invitations: "Invitations",
+    invite: "Inviter",
+    noMembers: "Aucun membre dans votre équipe pour le moment",
+    noInvitations: "Aucune invitation en attente",
+    searchPlaceholder: "Rechercher un membre...",
+    memberDetails: "Détails du membre",
+    inviteMember: "Inviter un membre",
+    resendInvite: "Renvoyer",
+    cancelInvite: "Annuler",
+    removeMember: "Retirer de l'équipe",
+    confirmRemove: "Êtes-vous sûr de vouloir retirer ce membre de l'équipe ?",
+    confirmCancel: "Annuler l'invitation",
+    confirmCancelMessage: "Êtes-vous sûr de vouloir annuler cette invitation ?",
+    invitationSent: "Invitation envoyée avec succès",
+    invitationResent: "Invitation renvoyée avec succès",
+    invitationCanceled: "Invitation annulée avec succès",
+    memberRemoved: "Membre retiré avec succès",
+    emailPlaceholder: "email@exemple.com",
+    namePlaceholder: "Nom complet",
+    roles: {
+      admin: "Administrateur",
+      member: "Membre",
+      viewer: "Observateur"
+    },
+    status: {
+      active: "Actif",
+      pending: "En attente",
+      accepted: "Acceptée",
+      declined: "Refusée",
+      expired: "Expirée",
+      inactive: "Inactif"
+    },
+    errorInviting: "Impossible d'envoyer l'invitation. Veuillez réessayer.",
+    errorRemoving: "Impossible de retirer le membre. Veuillez réessayer.",
+    errorResending: "Impossible de renvoyer l'invitation. Veuillez réessayer.",
+    errorCanceling: "Impossible d'annuler l'invitation. Veuillez réessayer.",
+    contactInfo: "Coordonnées",
+    projects: "Projets",
+    noProjects: "Aucun projet associé",
+    sendInvitation: "Envoyer l'invitation",
+    invitation: "Invitation d'équipe",
+    invitationAccepted: "Invitation acceptée avec succès",
+    invitationDeclined: "Invitation refusée",
+    errorAcceptingInvitation: "Impossible d'accepter l'invitation. Veuillez réessayer.",
+    errorDecliningInvitation: "Impossible de refuser l'invitation. Veuillez réessayer."
   }
 };

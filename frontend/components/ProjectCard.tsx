@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { shadowStyles } from '@/constants/CommonStyles';
@@ -11,6 +11,8 @@ interface ProjectCardProps {
 }
 
 const ProjectCard = ({ project, onPress }: ProjectCardProps) => {
+  const [isNewInvitation, setIsNewInvitation] = useState(false);
+
   // Calculer progression
   const calculateProgress = () => {
     if (!project.tasks || project.tasks.length === 0) return 0;
@@ -32,6 +34,18 @@ const ProjectCard = ({ project, onPress }: ProjectCardProps) => {
   const normalizedStatus = normalizeProjectStatus(project.status);
   const statusColor = getStatusColor(project.status);
 
+  // Vérifier si le projet est une invitation récente (moins de 24h)
+  useEffect(() => {
+    if (project.isInvitation) {
+      const createdAt = new Date(project.createdAt);
+      const now = new Date();
+      const diffTime = Math.abs(now.getTime() - createdAt.getTime());
+      const diffDays = diffTime / (1000 * 60 * 60 * 24);
+      
+      setIsNewInvitation(diffDays < 1);
+    }
+  }, [project]);
+
   return (
     <TouchableOpacity
       style={[styles.container, shadowStyles.card]}
@@ -42,6 +56,22 @@ const ProjectCard = ({ project, onPress }: ProjectCardProps) => {
           <View style={[styles.statusTag, { backgroundColor: statusColor }]}>
             <Text style={styles.statusText}>{getProjectStatusLabel(project.status)}</Text>
           </View>
+          
+          {/* Badge de rôle */}
+          <View style={[
+            styles.roleTag, 
+            { backgroundColor: project.role === 'owner' ? '#4CAF50' : '#2196F3' }
+          ]}>
+            <Text style={styles.roleText}>
+              {project.role === 'owner' ? 'Propriétaire' : 'Membre'}
+            </Text>
+          </View>
+          
+          {isNewInvitation && (
+            <View style={styles.newInvitationTag}>
+              <Text style={styles.newInvitationText}>Nouveau</Text>
+            </View>
+          )}
         </View>
         
         <Text style={styles.title} numberOfLines={1}>{project.name}</Text>
@@ -169,6 +199,29 @@ const styles = StyleSheet.create({
     fontSize: 8,
     fontWeight: '700',
     color: '#fff',
+  },
+  newInvitationTag: {
+    backgroundColor: '#8E44AD',
+    paddingVertical: 3,
+    paddingHorizontal: 6,
+    borderRadius: 6,
+    marginLeft: 6,
+  },
+  newInvitationText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '500',
+  },
+  roleTag: {
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    marginLeft: 6,
+  },
+  roleText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '500',
   },
 });
 

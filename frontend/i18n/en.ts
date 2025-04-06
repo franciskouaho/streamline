@@ -13,7 +13,9 @@ export default {
     loading: "Loading...",
     retry: "Retry",
     confirm: "Confirm",
-    viewAll: "View all"
+    viewAll: "View all",
+    accept: "Accept",
+    decline: "Decline"
   },
   auth: {
     login: "Login",
@@ -164,6 +166,8 @@ export default {
     empty: "No notifications",
     all: "All",
     unread: "Unread",
+    projectInvitation: "Project invitation",
+    viewProject: "View project",
     settings: {
       taskAssigned: "Task assignment",
       taskDeadline: "Deadline reminders",
@@ -285,5 +289,24 @@ export default {
     designGuidelines: "Design Guidelines",
     sprintPlanning: "Sprint Planning",
     marketingAssets: "Marketing Assets"
+  },
+  team: {
+    title: "Team",
+    members: "Members",
+    invitations: "Invitations",
+    invite: "Invite",
+    invitation: "Team invitation",
+    invitationAccepted: "Invitation accepted successfully",
+    invitationDeclined: "Invitation declined",
+    errorAcceptingInvitation: "Unable to accept invitation. Please try again.",
+    errorDecliningInvitation: "Unable to decline invitation. Please try again.",
+    status: {
+      active: "Active",
+      pending: "Pending",
+      accepted: "Accepted",
+      declined: "Declined",
+      expired: "Expired",
+      inactive: "Inactive"
+    }
   }
 };

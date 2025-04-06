@@ -68,6 +68,7 @@ export interface Project {
     photoURL?: string;
   }>;
   tasks?: Task[];
+  userRole: 'owner' | 'member';
 }
 
 export interface TaskCreateInput {

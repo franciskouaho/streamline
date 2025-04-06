@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { shadowStyles } from '@/constants/CommonStyles';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useRouter } from 'expo-router'; // Ajout de l'import du router
 
 interface Document {
     id: string;
@@ -12,8 +13,9 @@ interface Document {
     type: string;
 }
 
-export default function Docs() {
+export default function Id() {
     const { translations } = useLanguage();
+    const router = useRouter(); // Initialisation du router
 
     const documents: Document[] = [
         { id: '1', title: translations.docs.projectProposal, date: '2024-01-15', type: 'pdf' },
@@ -56,6 +58,12 @@ export default function Docs() {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
+                <TouchableOpacity 
+                    style={styles.backButton}
+                    onPress={() => router.back()}
+                >
+                    <Ionicons name="chevron-back" size={24} color="#000" />
+                </TouchableOpacity>
                 <Text style={styles.headerTitle}>{translations.docs.title}</Text>
                 <TouchableOpacity style={[styles.sortButton, shadowStyles.button]}>
                     <Ionicons name="filter" size={20} color="#000" />
@@ -181,5 +189,20 @@ const styles = StyleSheet.create({
         backgroundColor: "#ff7a5c",
         alignItems: "center",
         justifyContent: "center",
+    },
+    backButton: {
+        backgroundColor: '#fff',
+        width: 40,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+        elevation: 8,
     },
 });

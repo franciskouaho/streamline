@@ -1,5 +1,5 @@
 import api from './api';
-import { INotificationSettings, INotification, DeviceTokenParams } from '../types/notifications';
+import { INotificationSettings, INotification, DeviceRegistration } from '../types/notifications';
 
 export const fetchNotifications = async () => {
   try {
@@ -43,5 +43,17 @@ export const registerDeviceToken = async (params: DeviceTokenParams) => {
 
 export const sendTestNotification = async (userId: string, deviceToken: string) => {
   const response = await api.post('/send-test-notification', { user_id: userId, device_token: deviceToken });
+  return response.data;
+};
+
+// Accepter une invitation
+export const acceptInvitation = async (notificationId: number, invitationId: number) => {
+  const response = await api.post(`/team/invitations/${invitationId}/accept`, { notificationId });
+  return response.data;
+};
+
+// Refuser une invitation
+export const declineInvitation = async (notificationId: number, invitationId: number) => {
+  const response = await api.post(`/team/invitations/${invitationId}/decline`, { notificationId });
   return response.data;
 };

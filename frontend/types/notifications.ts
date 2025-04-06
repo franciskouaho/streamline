@@ -21,6 +21,12 @@ export interface INotification {
   read: boolean;
   createdAt: string;
   updatedAt: string;
+  // Nouveaux champs pour les invitations
+  actionRequired?: boolean;
+  actions?: {
+    accept?: boolean;
+    decline?: boolean;
+  };
 }
 
 export interface DeviceRegistration {

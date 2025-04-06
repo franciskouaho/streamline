@@ -1,10 +1,8 @@
-import { useColorScheme } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const TabsLayout = () => {
-    const colorScheme = useColorScheme();
     const { translations } = useLanguage();
 
     return (
@@ -78,11 +76,11 @@ const TabsLayout = () => {
                 }}
             />
             <Tabs.Screen
-                name="docs"
+                name="team"
                 options={{
-                    title: translations.projects.files,
+                    title: translations.projects.members,
                     tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="document-text-outline" size={size} color={color} />
+                        <Ionicons name="people-outline" size={size} color={color} />
                     ),
                 }}
             />

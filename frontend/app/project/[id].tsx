@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Modal } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Modal, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { shadowStyles } from '@/constants/CommonStyles';
-import { useProject, useDeleteProject, useUpdateProjectStatus } from '@/services/queries/projects';
+import { useProject, useDeleteProject, useUpdateProjectStatus, useProjectMembers, useRemoveProjectMember } from '@/services/queries/projects';
 import { useProjectTasks, useUpdateTask } from '@/services/queries/tasks';
 import { useQueryClient } from '@tanstack/react-query';
 import { shouldUpdateProjectStatus } from '@/utils/projectUtils';
@@ -61,8 +61,9 @@ export default function ProjectDetails() {
     const updateTask = useUpdateTask();
     const deleteProject = useDeleteProject();
     const updateProjectStatus = useUpdateProjectStatus();
+    const removeProjectMember = useRemoveProjectMember();
 
-    const [activeTab, setActiveTab] = useState<string>('attachment');
+    const [activeTab, setActiveTab] = useState<string>('');
     const [showMenu, setShowMenu] = useState(false);
     const [showStatusMenu, setShowStatusMenu] = useState(false);
     const [statusAutoUpdated, setStatusAutoUpdated] = useState(false);
@@ -123,6 +124,65 @@ export default function ProjectDetails() {
         }
     };
 
+    const handleRemoveMember = async (memberId: number) => {
+        Alert.alert(
+            "Retirer un membre",
+            "Êtes-vous sûr de vouloir retirer ce membre du projet ? Cette action ne peut pas être annulée.",
+            [
+                { 
+                    text: "Annuler", 
+                    style: 'cancel',
+                    onPress: () => console.log('Annulation du retrait du membre')
+                },
+                {
+                    text: "Retirer",
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await removeProjectMember.mutateAsync({
+                                projectId: Number(projectId),
+                                memberId: memberId
+                            });
+                            Alert.alert(
+                                'Membre retiré',
+                                'Le membre a été retiré du projet avec succès.',
+                                [
+                                    {
+                                        text: 'OK',
+                                        onPress: () => {
+                                            console.log('Membre supprimé avec succès');
+                                        }
+                                    }
+                                ],
+                                {
+                                    icon: require('@/assets/images/streamline.jpeg')
+                                }
+                            );
+                        } catch (error) {
+                            console.error('Error removing member:', error);
+                            Alert.alert(
+                                'Erreur', 
+                                'Une erreur est survenue lors du retrait du membre. Veuillez réessayer.',
+                                [
+                                    {
+                                        text: 'OK'
+                                    }
+                                ],
+                                {
+                                    icon: require('@/assets/images/streamline.jpeg')
+                                }
+                            );
+                        }
+                    }
+                }
+            ],
+            {
+                icon: require('@/assets/images/streamline.jpeg'),
+                cancelable: true
+            }
+        );
+    };
+
     // Effet pour mettre à jour automatiquement le statut du projet
     // en fonction de l'avancement des tâches
     useEffect(() => {
@@ -163,7 +223,10 @@ export default function ProjectDetails() {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()}>
+                <TouchableOpacity 
+                    style={styles.backButton} 
+                    onPress={() => router.back()}
+                >
                     <Ionicons name="chevron-back" size={24} color="#000" />
                 </TouchableOpacity>
 
@@ -196,17 +259,23 @@ export default function ProjectDetails() {
 
                 <View style={styles.tabsContainer}>
                     <TouchableOpacity
-                        style={[styles.tabButton, activeTab === 'attachment' && styles.activeTab]}
-                        onPress={() => setActiveTab('attachment')}
+                        style={[styles.tabButton]} // Supprimer la condition activeTab
+                        onPress={() => {
+                            setActiveTab('attachment');
+                            router.push(`/project/docs/${projectId}`);
+                        }}
                     >
-                        <Text style={[styles.tabText, activeTab === 'attachment' && styles.activeTabText]}>
+                        <Text style={[styles.tabText]}>
                             Attachment
                         </Text>
                     </TouchableOpacity>
-
+                    
                     <TouchableOpacity
                         style={[styles.tabButton, activeTab === 'kanban' && styles.activeTab]}
-                        onPress={() => router.push(`/project/kanban/${id}`)}
+                        onPress={() => {
+                            setActiveTab('kanban');
+                            router.push(`/project/kanban/${id}`);
+                        }}
                     >
                         <Text style={[styles.tabText, activeTab === 'kanban' && styles.activeTabText]}>
                             Kanban
@@ -221,7 +290,19 @@ export default function ProjectDetails() {
                             <View style={styles.teamContainer}>
                                 {project.members?.map((member) => (
                                     <View key={member.id} style={styles.teamMember}>
-                                        <View style={styles.memberAvatar} />
+                                        <Image 
+                                            source={member.photoURL ? 
+                                                { uri: member.photoURL } : 
+                                                require('@/assets/images/streamline.jpeg')
+                                            } 
+                                            style={styles.memberAvatar} 
+                                        />
+                                        <TouchableOpacity 
+                                            style={styles.removeMemberButton} 
+                                            onPress={() => handleRemoveMember(member.id)}
+                                        >
+                                            <Ionicons name="close-circle" size={20} color="#FF3B30" />
+                                        </TouchableOpacity>
                                     </View>
                                 ))}
                                 <TouchableOpacity style={styles.addMemberButton}>
@@ -459,6 +540,20 @@ const styles = StyleSheet.create({
         height: 35,
         borderRadius: 17.5,
         backgroundColor: "#ccc",
+    },
+    removeMemberButton: {
+        position: 'absolute',
+        right: -5,
+        top: -5,
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#FF3B30',
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 0,
+        elevation: 5,
     },
     addMemberButton: {
         width: 35,
@@ -749,5 +844,20 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         marginLeft: 8,
+    },
+    backButton: {
+        backgroundColor: '#fff',
+        width: 40,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+        elevation: 8,
     },
 });
