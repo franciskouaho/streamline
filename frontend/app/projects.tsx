@@ -121,10 +121,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#000',
     shadowColor: '#000',
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.3,
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
     shadowRadius: 0,
-    elevation: 5,
+    elevation: 8,
   },
   addButton: {
     width: 40,

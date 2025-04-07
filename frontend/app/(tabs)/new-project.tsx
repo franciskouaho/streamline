@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Platform, Modal, Alert, FlatList, ActivityIndicator, Image } from "react-native";
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Platform, Modal, Alert, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -8,8 +8,6 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useCreateProject } from "@/services/queries/projects";
 import { useAuthStore } from "@/stores/auth";
 import api from "@/services/api";
-import { useTeamMembers } from "@/services/queries/team";
-import { TeamMember } from "@/types/team";
 
 export default function NewProject() {
     const router = useRouter();
@@ -23,19 +21,11 @@ export default function NewProject() {
     const [showStartDatePicker, setShowStartDatePicker] = useState(false);
     const [showEndDatePicker, setShowEndDatePicker] = useState(false);
     
-    // Ajout d'état pour les membres
-    const [selectedMembers, setSelectedMembers] = useState<TeamMember[]>([]);
-    const [showMemberModal, setShowMemberModal] = useState(false);
-    
-    // Récupérer les membres de l'équipe
-    const { data: teamMembers, isLoading: isLoadingMembers } = useTeamMembers();
-
     const resetForm = () => {
         setName('');
         setDescription('');
         setStartDate(null);
         setEndDate(null);
-        setSelectedMembers([]);
     };
 
     const onStartDateChange = (event: any, selectedDate?: Date) => {
@@ -89,8 +79,6 @@ export default function NewProject() {
                 startDate: startDate.toISOString().split('T')[0],  // Format YYYY-MM-DD
                 endDate: endDate.toISOString().split('T')[0],      // Format YYYY-MM-DD
                 status: 'active',
-                // Ajout des membres sélectionnés
-                members: selectedMembers.map(member => Number(member.id))
             };
 
             console.log('Sending project data:', projectData);
@@ -137,61 +125,11 @@ export default function NewProject() {
             Alert.alert('Erreur', errorMessage);
         }
     };
-            
-    // Fonction pour sélectionner ou désélectionner un membre
-    const toggleMember = (member: TeamMember) => {
-        if (selectedMembers.some(m => m.id === member.id)) {
-            setSelectedMembers(selectedMembers.filter(m => m.id !== member.id));
-        } else {
-            setSelectedMembers([...selectedMembers, member]);
-        }
-    };
-
-    const renderMemberItem = ({ item }: { item: TeamMember }) => {
-        const isInvitation = typeof item.id === 'string' && item.id.startsWith('inv_');
-        const isSelected = selectedMembers.some(m => m.id === item.id);
-      
-        return (
-          <TouchableOpacity
-            style={[
-              styles.memberItem,
-              isSelected && styles.memberItemSelected,
-              isInvitation && styles.memberItemInvitation
-            ]}
-            onPress={() => toggleMember(item)}
-            disabled={item.status !== 'active'} // Désactiver la sélection pour les invitations en attente
-          >
-            <View style={styles.memberAvatarContainer}>
-              {item.photoURL ? (
-                <Image source={{ uri: item.photoURL }} style={styles.memberAvatar} />
-              ) : (
-                <View style={[styles.memberAvatar, styles.avatarPlaceholder]}>
-                  <Text style={styles.avatarInitials}>
-                    {item.fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
-                  </Text>
-                </View>
-              )}
-            </View>
-            <View style={styles.memberInfo}>
-              <Text style={styles.memberName}>{item.fullName}</Text>
-              <Text style={styles.memberEmail}>{item.email}</Text>
-              {item.status !== 'active' && (
-                <View style={styles.invitationBadge}>
-                  <Text style={styles.invitationText}>En attente d'acceptation</Text>
-                </View>
-              )}
-            </View>
-            {isSelected && (
-              <Ionicons name="checkmark-circle" size={24} color="#ff7a5c" />
-            )}
-          </TouchableOpacity>
-        );
-    };
 
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()}>
+                <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                     <Ionicons name="arrow-back" size={24} color="#000" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>{translations.projects.newProject}</Text>
@@ -223,37 +161,7 @@ export default function NewProject() {
                         />
                     </View>
 
-                    {/* Section pour les membres de l'équipe */}
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>{translations.projects.members}</Text>
-                        <TouchableOpacity 
-                            style={styles.membersButton}
-                            onPress={() => setShowMemberModal(true)}
-                        >
-                            <Ionicons name="people-outline" size={20} color="#666" />
-                            <Text style={styles.membersButtonText}>
-                                {selectedMembers.length === 0 
-                                    ? translations.projects.addMember 
-                                    : `${selectedMembers.length} ${translations.projects.members} sélectionné(s)`}
-                            </Text>
-                            <Ionicons name="chevron-forward" size={16} color="#666" />
-                        </TouchableOpacity>
-
-                        {selectedMembers.length > 0 && (
-                            <View style={styles.selectedMembersContainer}>
-                                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                                    {selectedMembers.map((member) => (
-                                        <View key={member.id} style={styles.memberChip}>
-                                            <Text style={styles.memberChipText}>{member.fullName}</Text>
-                                            <TouchableOpacity onPress={() => toggleMember(member)}>
-                                                <Ionicons name="close-circle" size={16} color="#000" />
-                                            </TouchableOpacity>
-                                        </View>
-                                    ))}
-                                </ScrollView>
-                            </View>
-                        )}
-                    </View>
+                    {/* Supprimé: Section pour les membres de l'équipe */}
 
                     <View style={styles.datesContainer}>
                         <View style={styles.dateField}>
@@ -299,49 +207,7 @@ export default function NewProject() {
                 </View>
             </ScrollView>
 
-            {/* Modal de sélection des membres */}
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={showMemberModal}
-                onRequestClose={() => setShowMemberModal(false)}
-            >
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Sélectionner des membres</Text>
-                            <TouchableOpacity onPress={() => setShowMemberModal(false)}>
-                                <Ionicons name="close" size={24} color="#000" />
-                            </TouchableOpacity>
-                        </View>
-
-                        {isLoadingMembers ? (
-                            <View style={styles.loadingContainer}>
-                                <ActivityIndicator size="large" color="#ff7a5c" />
-                                <Text style={styles.loadingText}>Chargement des membres...</Text>
-                            </View>
-                        ) : teamMembers && teamMembers.length > 0 ? (
-                            <FlatList
-                                data={teamMembers}
-                                keyExtractor={(item) => item.id.toString()}
-                                renderItem={renderMemberItem}
-                                showsVerticalScrollIndicator={false}
-                            />
-                        ) : (
-                            <View style={styles.emptyContainer}>
-                                <Text style={styles.emptyText}>Aucun membre disponible</Text>
-                            </View>
-                        )}
-
-                        <TouchableOpacity 
-                            style={styles.modalButton}
-                            onPress={() => setShowMemberModal(false)}
-                        >
-                            <Text style={styles.modalButtonText}>Confirmer</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
+            {/* Supprimé: Modal de sélection des membres */}
 
             <Modal
                 animationType="slide"
@@ -598,127 +464,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
     },
-    membersButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        backgroundColor: '#fff',
-        borderRadius: 15,
-        padding: 15,
-        marginBottom: 8,
-        borderWidth: 1,
-        borderColor: '#000',
-        shadowColor: '#000',
-        shadowOffset: { width: 4, height: 4 },
-        shadowOpacity: 1,
-        shadowRadius: 0,
-        elevation: 8,
-    },
-    membersButtonText: {
-        flex: 1,
-        fontSize: 16,
-        color: '#666',
-        marginLeft: 10,
-    },
-    selectedMembersContainer: {
-        marginTop: 5,
-        marginBottom: 15,
-    },
-    memberChip: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#f0f0f0',
-        borderRadius: 20,
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        marginRight: 8,
-        borderWidth: 1,
-        borderColor: '#ddd',
-    },
-    memberChipText: {
-        fontSize: 13,
-        marginRight: 5,
-    },
-    memberItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: 15,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
-    },
-    memberItemSelected: {
-        backgroundColor: 'rgba(255, 122, 92, 0.1)',
-    },
-    memberAvatarContainer: {
-        marginRight: 15,
-    },
-    memberAvatar: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#f0f0f0',
-    },
-    avatarPlaceholder: {
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    avatarInitials: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#666',
-    },
-    memberInfo: {
-        flex: 1,
-    },
-    memberName: {
-        fontSize: 16,
-        fontWeight: '500',
-    },
-    memberEmail: {
-        fontSize: 13,
-        color: '#666',
-        marginTop: 2,
-    },
-    loadingContainer: {
-        padding: 20,
-        alignItems: 'center',
-    },
-    loadingText: {
-        marginTop: 10,
-        color: '#666',
-    },
-    emptyContainer: {
-        padding: 30,
-        alignItems: 'center',
-    },
-    emptyText: {
-        color: '#666',
-        fontSize: 16,
-    },
-    memberItemInvitation: {
-        backgroundColor: '#f8f8f8',
-        opacity: 0.7,
-    },
-    invitationBadge: {
-        backgroundColor: '#FFC107',
-        borderRadius: 10,
-        paddingVertical: 2,
-        paddingHorizontal: 8,
-        marginTop: 4,
-        alignSelf: 'flex-start',
-    },
-    invitationText: {
-        color: '#fff',
-        fontSize: 12,
-        fontWeight: '500',
-    },
-    memberStatus: {
-        fontSize: 12,
-        color: '#666',
-        marginTop: 2,
-        fontStyle: 'italic'
-    },
+    // Supprimé styles liés aux membres
     iosButtonContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -735,5 +481,17 @@ const styles = StyleSheet.create({
         color: '#ff7a5c',
         fontSize: 16,
         fontWeight: '600',
+    },
+    backButton: {
+        backgroundColor: '#fff',
+        borderRadius: 30,
+        padding: 8,
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+        elevation: 4,
     },
 });

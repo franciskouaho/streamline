@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Modal, Image } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Modal, Image, ActivityIndicator, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { shadowStyles } from '@/constants/CommonStyles';
-import { useProject, useDeleteProject, useUpdateProjectStatus, useRemoveProjectMember } from '@/services/queries/projects';
+import { useProject, useDeleteProject, useUpdateProjectStatus, useRemoveProjectMember, useAddProjectMember } from '@/services/queries/projects';
 import { useProjectTasks, useUpdateTask } from '@/services/queries/tasks';
+import { useTeamMembers } from '@/services/queries/team';
 import { useQueryClient } from '@tanstack/react-query';
 import { shouldUpdateProjectStatus } from '@/utils/projectUtils';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -15,6 +16,15 @@ interface ProjectMember {
     id: number;
     fullName?: string;
     photoURL?: string;
+}
+
+// Ajout d'une interface pour les membres d'équipe
+interface TeamMember {
+    id: number;
+    fullName: string;
+    email: string;
+    photoURL?: string;
+    status: string;
 }
 
 interface ProjectTask {
@@ -66,11 +76,19 @@ export default function ProjectDetails() {
     const deleteProject = useDeleteProject();
     const updateProjectStatus = useUpdateProjectStatus();
     const removeProjectMember = useRemoveProjectMember();
+    const addProjectMember = useAddProjectMember();
+
+    // Récupérer les membres de l'équipe
+    const { data: teamMembers, isLoading: isLoadingTeamMembers } = useTeamMembers();
 
     const [activeTab, setActiveTab] = useState<string>('');
     const [showMenu, setShowMenu] = useState(false);
     const [showStatusMenu, setShowStatusMenu] = useState(false);
     const [statusAutoUpdated, setStatusAutoUpdated] = useState(false);
+    
+    // Ajout des états pour la gestion des membres
+    const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+    const [selectedMembersToAdd, setSelectedMembersToAdd] = useState<TeamMember[]>([]);
 
     const handleTaskToggle = async (task: ProjectTask) => {
         try {
@@ -185,6 +203,103 @@ export default function ProjectDetails() {
         }
     }, [project, tasks, statusAutoUpdated]);
 
+    // Fonction pour ouvrir le modal d'ajout de membres
+    const openAddMemberModal = () => {
+        setSelectedMembersToAdd([]);
+        setShowAddMemberModal(true);
+    };
+
+    // Fonction pour basculer la sélection d'un membre
+    const toggleMemberSelection = (member: TeamMember) => {
+        const isSelected = selectedMembersToAdd.some(m => m.id === member.id);
+        if (isSelected) {
+            setSelectedMembersToAdd(selectedMembersToAdd.filter(m => m.id !== member.id));
+        } else {
+            setSelectedMembersToAdd([...selectedMembersToAdd, member]);
+        }
+    };
+
+    // Fonction pour ajouter les membres sélectionnés au projet
+    const addSelectedMembersToProject = async () => {
+        if (selectedMembersToAdd.length === 0) {
+            setShowAddMemberModal(false);
+            return;
+        }
+
+        try {
+            // Ajouter chaque membre sélectionné au projet
+            for (const member of selectedMembersToAdd) {
+                await addProjectMember.mutateAsync({
+                    projectId: Number(projectId),
+                    memberId: member.id
+                });
+            }
+            
+            // Fermer le modal et rafraîchir les données du projet
+            setShowAddMemberModal(false);
+            queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+            
+            Alert.alert(
+                'Membres ajoutés',
+                'Les membres sélectionnés ont été ajoutés au projet avec succès.'
+            );
+        } catch (error) {
+            console.error('Error adding members to project:', error);
+            Alert.alert(
+                'Erreur',
+                'Une erreur est survenue lors de l\'ajout des membres au projet.'
+            );
+        }
+    };
+
+    // Fonction pour filtrer les membres d'équipe qui ne sont pas déjà dans le projet
+    const getAvailableTeamMembers = () => {
+        if (!teamMembers || !project || !project.members) return [];
+        
+        // Récupérer les IDs des membres déjà dans le projet
+        const projectMemberIds = project.members.map(member => member.id);
+        
+        // Filtrer les membres d'équipe qui ne sont pas déjà dans le projet et qui sont actifs
+        return teamMembers.filter(member => 
+            !projectMemberIds.includes(member.id) && 
+            member.status === 'active'
+        );
+    };
+
+    // Rendu d'un membre d'équipe dans la liste des membres disponibles
+    const renderTeamMemberItem = ({ item }: { item: TeamMember }) => {
+        const isSelected = selectedMembersToAdd.some(m => m.id === item.id);
+        
+        return (
+            <TouchableOpacity
+                style={[styles.memberItem, isSelected && styles.memberItemSelected]}
+                onPress={() => toggleMemberSelection(item)}
+            >
+                <View style={styles.memberAvatarContainer}>
+                    {item.photoURL ? (
+                        <Image
+                            source={{ uri: item.photoURL }}
+                            style={styles.memberAvatarItem}
+                        />
+                    ) : (
+                        <View style={[styles.memberAvatarItem, styles.memberAvatarPlaceholder]}>
+                            <Text style={styles.memberAvatarInitials}>
+                                {getInitials(item.fullName)}
+                            </Text>
+                        </View>
+                    )}
+                </View>
+                <View style={styles.memberItemInfo}>
+                    <Text style={styles.memberItemName}>{item.fullName}</Text>
+                    <Text style={styles.memberItemEmail}>{item.email}</Text>
+                </View>
+                {isSelected && (
+                    <Ionicons name="checkmark-circle" size={24} color="#ff7a5c" />
+                )}
+            </TouchableOpacity>
+        );
+    };
+
     if (isLoadingProject || isLoadingTasks) {
         return (
             <SafeAreaView style={styles.container}>
@@ -200,6 +315,8 @@ export default function ProjectDetails() {
             </SafeAreaView>
         );
     }
+
+    const availableTeamMembers = getAvailableTeamMembers();
 
     return (
         <SafeAreaView style={styles.container}>
@@ -290,7 +407,10 @@ export default function ProjectDetails() {
                                         </TouchableOpacity>
                                     </View>
                                 ))}
-                                <TouchableOpacity style={styles.addMemberButton}>
+                                <TouchableOpacity 
+                                    style={styles.addMemberButton}
+                                    onPress={openAddMemberModal}
+                                >
                                     <Ionicons name="add" size={20} color="#000" />
                                 </TouchableOpacity>
                             </View>
@@ -356,6 +476,59 @@ export default function ProjectDetails() {
                 </View>
             </ScrollView>
 
+            {/* Modal pour ajouter des membres au projet */}
+            <Modal
+                visible={showAddMemberModal}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setShowAddMemberModal(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Ajouter des membres</Text>
+                            <TouchableOpacity onPress={() => setShowAddMemberModal(false)}>
+                                <Ionicons name="close" size={24} color="#000" />
+                            </TouchableOpacity>
+                        </View>
+
+                        {isLoadingTeamMembers ? (
+                            <View style={styles.loadingContainer}>
+                                <ActivityIndicator size="large" color="#ff7a5c" />
+                                <Text style={styles.loadingText}>Chargement des membres...</Text>
+                            </View>
+                        ) : availableTeamMembers.length > 0 ? (
+                            <FlatList
+                                data={availableTeamMembers}
+                                keyExtractor={(item) => item.id.toString()}
+                                renderItem={renderTeamMemberItem}
+                                showsVerticalScrollIndicator={false}
+                                style={styles.membersList}
+                            />
+                        ) : (
+                            <View style={styles.emptyContainer}>
+                                <Text style={styles.emptyText}>Tous les membres de l'équipe sont déjà ajoutés à ce projet.</Text>
+                            </View>
+                        )}
+
+                        <TouchableOpacity
+                            style={[
+                                styles.modalButton,
+                                selectedMembersToAdd.length === 0 && styles.modalButtonDisabled
+                            ]}
+                            onPress={addSelectedMembersToProject}
+                            disabled={selectedMembersToAdd.length === 0}
+                        >
+                            <Text style={styles.modalButtonText}>
+                                {selectedMembersToAdd.length === 0 
+                                    ? 'Aucun membre sélectionné' 
+                                    : `Ajouter ${selectedMembersToAdd.length} membre(s)`}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
             <TouchableOpacity
                 style={styles.addTaskButton}
                 onPress={() => {
@@ -394,6 +567,94 @@ function getInitials(name: string | undefined): string {
 }
 
 const styles = StyleSheet.create({
+    // ...existing styles...
+    
+    // Styles pour le modal des membres
+    membersList: {
+        maxHeight: 400,
+        marginBottom: 20,
+    },
+    loadingContainer: {
+        padding: 30,
+        alignItems: 'center',
+    },
+    loadingText: {
+        marginTop: 10,
+        color: '#666',
+        fontSize: 16,
+    },
+    emptyContainer: {
+        padding: 30,
+        alignItems: 'center',
+    },
+    emptyText: {
+        textAlign: 'center',
+        color: '#666',
+        fontSize: 14,
+        marginTop: 20,
+    },
+    memberItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+    },
+    memberItemSelected: {
+        backgroundColor: 'rgba(255, 122, 92, 0.1)',
+    },
+    memberAvatarContainer: {
+        marginRight: 15,
+    },
+    memberAvatarItem: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+    },
+    memberAvatarPlaceholder: {
+        backgroundColor: '#f0f0f0',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    memberAvatarInitials: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#666',
+    },
+    memberItemInfo: {
+        flex: 1,
+    },
+    memberItemName: {
+        fontSize: 16,
+        fontWeight: '500',
+    },
+    memberItemEmail: {
+        fontSize: 13,
+        color: '#666',
+        marginTop: 2,
+    },
+    modalButton: {
+        backgroundColor: '#ff7a5c',
+        borderRadius: 15,
+        padding: 15,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+    },
+    modalButtonDisabled: {
+        backgroundColor: '#ccc',
+        shadowOffset: { width: 2, height: 2 },
+    },
+    modalButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    
     container: {
         flex: 1,
         backgroundColor: "#f2f2f2",
@@ -692,7 +953,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 8,
     },
-    taskDueDateText: { // Renommé pour éviter le doublon
+    taskDueDateText: {
         fontSize: 12,
         color: '#666',
         marginTop: 4,
@@ -718,12 +979,6 @@ const styles = StyleSheet.create({
     assigneeName: {
         fontSize: 12,
         color: '#666',
-    },
-    emptyText: {
-        textAlign: 'center',
-        color: '#666',
-        fontSize: 14,
-        marginTop: 20,
     },
     taskContent: {
         flex: 1,

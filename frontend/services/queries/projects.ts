@@ -94,6 +94,25 @@ export const useDeleteProject = () => {
   });
 };
 
+// Ajouter un membre à un projet
+export const useAddProjectMember = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ projectId, memberId }: { projectId: number, memberId: number }) => {
+      const response = await api.post(`/projects/${projectId}/members`, { memberId });
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate the project query to get updated data
+      queryClient.invalidateQueries({ queryKey: ['project', variables.projectId.toString()] });
+    },
+    onError: (error) => {
+      console.error('Error adding member to project:', error);
+    }
+  });
+};
+
 // Supprimer un membre d'un projet
 export const useRemoveProjectMember = () => {
   const queryClient = useQueryClient();
@@ -103,9 +122,12 @@ export const useRemoveProjectMember = () => {
       const response = await api.delete(`/projects/${projectId}/members/${memberId}`);
       return response.data;
     },
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
-      queryClient.invalidateQueries({ queryKey: ['projects', variables.projectId] });
+    onSuccess: (_, variables) => {
+      // Invalidate the project query to get updated data
+      queryClient.invalidateQueries({ queryKey: ['project', variables.projectId.toString()] });
+    },
+    onError: (error) => {
+      console.error('Error removing member from project:', error);
     }
   });
 };

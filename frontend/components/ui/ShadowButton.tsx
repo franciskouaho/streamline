@@ -27,6 +27,13 @@ const styles = StyleSheet.create({
         borderRadius: 15,
         padding: 18,
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+        elevation: 8,
     },
     buttonText: {
         color: '#fff',
