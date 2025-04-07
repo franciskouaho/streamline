@@ -44,6 +44,7 @@ export default class TeamInvitation extends BaseModel {
   declare user: BelongsTo<typeof User>
 
   @belongsTo(() => User, {
+    localKey: 'id', // Ajout explicite du localKey
     foreignKey: 'invitedBy',
   })
   declare inviter: BelongsTo<typeof User>

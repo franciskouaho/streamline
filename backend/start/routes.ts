@@ -109,6 +109,7 @@ router
               .group(() => {
                 router.get('/', [TeamInvitationsController, 'index'])
                 router.post('/', [TeamInvitationsController, 'store'])
+                router.get('/debug', [TeamInvitationsController, 'debug']) // Ajouter cette ligne
                 router.get('/:id', [TeamInvitationsController, 'show'])
                 router.post('/:id/accept', [TeamInvitationsController, 'accept'])
                 router.post('/:id/decline', [TeamInvitationsController, 'decline'])

@@ -139,8 +139,24 @@ export default class TeamInvitationsController {
         })
       }
 
-      // Mettre à jour le statut de l'invitation
-      await invitation.merge({ status: 'accepted' }).save()
+      // CORRECTION : Assurez-vous que l'userId est correctement défini
+      console.log('Accepting invitation, setting userId:', auth.user!.id)
+
+      // Mettre à jour le statut de l'invitation et associer l'utilisateur
+      await invitation
+        .merge({
+          status: 'accepted',
+          userId: auth.user!.id, // Associer explicitement l'utilisateur à l'invitation
+        })
+        .save()
+
+      // Vérifier que l'invitation a bien été mise à jour
+      const updatedInvitation = await TeamInvitation.find(invitation.id)
+      console.log('Updated invitation:', {
+        id: updatedInvitation?.id,
+        status: updatedInvitation?.status,
+        userId: updatedInvitation?.userId,
+      })
 
       // Si une notification a été spécifiée, la marquer comme lue
       if (data.notificationId) {
@@ -150,13 +166,23 @@ export default class TeamInvitationsController {
         }
       }
 
-      // L'utilisateur est désormais un membre de l'équipe
-      // Ici, vous pourriez ajouter une logique supplémentaire selon votre modèle de données
-      // Par exemple, ajouter l'utilisateur à tous les projets par défaut
+      // Créer une notification pour l'inviteur
+      await Notification.create({
+        userId: invitation.invitedBy,
+        type: 'team_invitation_accepted',
+        data: {
+          invitationId: String(invitation.id),
+          userName: auth.user!.fullName || auth.user!.email,
+          message: `${auth.user!.fullName || auth.user!.email} a accepté votre invitation d'équipe.`,
+        } as unknown as JSON,
+        read: false,
+        relatedType: 'team_invitation',
+        relatedId: invitation.id,
+      })
 
       return response.ok({
         message: 'Invitation acceptée avec succès',
-        invitation,
+        invitation: updatedInvitation,
       })
     } catch (error) {
       console.error("Erreur lors de l'acceptation de l'invitation:", error)
@@ -298,6 +324,65 @@ export default class TeamInvitationsController {
       console.error("Erreur lors de la suppression de l'invitation:", error)
       return response.internalServerError({
         message: "Une erreur est survenue lors de la suppression de l'invitation",
+        error: error.message,
+      })
+    }
+  }
+
+  // Ajoutez cette méthode à votre contrôleur TeamInvitationsController
+  async debug({ auth, response }: HttpContext) {
+    try {
+      // Récupérer toutes les invitations associées à l'utilisateur
+      const sentInvitations = await TeamInvitation.query()
+        .where('invited_by', auth.user!.id)
+        .preload('user')
+        .debug(true)
+
+      const receivedInvitations = await TeamInvitation.query()
+        .where('email', auth.user!.email)
+        .preload('inviter')
+        .debug(true)
+
+      // Compter les invitations par statut
+      const sentStats = {
+        pending: sentInvitations.filter((i) => i.status === 'pending').length,
+        accepted: sentInvitations.filter((i) => i.status === 'accepted').length,
+        declined: sentInvitations.filter((i) => i.status === 'declined').length,
+        expired: sentInvitations.filter((i) => i.status === 'expired').length,
+        total: sentInvitations.length,
+      }
+
+      const receivedStats = {
+        pending: receivedInvitations.filter((i) => i.status === 'pending').length,
+        accepted: receivedInvitations.filter((i) => i.status === 'accepted').length,
+        declined: receivedInvitations.filter((i) => i.status === 'declined').length,
+        expired: receivedInvitations.filter((i) => i.status === 'expired').length,
+        total: receivedInvitations.length,
+      }
+
+      return response.ok({
+        userId: auth.user!.id,
+        userEmail: auth.user!.email,
+        sentStats,
+        receivedStats,
+        sentInvitations: sentInvitations.map((i) => ({
+          id: i.id,
+          email: i.email,
+          status: i.status,
+          userId: i.userId,
+          hasUser: i.user !== null,
+        })),
+        receivedInvitations: receivedInvitations.map((i) => ({
+          id: i.id,
+          invitedBy: i.invitedBy,
+          status: i.status,
+          hasInviter: i.inviter !== null,
+        })),
+      })
+    } catch (error) {
+      console.error('Error in debug route:', error)
+      return response.internalServerError({
+        message: 'Erreur lors du diagnostic',
         error: error.message,
       })
     }

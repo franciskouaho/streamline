@@ -8,10 +8,16 @@ export const useTeamMembers = () => {
   return useQuery<TeamMember[]>({
     queryKey: ['team-members'],
     queryFn: async () => {
-      console.log('Fetching team members...');
-      const response = await api.get('/team/members');
-      console.log('Team members response:', response.data);
-      return response.data;
+      console.log('Fetching team members from frontend...');
+      try {
+        const response = await api.get('/team/members');
+        console.log('Team members response data:', response.data);
+        // Renvoyer les données telles quelles, SANS aucun filtrage
+        return response.data;
+      } catch (error) {
+        console.error('Error fetching team members:', error);
+        throw error;
+      }
     },
   });
 };
@@ -30,16 +36,18 @@ export const useTeamMember = (id: number) => {
 
 // Récupérer les invitations envoyées
 export const useTeamInvitations = () => {
-  const { user } = useAuthStore(); // Ajouter cette ligne pour accéder à l'utilisateur connecté
-
   return useQuery<TeamInvitation[]>({
     queryKey: ['team-invitations'],
     queryFn: async () => {
-      const response = await api.get('/team/invitations');
-      // Filtrer les invitations pour exclure celles de l'utilisateur connecté
-      return response.data.filter((invitation: TeamInvitation) => 
-        invitation.email !== user?.email
-      );
+      try {
+        const response = await api.get('/team/invitations');
+        console.log('Team invitations response data:', response.data);
+        // Ne pas filtrer les invitations
+        return response.data;
+      } catch (error) {
+        console.error('Error fetching team invitations:', error);
+        throw error;
+      }
     }
   });
 };

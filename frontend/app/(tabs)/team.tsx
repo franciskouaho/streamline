@@ -8,12 +8,15 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useTeamMembers, useInviteUser, useRemoveTeamMember, useTeamInvitations, useResendInvitation, useCancelInvitation } from '@/services/queries/team';
 import { useProjects } from '@/services/queries/projects';
 import { TeamMember, TeamInvitation } from '@/types/team';
+import { useAuthStore } from '@/stores/auth'; // Ajout de l'import manquant
+import api from '@/services/api';
 
 export default function TeamScreen() {
   const router = useRouter();
   const { translations } = useLanguage();
   const { data: members, isLoading: isLoadingMembers, refetch } = useTeamMembers();
   const { data: projects } = useProjects();
+  const { user } = useAuthStore(); // Importer le user pour vérifier l'identité
   const inviteUser = useInviteUser();
   const removeTeamMember = useRemoveTeamMember();
 
@@ -38,10 +41,31 @@ export default function TeamScreen() {
   const resendInvitation = useResendInvitation();
   const cancelInvitation = useCancelInvitation();
 
-  // Filtre les membres selon la recherche
+  // Ajouter cet effet pour plus de débogage
+  useEffect(() => {
+    const fetchDebugInfo = async () => {
+      try {
+        console.log("Fetching debug info...");
+        // Appel à l'API pour récupérer des infos de débogage
+        const invitationsDebug = await api.get('/team/invitations/debug');
+        console.log("Invitations debug info:", invitationsDebug.data);
+      } catch (error) {
+        console.error("Error fetching debug info:", error);
+      }
+    };
+    
+    if (user?.id) {
+      fetchDebugInfo();
+    }
+  }, [user?.id]);
+
+  // Filtrer les membres pour exclure l'utilisateur connecté
   const filteredMembers = members?.filter((member) => 
-    member.fullName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    member.email.toLowerCase().includes(searchQuery.toLowerCase())
+    // Exclure l'utilisateur connecté de la liste
+    (member.id !== user?.id) && 
+    // Appliquer également le filtre de recherche
+    (member.fullName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    member.email.toLowerCase().includes(searchQuery.toLowerCase()))
   ) || [];
 
   const handleInvite = async () => {
@@ -223,16 +247,21 @@ export default function TeamScreen() {
           ]} />
         </View>
         <View style={styles.memberInfo}>
-          <Text style={styles.memberName}>{item.fullName}</Text>
+          <Text style={styles.memberName}>
+            {item.fullName}
+            {item.status === 'pending' && " (En attente)"}
+          </Text>
           <Text style={styles.memberEmail}>{item.email}</Text>
           <Text style={styles.memberRole}>{item.role || 'Membre'}</Text>
         </View>
-        <View style={styles.memberStats}>
-          <View style={styles.statBadge}>
-            <Text style={styles.statValue}>{memberProjectCount}</Text>
-            <Text style={styles.statLabel}>Projets</Text>
+        {memberProjectCount > 0 && (
+          <View style={styles.memberStats}>
+            <View style={styles.statBadge}>
+              <Text style={styles.statValue}>{memberProjectCount}</Text>
+              <Text style={styles.statLabel}>Projets</Text>
+            </View>
           </View>
-        </View>
+        )}
       </TouchableOpacity>
     );
   };
@@ -350,6 +379,19 @@ export default function TeamScreen() {
       </View>
     );
   });
+
+  // Ajouter un effet pour du débogage détaillé
+  useEffect(() => {
+    if (members) {
+      console.log('Team members from API:', members);
+      console.log('Current user:', user);
+      console.log('Filtered members for display:', filteredMembers);
+      
+      // Vérifier s'il y a des membres qui ne sont pas l'utilisateur courant
+      const otherMembers = members.filter(m => m.id !== user?.id);
+      console.log('Members excluding current user:', otherMembers);
+    }
+  }, [members, user, filteredMembers]);
 
   return (
     <SafeAreaView style={styles.container}>
