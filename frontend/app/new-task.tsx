@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Platform, Modal } from "react-native";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from "react-native-safe-area-context";
-import {useLocalSearchParams, useRouter} from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCreateTask } from "@/services/queries/tasks";
@@ -63,7 +63,10 @@ export default function NewTask() {
     };
 
     const onDateChange = (event: any, selectedDate?: Date) => {
-        setShowDatePicker(false);
+        if (Platform.OS === 'android') {
+            setShowDatePicker(false);
+        }
+        
         if (selectedDate) {
             setSelectedDate(selectedDate);
             setDate(selectedDate.toLocaleDateString('fr-FR', {
@@ -176,21 +179,37 @@ export default function NewTask() {
                                 </TouchableOpacity>
                             </View>
 
+                            {Platform.OS === "ios" && (
+                                <View style={styles.iosButtonContainer}>
+                                    <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                                        <Text style={styles.iosButtonCancel}>Annuler</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity onPress={() => {
+                                        onDateChange(null, selectedDate);
+                                        setShowDatePicker(false);
+                                    }}>
+                                        <Text style={styles.iosButtonConfirm}>Confirmer</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+
                             <DateTimePicker
                                 value={selectedDate}
                                 mode="date"
-                                display="spinner"
+                                display={Platform.OS === "ios" ? "spinner" : "default"}
                                 onChange={onDateChange}
                                 minimumDate={new Date()}
                                 style={styles.datePicker}
                             />
 
-                            <TouchableOpacity 
-                                style={styles.modalButton}
-                                onPress={() => setShowDatePicker(false)}
-                            >
-                                <Text style={styles.modalButtonText}>Confirmer</Text>
-                            </TouchableOpacity>
+                            {Platform.OS === "android" && (
+                                <TouchableOpacity 
+                                    style={styles.modalButton}
+                                    onPress={() => setShowDatePicker(false)}
+                                >
+                                    <Text style={styles.modalButtonText}>Confirmer</Text>
+                                </TouchableOpacity>
+                            )}
                         </View>
                     </View>
                 </Modal>
@@ -446,56 +465,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "600",
     },
-    personSelector: {
-        position: 'absolute',
-        top: 200, // Position après le champ assignee
-        left: 20,
-        right: 20,
-        backgroundColor: '#fff',
-        borderRadius: 10,
-        padding: 10,
-        zIndex: 1000,
-        borderWidth: 1,
-        borderColor: '#000',
-        shadowColor: '#000',
-        shadowOffset: { width: 4, height: 4 },
-        shadowOpacity: 1,
-        shadowRadius: 0,
-        elevation: 8,
-    },
-    personItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
-    },
-    personAvatar: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#f0f0f0',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 10,
-    },
-    personName: {
-        fontSize: 16,
-        color: '#000',
-        flex: 1,
-    },
-    personItemSelected: {
-        backgroundColor: '#ff7a5c',
-    },
-    checkmark: {
-        marginLeft: 'auto',
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        backgroundColor: '#000',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
     dateField: {
         gap: 8,
         marginBottom: 15,
@@ -575,15 +544,82 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
     },
+    saveButton: {
+        color: "#43d2c3",
+        fontSize: 16,
+        fontWeight: "600",
+    },
     label: {
         fontSize: 14,
         fontWeight: "500",
         color: "#333",
         marginBottom: 6,
     },
-    saveButton: {
-        color: "#43d2c3",
+    personSelector: {
+        position: 'absolute',
+        top: 200,
+        left: 20,
+        right: 20,
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        padding: 10,
+        zIndex: 1000,
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+        elevation: 8,
+    },
+    personItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+    },
+    personAvatar: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#f0f0f0',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 10,
+    },
+    personName: {
         fontSize: 16,
-        fontWeight: "600",
+        color: '#000',
+        flex: 1,
+    },
+    personItemSelected: {
+        backgroundColor: '#ff7a5c',
+    },
+    checkmark: {
+        marginLeft: 'auto',
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: '#000',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    iosButtonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingHorizontal: 15,
+        paddingVertical: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#e0e0e0',
+    },
+    iosButtonCancel: {
+        color: '#ff3b30',
+        fontSize: 16,
+    },
+    iosButtonConfirm: {
+        color: '#ff7a5c',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });

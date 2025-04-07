@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Platform, Modal, Alert, FlatList, ActivityIndicator, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -7,7 +7,6 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCreateProject } from "@/services/queries/projects";
 import { useAuthStore } from "@/stores/auth";
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from "@/services/api";
 import { useTeamMembers } from "@/services/queries/team";
 import { TeamMember } from "@/types/team";
@@ -40,14 +39,18 @@ export default function NewProject() {
     };
 
     const onStartDateChange = (event: any, selectedDate?: Date) => {
-        setShowStartDatePicker(false);
+        if (Platform.OS === 'android') {
+            setShowStartDatePicker(false);
+        }
         if (selectedDate) {
             setStartDate(selectedDate);
         }
     };
 
     const onEndDateChange = (event: any, selectedDate?: Date) => {
-        setShowEndDatePicker(false);
+        if (Platform.OS === 'android') {
+            setShowEndDatePicker(false);
+        }
         if (selectedDate) {
             setEndDate(selectedDate);
         }
@@ -98,7 +101,7 @@ export default function NewProject() {
             router.back();
         } catch (error) {
             console.error('Error creating project:', error);
-            
+            resetForm();
             let errorMessage = 'Erreur lors de la création du projet';
             
             if (error.response) {
@@ -134,7 +137,7 @@ export default function NewProject() {
             Alert.alert('Erreur', errorMessage);
         }
     };
-
+            
     // Fonction pour sélectionner ou désélectionner un membre
     const toggleMember = (member: TeamMember) => {
         if (selectedMembers.some(m => m.id === member.id)) {
@@ -149,7 +152,7 @@ export default function NewProject() {
         const isSelected = selectedMembers.some(m => m.id === item.id);
       
         return (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[
               styles.memberItem,
               isSelected && styles.memberItemSelected,
@@ -183,7 +186,7 @@ export default function NewProject() {
             )}
           </TouchableOpacity>
         );
-      };
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -365,24 +368,48 @@ export default function NewProject() {
                             </TouchableOpacity>
                         </View>
 
+                        {Platform.OS === "ios" && (
+                            <View style={styles.iosButtonContainer}>
+                                <TouchableOpacity onPress={() => {
+                                    setShowStartDatePicker(false);
+                                    setShowEndDatePicker(false);
+                                }}>
+                                    <Text style={styles.iosButtonCancel}>Annuler</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={() => {
+                                    if (showStartDatePicker) {
+                                        onStartDateChange(null, startDate || new Date());
+                                    } else {
+                                        onEndDateChange(null, endDate || new Date());
+                                    }
+                                    setShowStartDatePicker(false);
+                                    setShowEndDatePicker(false);
+                                }}>
+                                    <Text style={styles.iosButtonConfirm}>Confirmer</Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
+
                         <DateTimePicker
                             value={showStartDatePicker ? (startDate || new Date()) : (endDate || new Date())}
                             mode="date"
-                            display="spinner"
+                            display={Platform.OS === "ios" ? "spinner" : "default"}
                             onChange={showStartDatePicker ? onStartDateChange : onEndDateChange}
                             minimumDate={showEndDatePicker ? startDate || new Date() : new Date()}
                             style={styles.datePicker}
                         />
 
-                        <TouchableOpacity 
-                            style={styles.modalButton}
-                            onPress={() => {
-                                setShowStartDatePicker(false);
-                                setShowEndDatePicker(false);
-                            }}
-                        >
-                            <Text style={styles.modalButtonText}>{translations.common.confirm}</Text>
-                        </TouchableOpacity>
+                        {Platform.OS === "android" && (
+                            <TouchableOpacity 
+                                style={styles.modalButton}
+                                onPress={() => {
+                                    setShowStartDatePicker(false);
+                                    setShowEndDatePicker(false);
+                                }}
+                            >
+                                <Text style={styles.modalButtonText}>{translations.common.confirm}</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
                 </View>
             </Modal>
@@ -670,14 +697,14 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     memberItemInvitation: {
-        opacity: 0.7,
         backgroundColor: '#f8f8f8',
+        opacity: 0.7,
     },
     invitationBadge: {
         backgroundColor: '#FFC107',
-        paddingHorizontal: 8,
-        paddingVertical: 2,
         borderRadius: 10,
+        paddingVertical: 2,
+        paddingHorizontal: 8,
         marginTop: 4,
         alignSelf: 'flex-start',
     },
@@ -691,5 +718,22 @@ const styles = StyleSheet.create({
         color: '#666',
         marginTop: 2,
         fontStyle: 'italic'
-    }
+    },
+    iosButtonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingHorizontal: 15,
+        paddingVertical: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#e0e0e0',
+    },
+    iosButtonCancel: {
+        color: '#ff3b30',
+        fontSize: 16,
+    },
+    iosButtonConfirm: {
+        color: '#ff7a5c',
+        fontSize: 16,
+        fontWeight: '600',
+    },
 });
