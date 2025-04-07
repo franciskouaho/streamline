@@ -333,19 +333,11 @@ export default function ProjectDetails() {
     // Fonction pour ouvrir le modal d'édition
     const openEditProjectModal = () => {
         if (project) {
-            setEditProjectData({
-                name: project.name,
-                description: project.description || '',
-                startDate: project.startDate ? new Date(project.startDate) : new Date(),
-                endDate: project.endDate ? new Date(project.endDate) : new Date(),
-                showStartDatePicker: false,
-                showEndDatePicker: false,
-                status: project.status
-            });
-            setShowEditProject(true);
+            // Au lieu d'ouvrir un modal, naviguer vers la page d'édition
+            router.push(`/project/${projectId}/edit`);
         }
     };
-    
+
     // Fonction pour gérer les changements de date
     const handleProjectDateChange = (event, selectedDate, dateType) => {
         if (Platform.OS === 'android') {
@@ -426,7 +418,7 @@ export default function ProjectDetails() {
                 </TouchableOpacity>
 
                 <View style={styles.headerIcons}>
-                    {/* Ajouter le bouton d'édition */}
+                    {/* Modifier le bouton d'édition pour naviguer vers la page d'édition */}
                     <TouchableOpacity
                         style={styles.iconButton}
                         onPress={openEditProjectModal}
@@ -638,158 +630,6 @@ export default function ProjectDetails() {
                         </TouchableOpacity>
                     </View>
                 </View>
-            </Modal>
-
-            {/* Modal d'édition de projet */}
-            <Modal
-                visible={showEditProject}
-                animationType="slide"
-                transparent={true}
-                onRequestClose={() => setShowEditProject(false)}
-            >
-                <KeyboardAvoidingView 
-                    behavior={Platform.OS === "ios" ? "padding" : "height"}
-                    style={styles.modalOverlay}
-                >
-                    <View style={styles.editModalContent}>
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Modifier le projet</Text>
-                            <TouchableOpacity onPress={() => setShowEditProject(false)}>
-                                <Ionicons name="close" size={24} color="#000" />
-                            </TouchableOpacity>
-                        </View>
-                        
-                        <ScrollView showsVerticalScrollIndicator={false}>
-                            <View style={styles.inputContainer}>
-                                <Text style={styles.inputLabel}>Nom du projet</Text>
-                                <TextInput
-                                    style={styles.textInput}
-                                    value={editProjectData.name}
-                                    onChangeText={(text) => setEditProjectData({...editProjectData, name: text})}
-                                    placeholder="Nom du projet"
-                                />
-                            </View>
-                            
-                            <View style={styles.inputContainer}>
-                                <Text style={styles.inputLabel}>Description</Text>
-                                <TextInput
-                                    style={[styles.textInput, styles.textAreaInput]}
-                                    value={editProjectData.description}
-                                    onChangeText={(text) => setEditProjectData({...editProjectData, description: text})}
-                                    placeholder="Description du projet"
-                                    multiline
-                                    numberOfLines={4}
-                                    textAlignVertical="top"
-                                />
-                            </View>
-                            
-                            <View style={styles.inputContainer}>
-                                <Text style={styles.inputLabel}>Statut</Text>
-                                <View style={styles.statusButtonsContainer}>
-                                    <TouchableOpacity 
-                                        style={[
-                                            styles.statusButton,
-                                            editProjectData.status === 'ongoing' && styles.statusButtonActive,
-                                            { borderColor: getStatusColor('ongoing') }
-                                        ]}
-                                        onPress={() => setEditProjectData({...editProjectData, status: 'ongoing'})}
-                                    >
-                                        <Text style={[
-                                            styles.statusButtonText,
-                                            editProjectData.status === 'ongoing' && { color: getStatusColor('ongoing') }
-                                        ]}>En cours</Text>
-                                    </TouchableOpacity>
-                                    
-                                    <TouchableOpacity 
-                                        style={[
-                                            styles.statusButton,
-                                            editProjectData.status === 'in_progress' && styles.statusButtonActive,
-                                            { borderColor: getStatusColor('in_progress') }
-                                        ]}
-                                        onPress={() => setEditProjectData({...editProjectData, status: 'in_progress'})}
-                                    >
-                                        <Text style={[
-                                            styles.statusButtonText,
-                                            editProjectData.status === 'in_progress' && { color: getStatusColor('in_progress') }
-                                        ]}>En progression</Text>
-                                    </TouchableOpacity>
-                                    
-                                    <TouchableOpacity 
-                                        style={[
-                                            styles.statusButton,
-                                            editProjectData.status === 'completed' && styles.statusButtonActive,
-                                            { borderColor: getStatusColor('completed') }
-                                        ]}
-                                        onPress={() => setEditProjectData({...editProjectData, status: 'completed'})}
-                                    >
-                                        <Text style={[
-                                            styles.statusButtonText,
-                                            editProjectData.status === 'completed' && { color: getStatusColor('completed') }
-                                        ]}>Terminé</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                            
-                            <View style={styles.inputContainer}>
-                                <Text style={styles.inputLabel}>Date de début</Text>
-                                <TouchableOpacity 
-                                    style={styles.dateButton}
-                                    onPress={() => setEditProjectData({
-                                        ...editProjectData, 
-                                        showStartDatePicker: true
-                                    })}
-                                >
-                                    <Ionicons name="calendar-outline" size={20} color="#666" />
-                                    <Text style={styles.dateButtonText}>
-                                        {editProjectData.startDate.toLocaleDateString('fr-FR')}
-                                    </Text>
-                                </TouchableOpacity>
-                                
-                                {editProjectData.showStartDatePicker && (
-                                    <DateTimePicker
-                                        value={editProjectData.startDate}
-                                        mode="date"
-                                        display={Platform.OS === "ios" ? "spinner" : "default"}
-                                        onChange={(event, date) => handleProjectDateChange(event, date, 'start')}
-                                    />
-                                )}
-                            </View>
-                            
-                            <View style={styles.inputContainer}>
-                                <Text style={styles.inputLabel}>Date de fin</Text>
-                                <TouchableOpacity 
-                                    style={styles.dateButton}
-                                    onPress={() => setEditProjectData({
-                                        ...editProjectData, 
-                                        showEndDatePicker: true
-                                    })}
-                                >
-                                    <Ionicons name="calendar-outline" size={20} color="#666" />
-                                    <Text style={styles.dateButtonText}>
-                                        {editProjectData.endDate.toLocaleDateString('fr-FR')}
-                                    </Text>
-                                </TouchableOpacity>
-                                
-                                {editProjectData.showEndDatePicker && (
-                                    <DateTimePicker
-                                        value={editProjectData.endDate}
-                                        mode="date"
-                                        display={Platform.OS === "ios" ? "spinner" : "default"}
-                                        onChange={(event, date) => handleProjectDateChange(event, date, 'end')}
-                                        minimumDate={editProjectData.startDate}
-                                    />
-                                )}
-                            </View>
-                        </ScrollView>
-                        
-                        <TouchableOpacity 
-                            style={styles.updateButton}
-                            onPress={handleUpdateProject}
-                        >
-                            <Text style={styles.updateButtonText}>Mettre à jour le projet</Text>
-                        </TouchableOpacity>
-                    </View>
-                </KeyboardAvoidingView>
             </Modal>
 
             <TouchableOpacity

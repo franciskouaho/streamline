@@ -191,6 +191,8 @@ export default function EditTask() {
                   mode="date"
                   display={Platform.OS === "ios" ? "spinner" : "default"}
                   onChange={onDateChange}
+                  style={styles.datePicker}
+                  textColor="#000000" // Ajouter une couleur de texte noire
                 />
               )}
             </View>
@@ -425,6 +427,19 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 8,
+    borderWidth: 1,
+    borderColor: '#000',
+    shadowColor: '#000',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 8,
+    backgroundColor: '#fff',
+    borderRadius: 25,  // Valeur plus élevée pour rendre le bouton rond
+    width: 50,        // Largeur fixe pour garantir un cercle parfait
+    height: 50,       // Hauteur fixe pour garantir un cercle parfait
+    alignItems: 'center',  // Centrer l'icône horizontalement
+    justifyContent: 'center', // Centrer l'icône verticalement
   },
   backButtonText: {
     fontSize: 16,
@@ -581,5 +596,8 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  datePicker: {
+    color: '#000000', // Assurer une bonne visibilité sur iOS
   },
 });

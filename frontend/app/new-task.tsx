@@ -200,6 +200,7 @@ export default function NewTask() {
                                 onChange={onDateChange}
                                 minimumDate={new Date()}
                                 style={styles.datePicker}
+                                textColor="#000000" // Ajouter une couleur de texte noire
                             />
 
                             {Platform.OS === "android" && (
@@ -526,6 +527,7 @@ const styles = StyleSheet.create({
     datePicker: {
         marginBottom: 20,
         height: 200,
+        color: '#000000', // Assurer une couleur visible
     },
     modalButton: {
         backgroundColor: '#ff7a5c',

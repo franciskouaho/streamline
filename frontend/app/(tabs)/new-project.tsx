@@ -263,6 +263,7 @@ export default function NewProject() {
                             onChange={showStartDatePicker ? onStartDateChange : onEndDateChange}
                             minimumDate={showEndDatePicker ? startDate || new Date() : new Date()}
                             style={styles.datePicker}
+                            textColor="#000000" // Assurer une couleur de texte noire pour une meilleure visibilité
                         />
 
                         {Platform.OS === "android" && (
@@ -446,6 +447,7 @@ const styles = StyleSheet.create({
     datePicker: {
         marginBottom: 20,
         height: 200,
+        color: '#000000', // S'assurer que la couleur du texte est noire et bien visible
     },
     modalButton: {
         backgroundColor: '#ff7a5c',
