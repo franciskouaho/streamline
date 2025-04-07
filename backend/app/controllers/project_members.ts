@@ -33,7 +33,28 @@ export default class ProjectMembersController {
   async store({ request, params, auth, response }: HttpContext) {
     try {
       const projectId = Number.parseInt(params.projectId, 10)
-      const { userId, role = 'member' } = request.body() as { userId: number; role?: string }
+      const { memberId, role = 'member' } = request.body() as {
+        memberId: number | string
+        role?: string
+      }
+
+      console.log('Received request to add member:', { projectId, memberId, role })
+
+      // Vérifier que memberId est défini et valide
+      if (!memberId) {
+        return response.badRequest({
+          message: 'Member ID is required',
+        })
+      }
+
+      // Assurer que memberId est un nombre
+      const userId = Number(memberId)
+
+      if (isNaN(userId)) {
+        return response.badRequest({
+          message: 'Invalid member ID format',
+        })
+      }
 
       // Vérifier si le projet existe
       const project = await Project.findOrFail(projectId)
@@ -49,7 +70,7 @@ export default class ProjectMembersController {
       const user = await User.find(userId)
       if (!user) {
         return response.badRequest({
-          message: 'User not found',
+          message: `User with ID ${userId} not found`,
         })
       }
 
@@ -73,6 +94,11 @@ export default class ProjectMembersController {
       })
 
       await member.load('user')
+      console.log('Member added successfully:', {
+        id: member.id,
+        userId: member.userId,
+        projectId: member.projectId,
+      })
       return response.created(member)
     } catch (error) {
       console.error('Error adding project member:', error)

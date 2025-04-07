@@ -100,12 +100,19 @@ export const useAddProjectMember = () => {
   
   return useMutation({
     mutationFn: async ({ projectId, memberId }: { projectId: number, memberId: number }) => {
-      const response = await api.post(`/projects/${projectId}/members`, { memberId });
-      return response.data;
+      try {
+        console.log(`Requête POST vers /projects/${projectId}/members avec memberId:`, memberId);
+        const response = await api.post(`/projects/${projectId}/members`, { memberId });
+        return response.data;
+      } catch (error) {
+        console.error('Error in API call to add project member:', error);
+        throw error;
+      }
     },
     onSuccess: (_, variables) => {
-      // Invalidate the project query to get updated data
-      queryClient.invalidateQueries({ queryKey: ['project', variables.projectId.toString()] });
+      // Corriger les clés d'invalidation pour qu'elles correspondent aux clés réellement utilisées
+      queryClient.invalidateQueries({ queryKey: ['projects', variables.projectId.toString()] });
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
     onError: (error) => {
       console.error('Error adding member to project:', error);

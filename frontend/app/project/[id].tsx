@@ -10,6 +10,7 @@ import { useTeamMembers } from '@/services/queries/team';
 import { useQueryClient } from '@tanstack/react-query';
 import { shouldUpdateProjectStatus } from '@/utils/projectUtils';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuthStore } from '@/stores/auth'; // Ajout de l'import manquant pour accéder à l'utilisateur connecté
 
 // Définir des interfaces locales pour éviter les problèmes de compatibilité
 interface ProjectMember {
@@ -51,9 +52,6 @@ interface TaskStatusUpdateInput {
     status: string;
 }
 
-// Autres interfaces
-// ...existing code...
-
 function formatDeadline(dateString: string) {
     if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('fr-FR', {
@@ -68,6 +66,7 @@ export default function ProjectDetails() {
     const { id } = useLocalSearchParams();
     const projectId = Array.isArray(id) ? id[0] : id as string;
     const { translations } = useLanguage();
+    const { user } = useAuthStore(); // Accès à l'utilisateur connecté
 
     const { data: project, isLoading: isLoadingProject } = useProject(projectId);
     const { data: tasks, isLoading: isLoadingTasks } = useProjectTasks(projectId);
@@ -131,7 +130,6 @@ export default function ProjectDetails() {
             );
         }
     };
-
 
     const handleRemoveMember = async (memberId: number) => {
         Alert.alert(
@@ -237,7 +235,7 @@ export default function ProjectDetails() {
             
             // Fermer le modal et rafraîchir les données du projet
             setShowAddMemberModal(false);
-            queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+            queryClient.invalidateQueries({ queryKey: ['projects', projectId] });
             
             Alert.alert(
                 'Membres ajoutés',
@@ -259,10 +257,12 @@ export default function ProjectDetails() {
         // Récupérer les IDs des membres déjà dans le projet
         const projectMemberIds = project.members.map(member => member.id);
         
-        // Filtrer les membres d'équipe qui ne sont pas déjà dans le projet et qui sont actifs
+        // Filtrer les membres d'équipe qui ne sont pas déjà dans le projet, qui sont actifs
+        // et qui ne sont pas l'utilisateur connecté
         return teamMembers.filter(member => 
             !projectMemberIds.includes(member.id) && 
-            member.status === 'active'
+            member.status === 'active' && 
+            member.id !== user?.id // Exclure l'utilisateur connecté
         );
     };
 
@@ -567,8 +567,6 @@ function getInitials(name: string | undefined): string {
 }
 
 const styles = StyleSheet.create({
-    // ...existing styles...
-    
     // Styles pour le modal des membres
     membersList: {
         maxHeight: 400,
