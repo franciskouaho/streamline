@@ -3,23 +3,13 @@
  */
 
 export const STATUS_COLORS = {
-  // Statuts de projets
-  ONGOING: "#4d8efc",    // Bleu - En cours
-  IN_PROGRESS: "#ffb443", // Orange - En progression
-  COMPLETED: "#43d2c3",  // Vert - Terminé
-  CANCELED: "#ff7a5c",   // Rouge/orange - Annulé
-  
-  // Statuts de tâches
-  TODO: "#ffb443",       // Orange - À faire
-  DONE: "#43d2c3",       // Vert - Terminé
-  
-  // Priorités de tâches
-  LOW: "#43d2c3",        // Vert - Faible
-  MEDIUM: "#ffb443",     // Orange - Moyenne
-  HIGH: "#ff3b30",       // Rouge - Haute
-  
-  // Couleur par défaut
-  DEFAULT: "#666666"     // Gris
+  COMPLETED: '#43d2c3',  // Vert clair
+  IN_PROGRESS: '#4d8efc', // Bleu
+  ONGOING: '#4d8efc',    // Bleu (même que IN_PROGRESS pour cohérence)
+  CANCELED: '#ff3b30',   // Rouge
+  TODO: '#ffb443',       // Orange
+  DONE: '#43d2c3',       // Vert clair (même que COMPLETED)
+  DEFAULT: '#cccccc'     // Gris
 };
 
 /**

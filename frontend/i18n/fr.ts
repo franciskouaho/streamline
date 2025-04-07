@@ -88,12 +88,14 @@ export default {
     plural: "Tâches",
     todo: "À faire",
     done: "Terminée",
+    in_progress: "En cours",
     errors: {
       creation: "Erreur lors de la création de la tâche",
       update: "Erreur lors de la mise à jour de la tâche",
       delete: "Erreur lors de la suppression de la tâche",
       projectNotFound: "Le projet sélectionné n'existe pas",
-      requiredFields: "Veuillez remplir tous les champs obligatoires"
+      requiredFields: "Veuillez remplir tous les champs obligatoires",
+      taskNotFound: "Tâche non trouvée"
     },
     categories: {
       design: "Design",
@@ -351,5 +353,15 @@ export default {
     invitationDeclined: "Invitation refusée",
     errorAcceptingInvitation: "Impossible d'accepter l'invitation. Veuillez réessayer.",
     errorDecliningInvitation: "Impossible de refuser l'invitation. Veuillez réessayer."
+  },
+  utils: {
+    project: {
+      progress: "Progression",
+      deadlineNotDefined: "Non définie",
+      dates: {
+        invalidDate: "Date invalide"
+      },
+      statusRecommended: "Statut recommandé : {status}"
+    }
   }
 };

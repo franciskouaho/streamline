@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Modal, Image, ActivityIndicator, FlatList } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Modal, Image, ActivityIndicator, FlatList, TextInput, KeyboardAvoidingView, Platform } from "react-native";
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { shadowStyles } from '@/constants/CommonStyles';
-import { useProject, useDeleteProject, useUpdateProjectStatus, useRemoveProjectMember, useAddProjectMember } from '@/services/queries/projects';
+import { useProject, useDeleteProject, useUpdateProjectStatus, useRemoveProjectMember, useAddProjectMember, useUpdateProject } from '@/services/queries/projects';
 import { useProjectTasks, useUpdateTask } from '@/services/queries/tasks';
 import { useTeamMembers } from '@/services/queries/team';
 import { useQueryClient } from '@tanstack/react-query';
-import { shouldUpdateProjectStatus } from '@/utils/projectUtils';
+// Ajouter l'import manquant pour la fonction getStatusColor
+import { shouldUpdateProjectStatus, getStatusColor, getProjectStatusLabel } from '@/utils/projectUtils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuthStore } from '@/stores/auth'; // Ajout de l'import manquant pour accéder à l'utilisateur connecté
 
@@ -76,6 +78,19 @@ export default function ProjectDetails() {
     const updateProjectStatus = useUpdateProjectStatus();
     const removeProjectMember = useRemoveProjectMember();
     const addProjectMember = useAddProjectMember();
+    const updateProject = useUpdateProject();
+    
+    // Ajouter ces états pour le modal d'édition
+    const [showEditProject, setShowEditProject] = useState(false);
+    const [editProjectData, setEditProjectData] = useState({
+        name: '',
+        description: '',
+        startDate: new Date(),
+        endDate: new Date(),
+        showStartDatePicker: false,
+        showEndDatePicker: false,
+        status: ''
+    });
 
     // Récupérer les membres de l'équipe
     const { data: teamMembers, isLoading: isLoadingTeamMembers } = useTeamMembers();
@@ -300,6 +315,88 @@ export default function ProjectDetails() {
         );
     };
 
+    // Initialiser les données du projet pour l'édition
+    useEffect(() => {
+        if (project) {
+            setEditProjectData({
+                name: project.name,
+                description: project.description || '',
+                startDate: project.startDate ? new Date(project.startDate) : new Date(),
+                endDate: project.endDate ? new Date(project.endDate) : new Date(),
+                showStartDatePicker: false,
+                showEndDatePicker: false,
+                status: project.status
+            });
+        }
+    }, [project]);
+    
+    // Fonction pour ouvrir le modal d'édition
+    const openEditProjectModal = () => {
+        if (project) {
+            setEditProjectData({
+                name: project.name,
+                description: project.description || '',
+                startDate: project.startDate ? new Date(project.startDate) : new Date(),
+                endDate: project.endDate ? new Date(project.endDate) : new Date(),
+                showStartDatePicker: false,
+                showEndDatePicker: false,
+                status: project.status
+            });
+            setShowEditProject(true);
+        }
+    };
+    
+    // Fonction pour gérer les changements de date
+    const handleProjectDateChange = (event, selectedDate, dateType) => {
+        if (Platform.OS === 'android') {
+            setEditProjectData({
+                ...editProjectData,
+                showStartDatePicker: false,
+                showEndDatePicker: false
+            });
+        }
+        
+        if (selectedDate) {
+            if (dateType === 'start') {
+                setEditProjectData({
+                    ...editProjectData,
+                    startDate: selectedDate
+                });
+            } else {
+                setEditProjectData({
+                    ...editProjectData,
+                    endDate: selectedDate
+                });
+            }
+        }
+    };
+    
+    // Fonction pour mettre à jour le projet
+    const handleUpdateProject = async () => {
+        try {
+            if (!editProjectData.name.trim()) {
+                Alert.alert('Erreur', 'Le nom du projet est requis');
+                return;
+            }
+
+            const updateData = {
+                id: Number(projectId),
+                name: editProjectData.name,
+                description: editProjectData.description,
+                startDate: editProjectData.startDate.toISOString(),
+                endDate: editProjectData.endDate.toISOString(),
+                status: editProjectData.status
+            };
+
+            await updateProject.mutateAsync(updateData);
+            setShowEditProject(false);
+            Alert.alert('Succès', 'Le projet a été mis à jour avec succès');
+        } catch (error) {
+            console.error('Error updating project:', error);
+            Alert.alert('Erreur', 'Une erreur est survenue lors de la mise à jour du projet');
+        }
+    };
+
     if (isLoadingProject || isLoadingTasks) {
         return (
             <SafeAreaView style={styles.container}>
@@ -329,6 +426,13 @@ export default function ProjectDetails() {
                 </TouchableOpacity>
 
                 <View style={styles.headerIcons}>
+                    {/* Ajouter le bouton d'édition */}
+                    <TouchableOpacity
+                        style={styles.iconButton}
+                        onPress={openEditProjectModal}
+                    >
+                        <Ionicons name="pencil-outline" size={22} color="#000" />
+                    </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.iconButton}
                         onPress={() => {
@@ -470,6 +574,13 @@ export default function ProjectDetails() {
                                         </Text>
                                     )}
                                 </View>
+                                {/* Ajout du bouton d'édition de tâche */}
+                                <TouchableOpacity 
+                                    style={styles.editTaskIconButton}
+                                    onPress={() => router.push(`/task/${task.id}/edit?projectId=${projectId}`)}
+                                >
+                                    <Ionicons name="pencil-outline" size={18} color="#666" />
+                                </TouchableOpacity>
                             </View>
                         ))
                     )}
@@ -527,6 +638,158 @@ export default function ProjectDetails() {
                         </TouchableOpacity>
                     </View>
                 </View>
+            </Modal>
+
+            {/* Modal d'édition de projet */}
+            <Modal
+                visible={showEditProject}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setShowEditProject(false)}
+            >
+                <KeyboardAvoidingView 
+                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    style={styles.modalOverlay}
+                >
+                    <View style={styles.editModalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Modifier le projet</Text>
+                            <TouchableOpacity onPress={() => setShowEditProject(false)}>
+                                <Ionicons name="close" size={24} color="#000" />
+                            </TouchableOpacity>
+                        </View>
+                        
+                        <ScrollView showsVerticalScrollIndicator={false}>
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.inputLabel}>Nom du projet</Text>
+                                <TextInput
+                                    style={styles.textInput}
+                                    value={editProjectData.name}
+                                    onChangeText={(text) => setEditProjectData({...editProjectData, name: text})}
+                                    placeholder="Nom du projet"
+                                />
+                            </View>
+                            
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.inputLabel}>Description</Text>
+                                <TextInput
+                                    style={[styles.textInput, styles.textAreaInput]}
+                                    value={editProjectData.description}
+                                    onChangeText={(text) => setEditProjectData({...editProjectData, description: text})}
+                                    placeholder="Description du projet"
+                                    multiline
+                                    numberOfLines={4}
+                                    textAlignVertical="top"
+                                />
+                            </View>
+                            
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.inputLabel}>Statut</Text>
+                                <View style={styles.statusButtonsContainer}>
+                                    <TouchableOpacity 
+                                        style={[
+                                            styles.statusButton,
+                                            editProjectData.status === 'ongoing' && styles.statusButtonActive,
+                                            { borderColor: getStatusColor('ongoing') }
+                                        ]}
+                                        onPress={() => setEditProjectData({...editProjectData, status: 'ongoing'})}
+                                    >
+                                        <Text style={[
+                                            styles.statusButtonText,
+                                            editProjectData.status === 'ongoing' && { color: getStatusColor('ongoing') }
+                                        ]}>En cours</Text>
+                                    </TouchableOpacity>
+                                    
+                                    <TouchableOpacity 
+                                        style={[
+                                            styles.statusButton,
+                                            editProjectData.status === 'in_progress' && styles.statusButtonActive,
+                                            { borderColor: getStatusColor('in_progress') }
+                                        ]}
+                                        onPress={() => setEditProjectData({...editProjectData, status: 'in_progress'})}
+                                    >
+                                        <Text style={[
+                                            styles.statusButtonText,
+                                            editProjectData.status === 'in_progress' && { color: getStatusColor('in_progress') }
+                                        ]}>En progression</Text>
+                                    </TouchableOpacity>
+                                    
+                                    <TouchableOpacity 
+                                        style={[
+                                            styles.statusButton,
+                                            editProjectData.status === 'completed' && styles.statusButtonActive,
+                                            { borderColor: getStatusColor('completed') }
+                                        ]}
+                                        onPress={() => setEditProjectData({...editProjectData, status: 'completed'})}
+                                    >
+                                        <Text style={[
+                                            styles.statusButtonText,
+                                            editProjectData.status === 'completed' && { color: getStatusColor('completed') }
+                                        ]}>Terminé</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                            
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.inputLabel}>Date de début</Text>
+                                <TouchableOpacity 
+                                    style={styles.dateButton}
+                                    onPress={() => setEditProjectData({
+                                        ...editProjectData, 
+                                        showStartDatePicker: true
+                                    })}
+                                >
+                                    <Ionicons name="calendar-outline" size={20} color="#666" />
+                                    <Text style={styles.dateButtonText}>
+                                        {editProjectData.startDate.toLocaleDateString('fr-FR')}
+                                    </Text>
+                                </TouchableOpacity>
+                                
+                                {editProjectData.showStartDatePicker && (
+                                    <DateTimePicker
+                                        value={editProjectData.startDate}
+                                        mode="date"
+                                        display={Platform.OS === "ios" ? "spinner" : "default"}
+                                        onChange={(event, date) => handleProjectDateChange(event, date, 'start')}
+                                    />
+                                )}
+                            </View>
+                            
+                            <View style={styles.inputContainer}>
+                                <Text style={styles.inputLabel}>Date de fin</Text>
+                                <TouchableOpacity 
+                                    style={styles.dateButton}
+                                    onPress={() => setEditProjectData({
+                                        ...editProjectData, 
+                                        showEndDatePicker: true
+                                    })}
+                                >
+                                    <Ionicons name="calendar-outline" size={20} color="#666" />
+                                    <Text style={styles.dateButtonText}>
+                                        {editProjectData.endDate.toLocaleDateString('fr-FR')}
+                                    </Text>
+                                </TouchableOpacity>
+                                
+                                {editProjectData.showEndDatePicker && (
+                                    <DateTimePicker
+                                        value={editProjectData.endDate}
+                                        mode="date"
+                                        display={Platform.OS === "ios" ? "spinner" : "default"}
+                                        onChange={(event, date) => handleProjectDateChange(event, date, 'end')}
+                                        minimumDate={editProjectData.startDate}
+                                    />
+                                )}
+                            </View>
+                        </ScrollView>
+                        
+                        <TouchableOpacity 
+                            style={styles.updateButton}
+                            onPress={handleUpdateProject}
+                        >
+                            <Text style={styles.updateButtonText}>Mettre à jour le projet</Text>
+                        </TouchableOpacity>
+                    </View>
+                </KeyboardAvoidingView>
             </Modal>
 
             <TouchableOpacity
@@ -1086,5 +1349,108 @@ const styles = StyleSheet.create({
         shadowOpacity: 1,
         shadowRadius: 0,
         elevation: 8,
+    },
+    // Styles pour le modal d'édition
+    editModalContent: {
+        backgroundColor: 'white',
+        borderRadius: 15,
+        padding: 20,
+        width: '90%',
+        maxHeight: '80%',
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+        elevation: 8,
+    },
+    inputContainer: {
+        marginBottom: 15,
+    },
+    inputLabel: {
+        fontSize: 14,
+        fontWeight: '500',
+        marginBottom: 5,
+        color: '#333',
+    },
+    textInput: {
+        backgroundColor: '#f8f8f8',
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 8,
+        padding: 10,
+        fontSize: 14,
+    },
+    textAreaInput: {
+        height: 100,
+        textAlignVertical: 'top',
+    },
+    dateButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f8f8f8',
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 8,
+        padding: 10,
+    },
+    dateButtonText: {
+        marginLeft: 10,
+        fontSize: 14,
+        color: '#333',
+    },
+    updateButton: {
+        backgroundColor: '#ff7a5c',
+        borderRadius: 10,
+        padding: 15,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+        elevation: 8,
+        marginTop: 10,
+    },
+    updateButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    statusButtonsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    statusButton: {
+        flex: 1,
+        paddingVertical: 8,
+        paddingHorizontal: 5,
+        borderRadius: 8,
+        borderWidth: 1,
+        alignItems: 'center',
+        marginHorizontal: 2,
+    },
+    statusButtonActive: {
+        backgroundColor: '#f0f0f0',
+    },
+    statusButtonText: {
+        fontSize: 12,
+        fontWeight: '500',
+    },
+    // Ajouter ce style pour le bouton d'édition de tâche
+    editTaskIconButton: {
+        padding: 8,
+        borderRadius: 20,
+        backgroundColor: '#f0f0f0',
+        marginLeft: 10,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 0,
+        elevation: 3,
     },
 });

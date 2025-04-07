@@ -83,6 +83,16 @@ export default function KanbanBoard() {
         }
     };
 
+    const handleEditTask = () => {
+        if (!selectedTask) return;
+        setShowStatusModal(false);
+        // Naviguer vers la page de détail de la tâche avec le mode édition
+        router.push({
+            pathname: `/task/${selectedTask.id}/edit`,
+            params: { projectId: projectId }
+        });
+    };
+
     const handleDeleteTask = async (taskId: number | string) => {
         try {
             Alert.alert(
@@ -296,6 +306,14 @@ export default function KanbanBoard() {
                         >
                             <Ionicons name="checkmark-circle" size={20} color="#fff" />
                             <Text style={styles.statusOptionText}>Terminé</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.editTaskButton}
+                            onPress={handleEditTask}
+                        >
+                            <Ionicons name="pencil-outline" size={20} color="#fff" />
+                            <Text style={styles.editTaskButtonText}>Modifier la tâche</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
@@ -550,6 +568,28 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         fontWeight: '500',
+    },
+    editTaskButton: {
+        backgroundColor: '#ff7a5c',
+        borderRadius: 10,
+        padding: 15,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 10,
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 0,
+        elevation: 5,
+    },
+    editTaskButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '500',
+        marginLeft: 10,
     }
 });
 

@@ -88,6 +88,7 @@ export default {
     plural: "Tasks",
     todo: "To Do",
     done: "Done",
+    in_progress: "In Progress",
     categories: {
       design: "Design",
       development: "Development",
@@ -95,6 +96,14 @@ export default {
       meeting: "Meeting",
       office: "Office",
       user: "User Experience"
+    },
+    errors: {
+      creation: "Error creating task",
+      update: "Error updating task",
+      delete: "Error deleting task",
+      projectNotFound: "Selected project doesn't exist",
+      requiredFields: "Please fill in all required fields",
+      taskNotFound: "Task not found"
     }
   },
   projects: {
@@ -344,5 +353,15 @@ export default {
     invitationDeclined: "Invitation declined",
     errorAcceptingInvitation: "Unable to accept invitation. Please try again.",
     errorDecliningInvitation: "Unable to decline invitation. Please try again."
+  },
+  utils: {
+    project: {
+      progress: "Progress",
+      deadlineNotDefined: "Not defined",
+      dates: {
+        invalidDate: "Invalid date"
+      },
+      statusRecommended: "Recommended status: {status}"
+    }
   }
 };
