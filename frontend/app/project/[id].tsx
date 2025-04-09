@@ -9,19 +9,23 @@ import { useProject, useDeleteProject, useUpdateProjectStatus, useRemoveProjectM
 import { useProjectTasks, useUpdateTask } from '@/services/queries/tasks';
 import { useTeamMembers } from '@/services/queries/team';
 import { useQueryClient } from '@tanstack/react-query';
-// Ajouter l'import manquant pour la fonction getStatusColor
 import { shouldUpdateProjectStatus, getStatusColor, getProjectStatusLabel } from '@/utils/projectUtils';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useAuthStore } from '@/stores/auth'; // Ajout de l'import manquant pour accéder à l'utilisateur connecté
+import { useAuthStore } from '@/stores/auth';
 
-// Définir des interfaces locales pour éviter les problèmes de compatibilité
 interface ProjectMember {
     id: number;
-    fullName?: string;
+    userId: number;
+    fullName: string;
+    email?: string;
     photoURL?: string;
+    role?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    projectId?: number;
+    permissions?: any;
 }
 
-// Ajout d'une interface pour les membres d'équipe
 interface TeamMember {
     id: number;
     fullName: string;
@@ -63,12 +67,39 @@ function formatDeadline(dateString: string) {
     });
 }
 
+function getInitials(name: string | undefined): string {
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+        console.log('Invalid name provided to getInitials:', name);
+        return '?';
+    }
+
+    console.log('Getting initials for name:', name);
+
+    try {
+        if (name.startsWith('User ') && name.length > 5) {
+            return 'U' + name.substring(5, 6);
+        }
+
+        const initials = name.trim()
+            .split(/\s+/)
+            .filter(word => word.length > 0)
+            .map(word => word[0])
+            .join('')
+            .toUpperCase();
+
+        return initials || '?';
+    } catch (error) {
+        console.error('Error getting initials:', error);
+        return '?';
+    }
+}
+
 export default function ProjectDetails() {
     const router = useRouter();
     const { id } = useLocalSearchParams();
     const projectId = Array.isArray(id) ? id[0] : id as string;
     const { translations } = useLanguage();
-    const { user } = useAuthStore(); // Accès à l'utilisateur connecté
+    const { user } = useAuthStore();
 
     const { data: project, isLoading: isLoadingProject } = useProject(projectId);
     const { data: tasks, isLoading: isLoadingTasks } = useProjectTasks(projectId);
@@ -79,8 +110,7 @@ export default function ProjectDetails() {
     const removeProjectMember = useRemoveProjectMember();
     const addProjectMember = useAddProjectMember();
     const updateProject = useUpdateProject();
-    
-    // Ajouter ces états pour le modal d'édition
+
     const [showEditProject, setShowEditProject] = useState(false);
     const [editProjectData, setEditProjectData] = useState({
         name: '',
@@ -92,15 +122,13 @@ export default function ProjectDetails() {
         status: ''
     });
 
-    // Récupérer les membres de l'équipe
     const { data: teamMembers, isLoading: isLoadingTeamMembers } = useTeamMembers();
 
     const [activeTab, setActiveTab] = useState<string>('');
     const [showMenu, setShowMenu] = useState(false);
     const [showStatusMenu, setShowStatusMenu] = useState(false);
     const [statusAutoUpdated, setStatusAutoUpdated] = useState(false);
-    
-    // Ajout des états pour la gestion des membres
+
     const [showAddMemberModal, setShowAddMemberModal] = useState(false);
     const [selectedMembersToAdd, setSelectedMembersToAdd] = useState<TeamMember[]>([]);
 
@@ -195,16 +223,13 @@ export default function ProjectDetails() {
         );
     };
 
-    // Effet pour mettre à jour automatiquement le statut du projet
-    // en fonction de l'avancement des tâches
     useEffect(() => {
         if (project && tasks && !statusAutoUpdated) {
             const { shouldUpdate, newStatus, progress } = shouldUpdateProjectStatus(project, tasks);
 
             if (shouldUpdate && newStatus) {
-                // Mettre à jour le statut du projet automatiquement
                 updateProjectStatus.mutate(
-                    { id: Number(projectId), status: newStatus }, // Conversion explicite en nombre
+                    { id: Number(projectId), status: newStatus },
                     {
                         onSuccess: () => {
                             console.log(`Statut du projet mis à jour automatiquement vers: ${newStatus}`);
@@ -216,13 +241,11 @@ export default function ProjectDetails() {
         }
     }, [project, tasks, statusAutoUpdated]);
 
-    // Fonction pour ouvrir le modal d'ajout de membres
     const openAddMemberModal = () => {
         setSelectedMembersToAdd([]);
         setShowAddMemberModal(true);
     };
 
-    // Fonction pour basculer la sélection d'un membre
     const toggleMemberSelection = (member: TeamMember) => {
         const isSelected = selectedMembersToAdd.some(m => m.id === member.id);
         if (isSelected) {
@@ -232,7 +255,6 @@ export default function ProjectDetails() {
         }
     };
 
-    // Fonction pour ajouter les membres sélectionnés au projet
     const addSelectedMembersToProject = async () => {
         if (selectedMembersToAdd.length === 0) {
             setShowAddMemberModal(false);
@@ -240,18 +262,16 @@ export default function ProjectDetails() {
         }
 
         try {
-            // Ajouter chaque membre sélectionné au projet
             for (const member of selectedMembersToAdd) {
                 await addProjectMember.mutateAsync({
                     projectId: Number(projectId),
                     memberId: member.id
                 });
             }
-            
-            // Fermer le modal et rafraîchir les données du projet
+
             setShowAddMemberModal(false);
             queryClient.invalidateQueries({ queryKey: ['projects', projectId] });
-            
+
             Alert.alert(
                 'Membres ajoutés',
                 'Les membres sélectionnés ont été ajoutés au projet avec succès.'
@@ -265,26 +285,21 @@ export default function ProjectDetails() {
         }
     };
 
-    // Fonction pour filtrer les membres d'équipe qui ne sont pas déjà dans le projet
     const getAvailableTeamMembers = () => {
         if (!teamMembers || !project || !project.members) return [];
-        
-        // Récupérer les IDs des membres déjà dans le projet
+
         const projectMemberIds = project.members.map(member => member.id);
-        
-        // Filtrer les membres d'équipe qui ne sont pas déjà dans le projet, qui sont actifs
-        // et qui ne sont pas l'utilisateur connecté
-        return teamMembers.filter(member => 
-            !projectMemberIds.includes(member.id) && 
-            member.status === 'active' && 
-            member.id !== user?.id // Exclure l'utilisateur connecté
+
+        return teamMembers.filter(member =>
+            !projectMemberIds.includes(member.id) &&
+            member.status === 'active' &&
+            member.id !== user?.id
         );
     };
 
-    // Rendu d'un membre d'équipe dans la liste des membres disponibles
     const renderTeamMemberItem = ({ item }: { item: TeamMember }) => {
         const isSelected = selectedMembersToAdd.some(m => m.id === item.id);
-        
+
         return (
             <TouchableOpacity
                 style={[styles.memberItem, isSelected && styles.memberItemSelected]}
@@ -308,7 +323,6 @@ export default function ProjectDetails() {
         );
     };
 
-    // Initialiser les données du projet pour l'édition
     useEffect(() => {
         if (project) {
             setEditProjectData({
@@ -322,16 +336,13 @@ export default function ProjectDetails() {
             });
         }
     }, [project]);
-    
-    // Fonction pour ouvrir le modal d'édition
+
     const openEditProjectModal = () => {
         if (project) {
-            // Au lieu d'ouvrir un modal, naviguer vers la page d'édition
             router.push(`/project/${projectId}/edit`);
         }
     };
 
-    // Fonction pour gérer les changements de date
     const handleProjectDateChange = (event, selectedDate, dateType) => {
         if (Platform.OS === 'android') {
             setEditProjectData({
@@ -340,7 +351,7 @@ export default function ProjectDetails() {
                 showEndDatePicker: false
             });
         }
-        
+
         if (selectedDate) {
             if (dateType === 'start') {
                 setEditProjectData({
@@ -355,8 +366,7 @@ export default function ProjectDetails() {
             }
         }
     };
-    
-    // Fonction pour mettre à jour le projet
+
     const handleUpdateProject = async () => {
         try {
             if (!editProjectData.name.trim()) {
@@ -411,7 +421,6 @@ export default function ProjectDetails() {
                 </TouchableOpacity>
 
                 <View style={styles.headerIcons}>
-                    {/* Modifier le bouton d'édition pour naviguer vers la page d'édition */}
                     <TouchableOpacity
                         style={styles.iconButton}
                         onPress={openEditProjectModal}
@@ -446,7 +455,7 @@ export default function ProjectDetails() {
 
                 <View style={styles.tabsContainer}>
                     <TouchableOpacity
-                        style={[styles.tabButton]} // Supprimer la condition activeTab
+                        style={[styles.tabButton]}
                         onPress={() => {
                             setActiveTab('attachment');
                             router.push(`/project/docs/${projectId}`);
@@ -461,7 +470,6 @@ export default function ProjectDetails() {
                         style={[styles.tabButton, activeTab === 'kanban' && styles.activeTab]}
                         onPress={() => {
                             setActiveTab('kanban');
-                            // Correction du chemin de navigation ici - assurez-vous que le chemin correspond à la structure des répertoires
                             router.push({
                                 pathname: `/project/kanban/[id]`,
                                 params: { id: projectId }
@@ -480,26 +488,22 @@ export default function ProjectDetails() {
                             <Text style={styles.sectionTitle}>{translations.projects.teamAssign}</Text>
                             <View style={styles.teamContainer}>
                                 {project.members?.map((member) => {
-                                    // Déboguer les données des membres pour comprendre pourquoi les initiales ne s'affichent pas
-                                    console.log('Member data:', member);
-                                    // S'assurer qu'il y a un nom valide
-                                    const memberName = member.fullName || 'User ' + member.id;
+                                    const memberName = member.fullName || `User ${member.userId || member.id}`;
                                     const initials = getInitials(memberName);
-                                    console.log('Member initials for', memberName, '→', initials);
-                                    
+
                                     return (
                                         <View key={member.id} style={styles.teamMember}>
-                                            <View 
+                                            <View
                                                 style={[
-                                                    styles.memberAvatar, 
-                                                    { 
+                                                    styles.memberAvatar,
+                                                    {
                                                         backgroundColor: '#ff7a5c',
                                                         borderWidth: 1,
                                                         borderColor: '#000'
                                                     }
                                                 ]}
                                             >
-                                                <Text 
+                                                <Text
                                                     style={{
                                                         fontSize: 16,
                                                         fontWeight: 'bold',
@@ -519,7 +523,7 @@ export default function ProjectDetails() {
                                         </View>
                                     )}
                                 )}
-                                <TouchableOpacity 
+                                <TouchableOpacity
                                     style={styles.addMemberButton}
                                     onPress={openAddMemberModal}
                                 >
@@ -582,8 +586,7 @@ export default function ProjectDetails() {
                                         </Text>
                                     )}
                                 </View>
-                                {/* Ajout du bouton d'édition de tâche */}
-                                <TouchableOpacity 
+                                <TouchableOpacity
                                     style={styles.editTaskIconButton}
                                     onPress={() => router.push(`/task/${task.id}/edit?projectId=${projectId}`)}
                                 >
@@ -595,7 +598,6 @@ export default function ProjectDetails() {
                 </View>
             </ScrollView>
 
-            {/* Modal pour ajouter des membres au projet */}
             <Modal
                 visible={showAddMemberModal}
                 animationType="slide"
@@ -639,8 +641,8 @@ export default function ProjectDetails() {
                             disabled={selectedMembersToAdd.length === 0}
                         >
                             <Text style={styles.modalButtonText}>
-                                {selectedMembersToAdd.length === 0 
-                                    ? 'Aucun membre sélectionné' 
+                                {selectedMembersToAdd.length === 0
+                                    ? 'Aucun membre sélectionné'
                                     : `Ajouter ${selectedMembersToAdd.length} membre(s)`}
                             </Text>
                         </TouchableOpacity>
@@ -676,39 +678,11 @@ function calculateProgress(project: Project | null): number {
     return Math.round((completedTasks / project.tasks.length) * 100);
 }
 
-function getInitials(name: string | undefined): string {
-    // S'assurer que name existe et n'est pas vide
-    if (!name || typeof name !== 'string' || name.trim() === '') {
-        console.log('Invalid name provided to getInitials:', name);
-        return '?';
-    }
-    
-    console.log('Getting initials for name:', name);
-    
-    try {
-        // Diviser par espace et prendre la première lettre de chaque mot
-        const initials = name.trim()
-            .split(/\s+/)
-            .filter(word => word.length > 0)
-            .map(word => word[0])
-            .join('')
-            .toUpperCase();
-        
-        return initials || '?';
-    } catch (error) {
-        console.error('Error getting initials:', error);
-        return '?';
-    }
-}
-
 const styles = StyleSheet.create({
-    // Styles pour le conteneur principal
     container: {
         flex: 1,
         backgroundColor: "#f2f2f2",
     },
-    
-    // Styles pour le header
     header: {
         flexDirection: "row",
         justifyContent: "space-between",
@@ -738,8 +712,6 @@ const styles = StyleSheet.create({
     deleteButton: {
         borderColor: '#ff3b30',
     },
-    
-    // Styles pour le titre et la description
     titleContainer: {
         paddingHorizontal: 20,
         paddingBottom: 10,
@@ -758,8 +730,6 @@ const styles = StyleSheet.create({
         lineHeight: 20,
         marginBottom: 20,
     },
-    
-    // Styles pour les onglets
     tabsContainer: {
         flexDirection: "row",
         marginBottom: 20,
@@ -789,8 +759,6 @@ const styles = StyleSheet.create({
     activeTabText: {
         color: "#fff",
     },
-    
-    // Styles pour la section d'équipe
     teamSection: {
         marginBottom: 20,
     },
@@ -808,8 +776,6 @@ const styles = StyleSheet.create({
         marginRight: 10,
         position: 'relative',
     },
-    
-    // Styles pour les avatars de membre
     memberAvatar: {
         width: 35,
         height: 35,
@@ -846,8 +812,6 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         lineHeight: 40,
     },
-    
-    // Styles pour le bouton de suppression de membre
     removeMemberButton: {
         position: 'absolute',
         right: -5,
@@ -862,8 +826,6 @@ const styles = StyleSheet.create({
         shadowRadius: 0,
         elevation: 5,
     },
-    
-    // Styles pour le bouton d'ajout de membre
     addMemberButton: {
         width: 35,
         height: 35,
@@ -879,8 +841,6 @@ const styles = StyleSheet.create({
         shadowRadius: 0,
         elevation: 4,
     },
-    
-    // Styles pour le cercle de progression
     progressCircle: {
         width: 80,
         height: 80,
@@ -900,8 +860,6 @@ const styles = StyleSheet.create({
         color: '#666',
         marginTop: 2,
     },
-    
-    // Styles pour la date limite
     deadlineContainer: {
         flexDirection: "row",
         alignItems: "center",
@@ -911,15 +869,11 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: "500",
     },
-    
-    // Styles pour les titres de section
     sectionTitle: {
         fontSize: 16,
         fontWeight: "600",
         marginBottom: 15,
     },
-    
-    // Styles pour la liste de tâches
     checklistSection: {
         marginBottom: 30,
     },
@@ -974,8 +928,6 @@ const styles = StyleSheet.create({
         color: '#666',
         marginTop: 4,
     },
-    
-    // Styles pour l'édition des tâches
     editTaskIconButton: {
         padding: 8,
         borderRadius: 20,
@@ -989,8 +941,6 @@ const styles = StyleSheet.create({
         shadowRadius: 0,
         elevation: 3,
     },
-    
-    // Styles pour le modal d'ajout de membres
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -1021,8 +971,6 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '600',
     },
-    
-    // Styles pour la liste des membres
     membersList: {
         maxHeight: 400,
         marginBottom: 20,
@@ -1049,8 +997,6 @@ const styles = StyleSheet.create({
         color: '#666',
         marginTop: 2,
     },
-    
-    // Styles pour les états de chargement et les conteneurs vides
     loadingContainer: {
         padding: 30,
         alignItems: 'center',
@@ -1070,8 +1016,6 @@ const styles = StyleSheet.create({
         fontSize: 14,
         marginTop: 20,
     },
-    
-    // Styles pour les boutons modaux
     modalButton: {
         backgroundColor: '#ff7a5c',
         borderRadius: 15,
@@ -1083,6 +1027,7 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 4, height: 4 },
         shadowOpacity: 1,
         shadowRadius: 0,
+        elevation: 8,
     },
     modalButtonDisabled: {
         backgroundColor: '#ccc',
@@ -1093,8 +1038,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
     },
-    
-    // Styles pour le bouton retour
     backButton: {
         backgroundColor: '#fff',
         width: 40,
@@ -1110,8 +1053,6 @@ const styles = StyleSheet.create({
         shadowRadius: 0,
         elevation: 8,
     },
-    
-    // Styles pour le bouton d'ajout de tâche flottant
     addTaskButton: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -1135,8 +1076,6 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         marginLeft: 8,
     },
-    
-    // Styles supplémentaires pour l'édition
     editModalContent: {
         backgroundColor: 'white',
         borderRadius: 15,

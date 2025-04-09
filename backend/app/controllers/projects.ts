@@ -175,11 +175,43 @@ export default class Projects {
   }
 
   async show({ params, response }: HttpContext) {
-    const project = await Project.findOrFail(params.id)
-    await project.load('owner')
-    await project.load('members')
-    await project.load('tasks')
-    return response.ok(project)
+    try {
+      const project = await Project.findOrFail(params.id)
+      await project.load('owner')
+
+      // Charger les membres avec les informations complètes des utilisateurs
+      await project.load('members', (query) => {
+        query.preload('user', (userQuery) => {
+          userQuery.select(['id', 'full_name', 'email', 'avatar'])
+        })
+      })
+
+      await project.load('tasks')
+
+      // Transformer les données pour inclure les informations de l'utilisateur dans chaque membre
+      const serializedProject = project.serialize()
+      serializedProject.members = serializedProject.members.map((member) => {
+        if (member.user) {
+          return {
+            id: member.id,
+            userId: member.userId,
+            fullName: member.user.fullName,
+            email: member.user.email,
+            photoURL: member.user.avatar,
+            role: member.role,
+          }
+        }
+        return member
+      })
+
+      return response.ok(serializedProject)
+    } catch (error) {
+      console.error('Error fetching project details:', error)
+      return response.internalServerError({
+        message: 'Error fetching project details',
+        error: error.message,
+      })
+    }
   }
 
   async store({ request, auth, response }: HttpContext) {

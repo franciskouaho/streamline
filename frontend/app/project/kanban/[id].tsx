@@ -158,36 +158,42 @@ export default function KanbanBoard() {
                             {getTasksByStatus('todo').length}
                         </Text>
                     </View>
-                    {getTasksByStatus('todo').map(task => (
-                        <TouchableOpacity 
-                            key={task.id} 
-                            style={[styles.taskCard, shadowStyles.card]}
-                            onPress={() => openStatusModal(task)}
-                            onLongPress={() => navigateToTaskDetails(task.id)}
-                        >
-                            <Text style={styles.taskTitle}>{task.title}</Text>
-                            {task.dueDate && (
-                                <View style={styles.taskDueDate}>
-                                    <Ionicons name="calendar-outline" size={12} color="#666" />
-                                    <Text style={styles.dueDateText}>
-                                        {new Date(task.dueDate).toLocaleDateString('fr-FR', {
-                                            day: 'numeric',
-                                            month: 'short'
-                                        })}
-                                    </Text>
-                                </View>
-                            )}
-                            {task.assignee && (
-                                <View style={styles.assigneeContainer}>
-                                    <View style={styles.assigneeAvatar}>
-                                        <Text style={styles.assigneeInitials}>
-                                            {getInitials(task.assignee.fullName)}
+                    <ScrollView 
+                        style={styles.columnScrollView}
+                        contentContainerStyle={styles.columnScrollViewContent}
+                        showsVerticalScrollIndicator={false}
+                    >
+                        {getTasksByStatus('todo').map(task => (
+                            <TouchableOpacity 
+                                key={task.id} 
+                                style={[styles.taskCard, shadowStyles.card]}
+                                onPress={() => openStatusModal(task)}
+                                onLongPress={() => navigateToTaskDetails(task.id)}
+                            >
+                                <Text style={styles.taskTitle}>{task.title}</Text>
+                                {task.dueDate && (
+                                    <View style={styles.taskDueDate}>
+                                        <Ionicons name="calendar-outline" size={12} color="#666" />
+                                        <Text style={styles.dueDateText}>
+                                            {new Date(task.dueDate).toLocaleDateString('fr-FR', {
+                                                day: 'numeric',
+                                                month: 'short'
+                                            })}
                                         </Text>
                                     </View>
-                                </View>
-                            )}
-                        </TouchableOpacity>
-                    ))}
+                                )}
+                                {task.assignee && (
+                                    <View style={styles.assigneeContainer}>
+                                        <View style={styles.assigneeAvatar}>
+                                            <Text style={styles.assigneeInitials}>
+                                                {getInitials(task.assignee.fullName)}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                )}
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
                 </View>
 
                 <View style={styles.column}>
@@ -197,36 +203,42 @@ export default function KanbanBoard() {
                             {getTasksByStatus('inProgress').length}
                         </Text>
                     </View>
-                    {getTasksByStatus('inProgress').map(task => (
-                        <TouchableOpacity 
-                            key={task.id} 
-                            style={[styles.taskCard, shadowStyles.card]}
-                            onPress={() => openStatusModal(task)}
-                            onLongPress={() => navigateToTaskDetails(task.id)}
-                        >
-                            <Text style={styles.taskTitle}>{task.title}</Text>
-                            {task.dueDate && (
-                                <View style={styles.taskDueDate}>
-                                    <Ionicons name="calendar-outline" size={12} color="#666" />
-                                    <Text style={styles.dueDateText}>
-                                        {new Date(task.dueDate).toLocaleDateString('fr-FR', {
-                                            day: 'numeric',
-                                            month: 'short'
-                                        })}
-                                    </Text>
-                                </View>
-                            )}
-                            {task.assignee && (
-                                <View style={styles.assigneeContainer}>
-                                    <View style={styles.assigneeAvatar}>
-                                        <Text style={styles.assigneeInitials}>
-                                            {getInitials(task.assignee.fullName)}
+                    <ScrollView 
+                        style={styles.columnScrollView}
+                        contentContainerStyle={styles.columnScrollViewContent}
+                        showsVerticalScrollIndicator={false}
+                    >
+                        {getTasksByStatus('inProgress').map(task => (
+                            <TouchableOpacity 
+                                key={task.id} 
+                                style={[styles.taskCard, shadowStyles.card]}
+                                onPress={() => openStatusModal(task)}
+                                onLongPress={() => navigateToTaskDetails(task.id)}
+                            >
+                                <Text style={styles.taskTitle}>{task.title}</Text>
+                                {task.dueDate && (
+                                    <View style={styles.taskDueDate}>
+                                        <Ionicons name="calendar-outline" size={12} color="#666" />
+                                        <Text style={styles.dueDateText}>
+                                            {new Date(task.dueDate).toLocaleDateString('fr-FR', {
+                                                day: 'numeric',
+                                                month: 'short'
+                                            })}
                                         </Text>
                                     </View>
-                                </View>
-                            )}
-                        </TouchableOpacity>
-                    ))}
+                                )}
+                                {task.assignee && (
+                                    <View style={styles.assigneeContainer}>
+                                        <View style={styles.assigneeAvatar}>
+                                            <Text style={styles.assigneeInitials}>
+                                                {getInitials(task.assignee.fullName)}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                )}
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
                 </View>
 
                 <View style={styles.column}>
@@ -236,36 +248,42 @@ export default function KanbanBoard() {
                             {getTasksByStatus('done').length}
                         </Text>
                     </View>
-                    {getTasksByStatus('done').map(task => (
-                        <TouchableOpacity 
-                            key={task.id} 
-                            style={[styles.taskCard, shadowStyles.card]}
-                            onPress={() => openStatusModal(task)}
-                            onLongPress={() => navigateToTaskDetails(task.id)}
-                        >
-                            <Text style={styles.taskTitle}>{task.title}</Text>
-                            {task.dueDate && (
-                                <View style={styles.taskDueDate}>
-                                    <Ionicons name="calendar-outline" size={12} color="#666" />
-                                    <Text style={styles.dueDateText}>
-                                        {new Date(task.dueDate).toLocaleDateString('fr-FR', {
-                                            day: 'numeric',
-                                            month: 'short'
-                                        })}
-                                    </Text>
-                                </View>
-                            )}
-                            {task.assignee && (
-                                <View style={styles.assigneeContainer}>
-                                    <View style={styles.assigneeAvatar}>
-                                        <Text style={styles.assigneeInitials}>
-                                            {getInitials(task.assignee.fullName)}
+                    <ScrollView 
+                        style={styles.columnScrollView}
+                        contentContainerStyle={styles.columnScrollViewContent}
+                        showsVerticalScrollIndicator={false}
+                    >
+                        {getTasksByStatus('done').map(task => (
+                            <TouchableOpacity 
+                                key={task.id} 
+                                style={[styles.taskCard, shadowStyles.card]}
+                                onPress={() => openStatusModal(task)}
+                                onLongPress={() => navigateToTaskDetails(task.id)}
+                            >
+                                <Text style={styles.taskTitle}>{task.title}</Text>
+                                {task.dueDate && (
+                                    <View style={styles.taskDueDate}>
+                                        <Ionicons name="calendar-outline" size={12} color="#666" />
+                                        <Text style={styles.dueDateText}>
+                                            {new Date(task.dueDate).toLocaleDateString('fr-FR', {
+                                                day: 'numeric',
+                                                month: 'short'
+                                            })}
                                         </Text>
                                     </View>
-                                </View>
-                            )}
-                        </TouchableOpacity>
-                    ))}
+                                )}
+                                {task.assignee && (
+                                    <View style={styles.assigneeContainer}>
+                                        <View style={styles.assigneeAvatar}>
+                                            <Text style={styles.assigneeInitials}>
+                                                {getInitials(task.assignee.fullName)}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                )}
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
                 </View>
             </ScrollView>
 
@@ -402,6 +420,7 @@ const styles = StyleSheet.create({
     column: {
         width: 280,
         marginRight: 15,
+        maxHeight: '100%',
     },
     columnHeader: {
         flexDirection: 'row',
@@ -411,15 +430,11 @@ const styles = StyleSheet.create({
         borderRadius: 15,
         marginBottom: 15,
     },
-    columnTitle: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
+    columnScrollView: {
+        maxHeight: '85%',
     },
-    taskCount: {
-        color: '#fff',
-        fontSize: 14,
-        fontWeight: '500',
+    columnScrollViewContent: {
+        paddingBottom: 15,
     },
     taskCard: {
         backgroundColor: '#fff',
