@@ -485,8 +485,24 @@ export default function ProjectDetails() {
                                     
                                     return (
                                         <View key={member.id} style={styles.teamMember}>
-                                            <View style={[styles.memberAvatar, styles.memberAvatarPlaceholder]}>
-                                                <Text style={styles.memberInitials}>
+                                            <View 
+                                                style={[
+                                                    styles.memberAvatar, 
+                                                    { 
+                                                        backgroundColor: '#ff7a5c',
+                                                        borderWidth: 1,
+                                                        borderColor: '#000'
+                                                    }
+                                                ]}
+                                            >
+                                                <Text 
+                                                    style={{
+                                                        fontSize: 16,
+                                                        fontWeight: 'bold',
+                                                        color: 'white',
+                                                        textAlign: 'center',
+                                                    }}
+                                                >
                                                     {initials}
                                                 </Text>
                                             </View>
@@ -657,12 +673,20 @@ function calculateProgress(project: Project | null): number {
 }
 
 function getInitials(name: string | undefined): string {
-    if (!name) return '';
-    return name
-        .split(' ')
-        .map(n => n[0])
-        .join('')
-        .toUpperCase();
+    if (!name || name.trim() === '') return '??';
+    
+    console.log('Getting initials for name:', name);
+    
+    const parts = name.trim().split(' ');
+    let initials = '';
+    
+    for (const part of parts) {
+        if (part.length > 0) {
+            initials += part[0].toUpperCase();
+        }
+    }
+    
+    return initials || '?';
 }
 
 const styles = StyleSheet.create({
