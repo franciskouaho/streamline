@@ -718,14 +718,14 @@ const styles = StyleSheet.create({
         borderRadius: 20,
     },
     memberAvatarPlaceholder: {
-        backgroundColor: '#f0f0f0',
+        backgroundColor: '#ff7a5c', // Couleur de fond contrastante pour améliorer la lisibilité
         justifyContent: 'center',
         alignItems: 'center',
     },
     memberAvatarInitials: {
         fontSize: 16,
-        fontWeight: '600',
-        color: '#666',
+        fontWeight: '700', // Augmenter le poids pour plus de visibilité
+        color: '#ffffff', // Texte blanc pour contraster
     },
     memberItemInfo: {
         flex: 1,
