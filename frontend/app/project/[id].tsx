@@ -291,18 +291,11 @@ export default function ProjectDetails() {
                 onPress={() => toggleMemberSelection(item)}
             >
                 <View style={styles.memberAvatarContainer}>
-                    {item.photoURL ? (
-                        <Image
-                            source={{ uri: item.photoURL }}
-                            style={styles.memberAvatarItem}
-                        />
-                    ) : (
-                        <View style={[styles.memberAvatarItem, styles.memberAvatarPlaceholder]}>
-                            <Text style={styles.memberAvatarInitials}>
-                                {getInitials(item.fullName)}
-                            </Text>
-                        </View>
-                    )}
+                    <View style={[styles.memberAvatarItem, styles.memberAvatarPlaceholder]}>
+                        <Text style={styles.memberAvatarInitials}>
+                            {getInitials(item.fullName)}
+                        </Text>
+                    </View>
                 </View>
                 <View style={styles.memberItemInfo}>
                     <Text style={styles.memberItemName}>{item.fullName}</Text>
@@ -488,18 +481,11 @@ export default function ProjectDetails() {
                             <View style={styles.teamContainer}>
                                 {project.members?.map((member) => (
                                     <View key={member.id} style={styles.teamMember}>
-                                        {member.photoURL ? (
-                                            <Image
-                                                source={{ uri: member.photoURL }}
-                                                style={styles.memberAvatar}
-                                            />
-                                        ) : (
-                                            <View style={[styles.memberAvatar, styles.memberAvatarPlaceholder]}>
-                                                <Text style={styles.memberInitials}>
-                                                    {getInitials(member.fullName)}
-                                                </Text>
-                                            </View>
-                                        )}
+                                        <View style={[styles.memberAvatar, styles.memberAvatarPlaceholder]}>
+                                            <Text style={styles.memberInitials}>
+                                                {getInitials(member.fullName)}
+                                            </Text>
+                                        </View>
                                         <TouchableOpacity
                                             style={styles.removeMemberButton}
                                             onPress={() => handleRemoveMember(member.id)}
@@ -718,14 +704,17 @@ const styles = StyleSheet.create({
         borderRadius: 20,
     },
     memberAvatarPlaceholder: {
-        backgroundColor: '#ff7a5c', // Couleur de fond contrastante pour améliorer la lisibilité
+        backgroundColor: '#ff7a5c', // Couleur vive pour un meilleur contraste
         justifyContent: 'center',
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#000', // Ajouter une bordure pour plus de visibilité
     },
     memberAvatarInitials: {
-        fontSize: 16,
-        fontWeight: '700', // Augmenter le poids pour plus de visibilité
-        color: '#ffffff', // Texte blanc pour contraster
+        fontSize: 16, // Taille augmentée pour une meilleure visibilité
+        fontWeight: '700', // Police en gras pour un meilleur contraste
+        color: '#ffffff', // Texte blanc pour contraster avec le fond coloré
+        textAlign: 'center', // Assurer le centrage du texte
     },
     memberItemInfo: {
         flex: 1,
@@ -892,6 +881,8 @@ const styles = StyleSheet.create({
         height: 35,
         borderRadius: 17.5,
         backgroundColor: "#ccc",
+        justifyContent: 'center', // Centrer le contenu verticalement
+        alignItems: 'center',    // Centrer le contenu horizontalement
     },
     removeMemberButton: {
         position: 'absolute',

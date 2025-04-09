@@ -231,15 +231,11 @@ export default function TeamScreen() {
         disabled={isMutating}
       >
         <View style={styles.memberAvatarContainer}>
-          {item.photoURL ? (
-            <Image source={{ uri: item.photoURL }} style={styles.memberAvatar} />
-          ) : (
-            <View style={[styles.memberAvatar, styles.avatarPlaceholder]}>
-              <Text style={styles.avatarInitials}>
-                {item.fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
-              </Text>
-            </View>
-          )}
+          <View style={[styles.memberAvatar, styles.memberAvatarPlaceholder]}>
+            <Text style={styles.memberInitials}>
+              {getInitials(item.fullName)}
+            </Text>
+          </View>
           <View style={[
             styles.statusIndicator, 
             item.status === 'active' ? styles.statusActive : 
@@ -592,15 +588,11 @@ export default function TeamScreen() {
                 </View>
 
                 <View style={styles.memberDetailHeader}>
-                  {selectedMember.photoURL ? (
-                    <Image source={{ uri: selectedMember.photoURL }} style={styles.detailAvatar} />
-                  ) : (
-                    <View style={[styles.detailAvatar, styles.avatarPlaceholder]}>
-                      <Text style={styles.detailAvatarInitials}>
-                        {selectedMember.fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
-                      </Text>
-                    </View>
-                  )}
+                  <View style={[styles.detailAvatar, styles.memberAvatarPlaceholder]}>
+                    <Text style={styles.memberInitials}>
+                      {getInitials(selectedMember.fullName)}
+                    </Text>
+                  </View>
                   <View style={styles.memberDetailInfo}>
                     <Text style={styles.memberDetailName}>{selectedMember.fullName}</Text>
                     <Text style={styles.memberDetailRole}>{selectedMember.role || 'Membre'}</Text>
@@ -695,6 +687,16 @@ function getStatusColor(status: string): string {
   }
 }
 
+// Fonction utilitaire pour obtenir les initiales
+function getInitials(name: string | undefined): string {
+  if (!name) return '';
+  return name
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase();
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -778,16 +780,21 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-  },
-  avatarPlaceholder: {
-    backgroundColor: '#e0e0e0',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  avatarInitials: {
+  memberAvatarPlaceholder: {
+    backgroundColor: '#ff7a5c',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#000',
+  },
+  memberInitials: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#666',
+    fontWeight: '700',
+    color: '#ffffff',
+    textAlign: 'center',
   },
   statusIndicator: {
     position: 'absolute',
@@ -975,11 +982,8 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     marginRight: 20,
-  },
-  detailAvatarInitials: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#666',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   memberDetailInfo: {
     flex: 1,
