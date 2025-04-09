@@ -488,13 +488,18 @@ export default function ProjectDetails() {
                             <View style={styles.teamContainer}>
                                 {project.members?.map((member) => (
                                     <View key={member.id} style={styles.teamMember}>
-                                        <Image
-                                            source={member.photoURL ?
-                                                { uri: member.photoURL } :
-                                                require('@/assets/images/streamline.jpeg')
-                                            }
-                                            style={styles.memberAvatar}
-                                        />
+                                        {member.photoURL ? (
+                                            <Image
+                                                source={{ uri: member.photoURL }}
+                                                style={styles.memberAvatar}
+                                            />
+                                        ) : (
+                                            <View style={[styles.memberAvatar, styles.memberAvatarPlaceholder]}>
+                                                <Text style={styles.memberInitials}>
+                                                    {getInitials(member.fullName)}
+                                                </Text>
+                                            </View>
+                                        )}
                                         <TouchableOpacity
                                             style={styles.removeMemberButton}
                                             onPress={() => handleRemoveMember(member.id)}
