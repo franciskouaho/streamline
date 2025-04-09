@@ -480,8 +480,12 @@ export default function ProjectDetails() {
                             <Text style={styles.sectionTitle}>{translations.projects.teamAssign}</Text>
                             <View style={styles.teamContainer}>
                                 {project.members?.map((member) => {
-                                    const initials = getInitials(member.fullName);
-                                    console.log('Member initials:', member.fullName, '→', initials);
+                                    // Déboguer les données des membres pour comprendre pourquoi les initiales ne s'affichent pas
+                                    console.log('Member data:', member);
+                                    // S'assurer qu'il y a un nom valide
+                                    const memberName = member.fullName || 'User ' + member.id;
+                                    const initials = getInitials(memberName);
+                                    console.log('Member initials for', memberName, '→', initials);
                                     
                                     return (
                                         <View key={member.id} style={styles.teamMember}>
@@ -503,7 +507,7 @@ export default function ProjectDetails() {
                                                         textAlign: 'center',
                                                     }}
                                                 >
-                                                    {initials}
+                                                    {initials || '?'}
                                                 </Text>
                                             </View>
                                             <TouchableOpacity
@@ -673,20 +677,28 @@ function calculateProgress(project: Project | null): number {
 }
 
 function getInitials(name: string | undefined): string {
-    if (!name || name.trim() === '') return '??';
+    // S'assurer que name existe et n'est pas vide
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+        console.log('Invalid name provided to getInitials:', name);
+        return '?';
+    }
     
     console.log('Getting initials for name:', name);
     
-    const parts = name.trim().split(' ');
-    let initials = '';
-    
-    for (const part of parts) {
-        if (part.length > 0) {
-            initials += part[0].toUpperCase();
-        }
+    try {
+        // Diviser par espace et prendre la première lettre de chaque mot
+        const initials = name.trim()
+            .split(/\s+/)
+            .filter(word => word.length > 0)
+            .map(word => word[0])
+            .join('')
+            .toUpperCase();
+        
+        return initials || '?';
+    } catch (error) {
+        console.error('Error getting initials:', error);
+        return '?';
     }
-    
-    return initials || '?';
 }
 
 const styles = StyleSheet.create({
