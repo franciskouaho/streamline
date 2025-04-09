@@ -479,21 +479,26 @@ export default function ProjectDetails() {
                         <View>
                             <Text style={styles.sectionTitle}>{translations.projects.teamAssign}</Text>
                             <View style={styles.teamContainer}>
-                                {project.members?.map((member) => (
-                                    <View key={member.id} style={styles.teamMember}>
-                                        <View style={[styles.memberAvatar, styles.memberAvatarPlaceholder]}>
-                                            <Text style={styles.memberInitials}>
-                                                {getInitials(member.fullName)}
-                                            </Text>
+                                {project.members?.map((member) => {
+                                    const initials = getInitials(member.fullName);
+                                    console.log('Member initials:', member.fullName, '→', initials);
+                                    
+                                    return (
+                                        <View key={member.id} style={styles.teamMember}>
+                                            <View style={[styles.memberAvatar, styles.memberAvatarPlaceholder]}>
+                                                <Text style={styles.memberInitials}>
+                                                    {initials}
+                                                </Text>
+                                            </View>
+                                            <TouchableOpacity
+                                                style={styles.removeMemberButton}
+                                                onPress={() => handleRemoveMember(member.id)}
+                                            >
+                                                <Ionicons name="close-circle" size={20} color="#FF3B30" />
+                                            </TouchableOpacity>
                                         </View>
-                                        <TouchableOpacity
-                                            style={styles.removeMemberButton}
-                                            onPress={() => handleRemoveMember(member.id)}
-                                        >
-                                            <Ionicons name="close-circle" size={20} color="#FF3B30" />
-                                        </TouchableOpacity>
-                                    </View>
-                                ))}
+                                    )}
+                                )}
                                 <TouchableOpacity 
                                     style={styles.addMemberButton}
                                     onPress={openAddMemberModal}
@@ -661,99 +666,13 @@ function getInitials(name: string | undefined): string {
 }
 
 const styles = StyleSheet.create({
-    // Styles pour le modal des membres
-    membersList: {
-        maxHeight: 400,
-        marginBottom: 20,
-    },
-    loadingContainer: {
-        padding: 30,
-        alignItems: 'center',
-    },
-    loadingText: {
-        marginTop: 10,
-        color: '#666',
-        fontSize: 16,
-    },
-    emptyContainer: {
-        padding: 30,
-        alignItems: 'center',
-    },
-    emptyText: {
-        textAlign: 'center',
-        color: '#666',
-        fontSize: 14,
-        marginTop: 20,
-    },
-    memberItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 15,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
-    },
-    memberItemSelected: {
-        backgroundColor: 'rgba(255, 122, 92, 0.1)',
-    },
-    memberAvatarContainer: {
-        marginRight: 15,
-    },
-    memberAvatarItem: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-    },
-    memberAvatarPlaceholder: {
-        backgroundColor: '#ff7a5c', // Couleur vive pour un meilleur contraste
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#000', // Ajouter une bordure pour plus de visibilité
-    },
-    memberAvatarInitials: {
-        fontSize: 16, // Taille augmentée pour une meilleure visibilité
-        fontWeight: '700', // Police en gras pour un meilleur contraste
-        color: '#ffffff', // Texte blanc pour contraster avec le fond coloré
-        textAlign: 'center', // Assurer le centrage du texte
-    },
-    memberItemInfo: {
-        flex: 1,
-    },
-    memberItemName: {
-        fontSize: 16,
-        fontWeight: '500',
-    },
-    memberItemEmail: {
-        fontSize: 13,
-        color: '#666',
-        marginTop: 2,
-    },
-    modalButton: {
-        backgroundColor: '#ff7a5c',
-        borderRadius: 15,
-        padding: 15,
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#000',
-        shadowColor: '#000',
-        shadowOffset: { width: 4, height: 4 },
-        shadowOpacity: 1,
-        shadowRadius: 0,
-    },
-    modalButtonDisabled: {
-        backgroundColor: '#ccc',
-        shadowOffset: { width: 2, height: 2 },
-    },
-    modalButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    
+    // Styles pour le conteneur principal
     container: {
         flex: 1,
         backgroundColor: "#f2f2f2",
     },
+    
+    // Styles pour le header
     header: {
         flexDirection: "row",
         justifyContent: "space-between",
@@ -780,15 +699,11 @@ const styles = StyleSheet.create({
         shadowRadius: 0,
         elevation: 5,
     },
-    statusTag: {
-        backgroundColor: "#ffb443",
-        paddingVertical: 5,
-        paddingHorizontal: 12,
-        borderRadius: 15,
-        fontSize: 12,
-        fontWeight: "600",
-        color: "#fff",
+    deleteButton: {
+        borderColor: '#ff3b30',
     },
+    
+    // Styles pour le titre et la description
     titleContainer: {
         paddingHorizontal: 20,
         paddingBottom: 10,
@@ -807,6 +722,8 @@ const styles = StyleSheet.create({
         lineHeight: 20,
         marginBottom: 20,
     },
+    
+    // Styles pour les onglets
     tabsContainer: {
         flexDirection: "row",
         marginBottom: 20,
@@ -836,6 +753,8 @@ const styles = StyleSheet.create({
     activeTabText: {
         color: "#fff",
     },
+    
+    // Styles pour la section d'équipe
     teamSection: {
         marginBottom: 20,
     },
@@ -845,6 +764,87 @@ const styles = StyleSheet.create({
         alignItems: 'flex-start',
         marginBottom: 15,
     },
+    teamContainer: {
+        flexDirection: "row",
+        marginBottom: 15,
+    },
+    teamMember: {
+        marginRight: 10,
+        position: 'relative',
+    },
+    
+    // Styles pour les avatars de membre
+    memberAvatar: {
+        width: 35,
+        height: 35,
+        borderRadius: 17.5,
+        backgroundColor: "#ccc",
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    memberAvatarPlaceholder: {
+        backgroundColor: '#ff7a5c',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#000',
+    },
+    memberInitials: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#ffffff',
+        textAlign: 'center',
+    },
+    memberAvatarContainer: {
+        marginRight: 15,
+    },
+    memberAvatarItem: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+    },
+    memberAvatarInitials: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#ffffff',
+        textAlign: 'center',
+        lineHeight: 40,
+    },
+    
+    // Styles pour le bouton de suppression de membre
+    removeMemberButton: {
+        position: 'absolute',
+        right: -5,
+        top: -5,
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#FF3B30',
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 0,
+        elevation: 5,
+    },
+    
+    // Styles pour le bouton d'ajout de membre
+    addMemberButton: {
+        width: 35,
+        height: 35,
+        borderRadius: 17.5,
+        backgroundColor: "#f0f0f0",
+        alignItems: "center",
+        justifyContent: "center",
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+        elevation: 4,
+    },
+    
+    // Styles pour le cercle de progression
     progressCircle: {
         width: 80,
         height: 80,
@@ -864,55 +864,8 @@ const styles = StyleSheet.create({
         color: '#666',
         marginTop: 2,
     },
-    sectionTitle: {
-        fontSize: 16,
-        fontWeight: "600",
-        marginBottom: 15,
-    },
-    teamContainer: {
-        flexDirection: "row",
-        marginBottom: 15,
-    },
-    teamMember: {
-        marginRight: 10,
-    },
-    memberAvatar: {
-        width: 35,
-        height: 35,
-        borderRadius: 17.5,
-        backgroundColor: "#ccc",
-        justifyContent: 'center', // Centrer le contenu verticalement
-        alignItems: 'center',    // Centrer le contenu horizontalement
-    },
-    removeMemberButton: {
-        position: 'absolute',
-        right: -5,
-        top: -5,
-        backgroundColor: '#fff',
-        borderRadius: 10,
-        borderWidth: 1,
-        borderColor: '#FF3B30',
-        shadowColor: '#000',
-        shadowOffset: { width: 2, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 0,
-        elevation: 5,
-    },
-    addMemberButton: {
-        width: 35,
-        height: 35,
-        borderRadius: 17.5,
-        backgroundColor: "#f0f0f0",
-        alignItems: "center",
-        justifyContent: "center",
-        borderWidth: 1,
-        borderColor: '#000',
-        shadowColor: '#000',
-        shadowOffset: { width: 2, height: 2 },
-        shadowOpacity: 1,
-        shadowRadius: 0,
-        elevation: 4,
-    },
+    
+    // Styles pour la date limite
     deadlineContainer: {
         flexDirection: "row",
         alignItems: "center",
@@ -922,6 +875,15 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: "500",
     },
+    
+    // Styles pour les titres de section
+    sectionTitle: {
+        fontSize: 16,
+        fontWeight: "600",
+        marginBottom: 15,
+    },
+    
+    // Styles pour la liste de tâches
     checklistSection: {
         marginBottom: 30,
     },
@@ -959,6 +921,10 @@ const styles = StyleSheet.create({
     checkboxCompleted: {
         backgroundColor: "#43d2c3",
     },
+    taskContent: {
+        flex: 1,
+        marginLeft: 15,
+    },
     checklistText: {
         flex: 1,
         fontSize: 14,
@@ -967,137 +933,28 @@ const styles = StyleSheet.create({
         textDecorationLine: "line-through",
         color: "#888",
     },
-    moreButton: {
-        padding: 5,
-    },
-    progressSection: {
-        backgroundColor: '#fff',
-        padding: 15,
-        borderRadius: 15,
-        marginBottom: 20,
-    },
-    progressHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 10,
-    },
-    progressTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    progressBarContainer: {
-        height: 8,
-        backgroundColor: '#f0f0f0',
-        borderRadius: 4,
-    },
-    progressBar: {
-        height: '100%',
-        backgroundColor: '#ff7a5c',
-        borderRadius: 4,
-    },
-    sectionHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 15,
-    },
-    addButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#fff',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: '#000',
-        shadowColor: '#000',
-        shadowOffset: { width: 2, height: 2 },
-        shadowOpacity: 1,
-        shadowRadius: 0,
-    },
-    taskHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 8,
-    },
-    taskStatus: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    statusDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        marginRight: 6,
-    },
-    statusText: {
-        fontSize: 12,
-        color: '#666',
-    },
-    priorityText: {
-        fontSize: 12,
-        color: '#666',
-        textTransform: 'capitalize',
-    },
-    taskTitle: {
-        fontSize: 16,
-        fontWeight: '500',
-        marginBottom: 8,
-    },
-    taskDueDate: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 8,
-    },
     taskDueDateText: {
         fontSize: 12,
         color: '#666',
         marginTop: 4,
     },
-    assigneeContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    assigneeAvatar: {
-        width: 24,
-        height: 24,
-        borderRadius: 12,
+    
+    // Styles pour l'édition des tâches
+    editTaskIconButton: {
+        padding: 8,
+        borderRadius: 20,
         backgroundColor: '#f0f0f0',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 8,
-    },
-    assigneeInitials: {
-        fontSize: 10,
-        fontWeight: '600',
-        color: '#666',
-    },
-    assigneeName: {
-        fontSize: 12,
-        color: '#666',
-    },
-    taskContent: {
-        flex: 1,
-        marginLeft: 15,
-    },
-    deleteButton: {
-        borderColor: '#ff3b30',
-    },
-    statusBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#4d8efc',
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        borderRadius: 15,
+        marginLeft: 10,
         borderWidth: 1,
-        borderColor: '#000',
+        borderColor: '#ddd',
         shadowColor: '#000',
         shadowOffset: { width: 2, height: 2 },
-        shadowOpacity: 0.25,
+        shadowOpacity: 0.2,
         shadowRadius: 0,
+        elevation: 3,
     },
+    
+    // Styles pour le modal d'ajout de membres
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -1128,26 +985,97 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '600',
     },
-    statusOption: {
+    
+    // Styles pour la liste des membres
+    membersList: {
+        maxHeight: 400,
+        marginBottom: 20,
+    },
+    memberItem: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: 15,
-        borderRadius: 10,
-        marginBottom: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+    },
+    memberItemSelected: {
+        backgroundColor: 'rgba(255, 122, 92, 0.1)',
+    },
+    memberItemInfo: {
+        flex: 1,
+    },
+    memberItemName: {
+        fontSize: 16,
+        fontWeight: '500',
+    },
+    memberItemEmail: {
+        fontSize: 13,
+        color: '#666',
+        marginTop: 2,
+    },
+    
+    // Styles pour les états de chargement et les conteneurs vides
+    loadingContainer: {
+        padding: 30,
+        alignItems: 'center',
+    },
+    loadingText: {
+        marginTop: 10,
+        color: '#666',
+        fontSize: 16,
+    },
+    emptyContainer: {
+        padding: 30,
+        alignItems: 'center',
+    },
+    emptyText: {
+        textAlign: 'center',
+        color: '#666',
+        fontSize: 14,
+        marginTop: 20,
+    },
+    
+    // Styles pour les boutons modaux
+    modalButton: {
+        backgroundColor: '#ff7a5c',
+        borderRadius: 15,
+        padding: 15,
+        alignItems: 'center',
         borderWidth: 1,
         borderColor: '#000',
         shadowColor: '#000',
-        shadowOffset: { width: 2, height: 2 },
-        shadowOpacity: 0.25,
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 1,
         shadowRadius: 0,
-        elevation: 5,
     },
-    statusOptionText: {
-        color: 'white',
+    modalButtonDisabled: {
+        backgroundColor: '#ccc',
+        shadowOffset: { width: 2, height: 2 },
+    },
+    modalButtonText: {
+        color: '#fff',
         fontSize: 16,
-        fontWeight: '500',
-        marginLeft: 10,
+        fontWeight: '600',
     },
+    
+    // Styles pour le bouton retour
+    backButton: {
+        backgroundColor: '#fff',
+        width: 40,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 4, height: 4 },
+        shadowOpacity: 1,
+        shadowRadius: 0,
+        elevation: 8,
+    },
+    
+    // Styles pour le bouton d'ajout de tâche flottant
     addTaskButton: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -1171,22 +1099,8 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         marginLeft: 8,
     },
-    backButton: {
-        backgroundColor: '#fff',
-        width: 40,
-        height: 40,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: '#000',
-        shadowColor: '#000',
-        shadowOffset: { width: 4, height: 4 },
-        shadowOpacity: 1,
-        shadowRadius: 0,
-        elevation: 8,
-    },
-    // Styles pour le modal d'édition
+    
+    // Styles supplémentaires pour l'édition
     editModalContent: {
         backgroundColor: 'white',
         borderRadius: 15,
@@ -1275,18 +1189,38 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '500',
     },
-    // Ajouter ce style pour le bouton d'édition de tâche
-    editTaskIconButton: {
-        padding: 8,
-        borderRadius: 20,
-        backgroundColor: '#f0f0f0',
-        marginLeft: 10,
+    statusOption: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 10,
         borderWidth: 1,
-        borderColor: '#ddd',
+        borderColor: '#000',
         shadowColor: '#000',
         shadowOffset: { width: 2, height: 2 },
-        shadowOpacity: 0.2,
+        shadowOpacity: 0.25,
         shadowRadius: 0,
-        elevation: 3,
+        elevation: 5,
+    },
+    statusOptionText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '500',
+        marginLeft: 10,
+    },
+    statusBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#4d8efc',
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 15,
+        borderWidth: 1,
+        borderColor: '#000',
+        shadowColor: '#000',
+        shadowOffset: { width: 2, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 0,
     },
 });
