@@ -130,13 +130,14 @@ export default function Login() {
 
                         {/* Section du bas */}
                         <View style={styles.bottomSection}>
+                           {/*
                             <View style={styles.divider}>
                                 <View style={styles.dividerLine} />
                                 <Text style={[styles.dividerText, { color: '#888' }]}>{translations.auth.or}</Text>
                                 <View style={styles.dividerLine} />
-                            </View>
+                            </View>*/}
 
-                            <View style={styles.socialButtonsContainer}>
+                           {/* <View style={styles.socialButtonsContainer}>
                                 <TouchableOpacity style={styles.socialButton}>
                                     <Image
                                         source={require('../assets/images/google.png')}
@@ -157,7 +158,7 @@ export default function Login() {
                                         style={styles.socialIcon}
                                     />
                                 </TouchableOpacity>
-                            </View>
+                            </View>*/}
 
                             <View style={styles.signUpContainer}>
                                 <Text style={[styles.signUpText, { color: '#666' }]}>

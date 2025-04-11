@@ -128,13 +128,13 @@ export default function Register() {
                                 </Text>
                             </TouchableOpacity>
 
-                            <View style={styles.divider}>
+                           {/* <View style={styles.divider}>
                                 <View style={styles.dividerLine} />
                                 <Text style={[styles.dividerText, { color: '#888' }]}>{translations.auth.or}</Text>
                                 <View style={styles.dividerLine} />
-                            </View>
+                            </View>*/}
 
-                            <View style={styles.socialButtonsContainer}>
+                           {/* <View style={styles.socialButtonsContainer}>
                                 <TouchableOpacity style={styles.socialButton}>
                                     <Image
                                         source={require('../assets/images/google.png')}
@@ -155,7 +155,7 @@ export default function Register() {
                                         style={styles.socialIcon}
                                     />
                                 </TouchableOpacity>
-                            </View>
+                            </View>*/}
 
                             <View style={styles.loginContainer}>
                                 <Text style={styles.loginText}>
