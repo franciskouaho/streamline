@@ -10,9 +10,9 @@ import ProjectMember from '#models/project_member'
 import { DateTime } from 'luxon'
 
 export default class Tasks {
-  async index({ request, auth, response }: HttpContext) {
+  async index({ params, auth, response }: HttpContext) {
     try {
-      const authorized = request.input('authorized', false)
+      const projectId = params.projectId
 
       // Récupérer d'abord les projets autorisés
       const memberProjectIds = await ProjectMember.query()
@@ -24,10 +24,15 @@ export default class Tasks {
       // Construire la requête de base
       const query = Task.query().where((builder) => {
         builder
-          .where('assignee_id', auth.user!.id) // Tâches assignées à l'utilisateur
-          .orWhere('created_by', auth.user!.id) // Tâches créées par l'utilisateur
-          .orWhereIn('project_id', allowedProjectIds) // Tâches des projets autorisés
+          .where('assignee_id', auth.user!.id)
+          .orWhere('created_by', auth.user!.id)
+          .orWhereIn('project_id', allowedProjectIds)
       })
+
+      // Filtrer par projet si un projectId est fourni
+      if (projectId) {
+        query.where('project_id', projectId)
+      }
 
       const tasks = await query.preload('project')
 
