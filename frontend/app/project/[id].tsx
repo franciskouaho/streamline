@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Modal, Image, ActivityIndicator, FlatList, TextInput, KeyboardAvoidingView, Platform } from "react-native";
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,7 +8,7 @@ import { useProject, useDeleteProject, useUpdateProjectStatus, useRemoveProjectM
 import { useProjectTasks, useUpdateTask } from '@/services/queries/tasks';
 import { useTeamMembers } from '@/services/queries/team';
 import { useQueryClient } from '@tanstack/react-query';
-import { shouldUpdateProjectStatus, getStatusColor, getProjectStatusLabel } from '@/utils/projectUtils';
+import { shouldUpdateProjectStatus } from '@/utils/projectUtils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuthStore } from '@/stores/auth';
 
@@ -454,7 +453,7 @@ export default function ProjectDetails() {
                 <Text style={styles.description}>{project?.description}</Text>
 
                 <View style={styles.tabsContainer}>
-                    <TouchableOpacity
+                   {/* <TouchableOpacity
                         style={[styles.tabButton]}
                         onPress={() => {
                             setActiveTab('attachment');
@@ -464,7 +463,7 @@ export default function ProjectDetails() {
                         <Text style={[styles.tabText]}>
                             Attachment
                         </Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity>*/}
 
                     <TouchableOpacity
                         style={[styles.tabButton, activeTab === 'kanban' && styles.activeTab]}
