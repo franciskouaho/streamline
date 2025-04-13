@@ -2,156 +2,62 @@ import type { HttpContext } from '@adonisjs/core/http'
 import User from '#models/user'
 import ProjectMember from '#models/project_member'
 import TeamInvitation from '#models/team_invitation'
+import Project from '#models/project'
 
 export default class TeamMembersController {
   async index({ auth, response }: HttpContext) {
     try {
       console.log('Fetching team members...')
       console.log('Current user ID:', auth.user!.id)
-      console.log('Current user email:', auth.user!.email)
-
-      // Obtenir toutes les invitations pour les logs de débogage
-      const allInvitations = await TeamInvitation.query()
-        .debug(true)
-        .whereIn('status', ['accepted', 'pending'])
-
-      console.log(
-        'All active invitations in the system:',
-        allInvitations.map((inv) => ({
-          id: inv.id,
-          inviter_id: inv.invitedBy,
-          invitee_email: inv.email,
-          invitee_id: inv.userId,
-          status: inv.status,
-        }))
-      )
 
       // Créer un Map pour éviter les doublons
       const membersMap = new Map<string | number, any>()
 
-      // Récupérer l'utilisateur connecté
-      const currentUser = auth.user!
+      // On ne montre plus l'utilisateur connecté dans la liste
+      // Récupérer uniquement les membres avec qui l'utilisateur a une relation directe
 
-      // Ajouter l'utilisateur connecté comme premier membre de l'équipe
-      membersMap.set(currentUser.id, {
-        id: currentUser.id,
-        fullName: currentUser.fullName || currentUser.email,
-        email: currentUser.email,
-        photoURL: currentUser.avatar,
-        role: currentUser.role || 'admin',
-        status: 'active',
-        projectCount: 0,
-      })
+      // 1. Récupérer les membres des projets où l'utilisateur est propriétaire
+      const ownedProjects = await Project.query()
+        .where('owner_id', auth.user!.id)
+        .preload('members', (query) => {
+          query.preload('user')
+        })
 
-      // CORRECTION CRITIQUE: Traiter les invitations acceptées même si elles n'ont pas d'userId
-      // Pour les invitations où je suis l'inviteur
-      const invitationsICreated = await TeamInvitation.query()
-        .where('invited_by', auth.user!.id)
-        .where('status', 'accepted')
-        .debug(true)
+      // 2. Récupérer les membres des projets où l'utilisateur est membre
+      const projectMemberships = await ProjectMember.query()
+        .where('user_id', auth.user!.id)
+        .select('project_id')
 
-      console.log(`Found ${invitationsICreated.length} accepted invitations that I sent`)
+      const projectIds = projectMemberships.map((m) => m.projectId)
 
-      // Pour chaque invitation acceptée, rechercher l'utilisateur par email
-      for (const invitation of invitationsICreated) {
-        // Si l'userId est défini, utiliser cette valeur
-        if (invitation.userId) {
-          const invitedUser = await User.find(invitation.userId)
-          if (invitedUser && invitedUser.id !== currentUser.id) {
-            console.log(`Adding user from userId: ${invitedUser.email} (ID: ${invitedUser.id})`)
-            membersMap.set(invitedUser.id, {
-              id: invitedUser.id,
-              fullName: invitedUser.fullName || invitedUser.email,
-              email: invitedUser.email,
-              photoURL: invitedUser.avatar,
-              role: invitation.role || 'member',
+      const sharedProjects = await Project.query()
+        .whereIn('id', projectIds)
+        .preload('members', (query) => {
+          query.preload('user')
+        })
+
+      // Ajouter uniquement les membres avec qui l'utilisateur partage des projets
+      const addMemberFromProject = (project: any) => {
+        project.members.forEach((member: any) => {
+          if (member.user && member.user.id !== auth.user!.id) {
+            membersMap.set(member.user.id, {
+              id: member.user.id,
+              fullName: member.user.fullName || member.user.email,
+              email: member.user.email,
+              photoURL: member.user.avatar,
+              role: member.role || 'member',
               status: 'active',
               projectCount: 0,
             })
           }
-        }
-        // Si l'userId n'est pas défini, rechercher par email
-        else {
-          const invitedUser = await User.findBy('email', invitation.email)
-          if (invitedUser && invitedUser.id !== currentUser.id) {
-            console.log(
-              `Adding user from email lookup: ${invitedUser.email} (ID: ${invitedUser.id})`
-            )
-
-            // Mettre à jour l'invitation avec l'ID utilisateur trouvé
-            await invitation.merge({ userId: invitedUser.id }).save()
-
-            membersMap.set(invitedUser.id, {
-              id: invitedUser.id,
-              fullName: invitedUser.fullName || invitedUser.email,
-              email: invitedUser.email,
-              photoURL: invitedUser.avatar,
-              role: invitation.role || 'member',
-              status: 'active',
-              projectCount: 0,
-            })
-          }
-        }
-      }
-
-      // Récupérer l'utilisateur qui a invité l'utilisateur courant
-      const invitationsIAccepted = await TeamInvitation.query()
-        .where('email', auth.user!.email)
-        .where('status', 'accepted')
-        .whereNot('invited_by', auth.user!.id)
-        .debug(true)
-
-      console.log(`Found ${invitationsIAccepted.length} invitations I accepted`)
-
-      // Ajouter ces utilisateurs inviteurs à la liste des membres
-      for (const invitation of invitationsIAccepted) {
-        const inviter = await User.find(invitation.invitedBy)
-        if (inviter && inviter.id !== currentUser.id) {
-          console.log(`Adding user who invited me: ${inviter.email} (ID: ${inviter.id})`)
-          membersMap.set(inviter.id, {
-            id: inviter.id,
-            fullName: inviter.fullName || inviter.email,
-            email: inviter.email,
-            photoURL: inviter.avatar,
-            role: inviter.role || 'admin', // L'inviteur est généralement admin
-            status: 'active',
-            projectCount: 0,
-          })
-        }
-      }
-
-      // Ajouter les invitations en attente que j'ai envoyées
-      const pendingInvitations = await TeamInvitation.query()
-        .where('invited_by', auth.user!.id)
-        .where('status', 'pending')
-        .debug(true)
-
-      console.log(`Found ${pendingInvitations.length} pending invitations I sent`)
-
-      for (const invitation of pendingInvitations) {
-        const tempId = `inv_${invitation.id}`
-        membersMap.set(tempId, {
-          id: tempId,
-          fullName: invitation.name || invitation.email,
-          email: invitation.email,
-          photoURL: null,
-          role: invitation.role,
-          status: 'pending',
-          invitationId: invitation.id,
         })
       }
 
-      // Débogage pour vérifier les membres finaux
-      console.log('Final members map count:', membersMap.size)
-      console.log(
-        'Members to be displayed:',
-        Array.from(membersMap.values()).map((m) => ({
-          id: m.id,
-          name: m.fullName,
-          email: m.email,
-          status: m.status,
-        }))
-      )
+      // Traiter les projets possédés et partagés
+      ownedProjects.forEach(addMemberFromProject)
+      sharedProjects.forEach(addMemberFromProject)
+
+      console.log('Final members map:', membersMap)
 
       return response.ok(Array.from(membersMap.values()))
     } catch (error) {

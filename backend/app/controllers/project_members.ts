@@ -7,14 +7,26 @@ export default class ProjectMembersController {
   /**
    * Liste tous les membres d'un projet
    */
-  async index({ params, response }: HttpContext) {
+  async index({ params, auth, response }: HttpContext) {
     try {
       const projectId = params.projectId
       if (!projectId) {
         return response.badRequest({ message: 'Project ID is required' })
       }
 
-      // Au lieu de récupérer le projet, nous allons simplement l'utiliser dans la requête
+      // Vérifier que l'utilisateur a accès au projet
+      const project = await Project.findOrFail(projectId)
+      const isMember = await ProjectMember.query()
+        .where('project_id', projectId)
+        .where('user_id', auth.user!.id)
+        .first()
+
+      if (project.ownerId !== auth.user!.id && !isMember) {
+        return response.forbidden({
+          message: 'You do not have access to this project',
+        })
+      }
+
       const members = await ProjectMember.query().where('projectId', projectId).preload('user')
 
       return response.ok(members)

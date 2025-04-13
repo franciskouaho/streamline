@@ -9,7 +9,12 @@ export const useTasks = () => {
     queryKey: ['tasks'],
     queryFn: async (): Promise<Task[]> => {
       try {
-        const response = await api.get('/tasks');
+        // Ajouter le paramètre authorized=true pour filtrer côté serveur
+        const response = await api.get('/tasks', {
+          params: {
+            authorized: true
+          }
+        });
         console.log("Tâches récupérées:", response.data.length);
         return response.data;
       } catch (error) {

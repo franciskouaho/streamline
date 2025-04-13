@@ -40,11 +40,37 @@ export const normalizeStatus = (status: string, type: 'project' | 'task' = 'proj
 
 // Fonctions d'aide qui utilisent la fonction centrale normalizeStatus
 export const normalizeProjectStatus = (status: string): string => {
-  return normalizeStatus(status, 'project');
+  const lowerStatus = status?.toLowerCase();
+  
+  // Map des statuts possibles vers leur version normalisée
+  const statusMap: { [key: string]: string } = {
+    'active': 'ongoing',
+    'en cours': 'ongoing',
+    'ongoing': 'ongoing',
+    'in progress': 'in_progress',
+    'in_progress': 'in_progress',
+    'en progression': 'in_progress',
+    'completed': 'completed',
+    'terminé': 'completed',
+    'done': 'completed',
+    'canceled': 'canceled',
+    'annulé': 'canceled',
+    'cancelled': 'canceled'
+  };
+  
+  return statusMap[lowerStatus] || 'ongoing';
 };
 
 export const normalizeTaskStatus = (status: string): string => {
-  return normalizeStatus(status, 'task');
+  const lowerStatus = status?.toLowerCase();
+  
+  if (lowerStatus === 'done' || lowerStatus === 'completed' || lowerStatus === 'terminé') {
+    return 'done';
+  } else if (lowerStatus === 'in_progress' || lowerStatus === 'in progress' || lowerStatus === 'en cours') {
+    return 'in_progress';
+  } else {
+    return 'todo';
+  }
 };
 
 /**

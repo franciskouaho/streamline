@@ -19,151 +19,43 @@ export default class Projects {
 
       let projects: Project[] = []
 
-      // Vérification: est-ce que la table project_members contient des entrées pour cet utilisateur?
-      const allMemberships = await ProjectMember.query().where('user_id', auth.user!.id).exec()
+      // Récupérer d'abord les projets où l'utilisateur est explicitement membre
+      const membershipIds = await ProjectMember.query()
+        .where('user_id', auth.user!.id)
+        .select('project_id')
 
-      console.log(
-        'DEBUG - Tous les memberships pour user',
-        auth.user!.id,
-        ':',
-        allMemberships.length
-      )
-      console.log(
-        'DEBUG - Memberships details:',
-        allMemberships.map((m) => ({
-          id: m.id,
-          projectId: m.projectId,
-          userId: m.userId,
-          role: m.role,
-        }))
-      )
+      const allowedProjectIds = membershipIds.map((m) => m.projectId)
 
       if (filter === 'owned') {
-        // Récupérer les projets possédés par l'utilisateur
+        // Uniquement les projets possédés
         projects = await Project.query().where('owner_id', auth.user!.id)
-        console.log('SQL debug - owned projects:', projects.length)
       } else if (filter === 'member') {
-        // Correction importante: ne pas utiliser .where('user_id', auth.user!.id)
-        // mais plutôt .where('user_id', '=', auth.user!.id) pour être explicite
-        const memberProjectIds = await ProjectMember.query()
-          .select('project_id')
-          .where('user_id', '=', auth.user!.id)
-          .exec()
-
-        console.log('DEBUG - memberProjectIds:', memberProjectIds)
-
-        if (memberProjectIds && memberProjectIds.length > 0) {
-          const projectIds = memberProjectIds.map((m) => m.projectId)
-          console.log('DEBUG - projectIds as member:', projectIds)
-
-          // Récupérer tous les projets, même ceux dont l'utilisateur est propriétaire
-          // (pour éviter de filtrer par erreur)
-          projects = await Project.query().whereIn('id', projectIds)
-
-          // Filtrer après si nécessaire
-          const excludeOwned = request.input('excludeOwned', false) === true
-          if (excludeOwned) {
-            projects = projects.filter((p) => p.ownerId !== auth.user!.id)
-          }
+        // Uniquement les projets où l'utilisateur est membre
+        if (allowedProjectIds.length > 0) {
+          projects = await Project.query().whereIn('id', allowedProjectIds)
         }
-
-        console.log('SQL debug - member projects:', projects.length)
       } else {
-        // filter === 'all'
-        // 1. Récupérer tous les projets possédés
-        const ownedProjects = await Project.query().where('owner_id', auth.user!.id)
-        console.log('DEBUG - Owned projects count:', ownedProjects.length)
-        console.log(
-          'DEBUG - Owned projects:',
-          ownedProjects.map((p) => p.id)
-        )
-
-        // 2. Récupérer tous les IDs des projets où l'utilisateur est membre
-        const memberProjectIds = await ProjectMember.query()
-          .select('project_id')
-          .where('user_id', '=', auth.user!.id)
-          .exec()
-
-        console.log(
-          'DEBUG - Member project IDs:',
-          memberProjectIds.map((m) => m.projectId)
-        )
-
-        // 3. Récupérer ces projets
-        let memberProjects: Project[] = []
-        if (memberProjectIds && memberProjectIds.length > 0) {
-          const projectIds = memberProjectIds.map((m) => m.projectId)
-
-          memberProjects = await Project.query().whereIn('id', projectIds)
-
-          console.log('DEBUG - Member projects after query:', memberProjects.length)
-          console.log(
-            'DEBUG - Member projects IDs:',
-            memberProjects.map((p) => p.id)
-          )
-        }
-
-        // 4. Combiner sans doublons (basé sur l'ID)
-        const projectMap = new Map()
-
-        // Ajouter les projets possédés
-        ownedProjects.forEach((project) => {
-          projectMap.set(project.id, project)
+        // Combiner les projets possédés et ceux où l'utilisateur est membre
+        projects = await Project.query().where((query) => {
+          query.where('owner_id', auth.user!.id).orWhereIn('id', allowedProjectIds)
         })
-
-        // Ajouter les projets où l'utilisateur est membre
-        memberProjects.forEach((project) => {
-          if (!projectMap.has(project.id)) {
-            projectMap.set(project.id, project)
-          }
-        })
-
-        // Convertir la Map en tableau
-        projects = Array.from(projectMap.values())
-
-        console.log(
-          `SQL debug - all projects: ${projects.length} (owned: ${ownedProjects.length}, member: ${memberProjects.length})`
-        )
       }
-
-      // Vérifier que nous avons des projets à retourner
-      console.log(
-        'Projects before loading relations:',
-        projects.map((p) => ({ id: p.id, name: p.name, ownerId: p.ownerId }))
-      )
 
       // Charger les relations pour les projets trouvés
       for (const project of projects) {
         await project.load('owner')
         await project.load('members', (query) => {
-          // Éviter de charger user, mais récupérer les données nécessaires
           query.select(['id', 'project_id', 'user_id', 'role'])
         })
         await project.load('tasks')
       }
 
-      // Enrichir les projets avec des informations supplémentaires
-      const enrichedProjects = projects.map((project) => {
-        // Vérifier si l'utilisateur est membre de ce projet
-        const isMember = project.members.some((member) => {
-          console.log(
-            `DEBUG - Checking member in project ${project.id}:`,
-            member.userId,
-            '=?=',
-            auth.user!.id
-          )
-          return member.userId === auth.user!.id
-        })
+      // Vérification de sécurité supplémentaire
+      const filteredProjects = projects.filter(
+        (project) => project.ownerId === auth.user!.id || allowedProjectIds.includes(project.id)
+      )
 
-        return {
-          ...project.serialize(),
-          userRole: project.ownerId === auth.user!.id ? 'owner' : 'member',
-          isOwner: project.ownerId === auth.user!.id,
-          isMember: isMember || project.ownerId === auth.user!.id,
-        }
-      })
-
-      return response.ok(enrichedProjects)
+      return response.ok(filteredProjects)
     } catch (error) {
       console.error('Error fetching projects:', error)
       return response.internalServerError({
@@ -255,7 +147,6 @@ export default class Projects {
                 userId: Number(memberId),
                 type: 'project_invitation',
                 data: {
-                  // Conversion explicite en JSON pour éviter l'erreur de typage
                   projectId: String(project.id),
                   projectName: project.name,
                   inviterName: auth.user.fullName || auth.user.email,

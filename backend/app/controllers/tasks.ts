@@ -6,21 +6,40 @@ import {
   UpdateTaskData,
 } from '#validators/task'
 import Task from '#models/task'
+import ProjectMember from '#models/project_member'
 import { DateTime } from 'luxon'
 
 export default class Tasks {
-  async index({ request, response }: HttpContext) {
+  async index({ request, auth, response }: HttpContext) {
     try {
-      const { projectId } = request.qs() as { projectId?: number }
-      const query = Task.query().preload('assignee').orderBy('createdAt', 'desc')
+      const authorized = request.input('authorized', false)
 
-      if (projectId) {
-        query.where('projectId', projectId)
-      }
+      // Récupérer d'abord les projets autorisés
+      const memberProjectIds = await ProjectMember.query()
+        .where('user_id', auth.user!.id)
+        .select('project_id')
 
-      const tasks = await query
-      console.log('Tasks found:', tasks.length)
-      return response.ok(tasks)
+      const allowedProjectIds = memberProjectIds.map((m) => m.projectId)
+
+      // Construire la requête de base
+      const query = Task.query().where((builder) => {
+        builder
+          .where('assignee_id', auth.user!.id) // Tâches assignées à l'utilisateur
+          .orWhere('created_by', auth.user!.id) // Tâches créées par l'utilisateur
+          .orWhereIn('project_id', allowedProjectIds) // Tâches des projets autorisés
+      })
+
+      const tasks = await query.preload('project')
+
+      // Vérification supplémentaire
+      const filteredTasks = tasks.filter((task) => {
+        if (task.assigneeId === auth.user!.id) return true
+        if (task.createdBy === auth.user!.id) return true
+        if (task.projectId && allowedProjectIds.includes(task.projectId)) return true
+        return false
+      })
+
+      return response.ok(filteredTasks)
     } catch (error) {
       console.error('Error fetching tasks:', error)
       return response.internalServerError({
