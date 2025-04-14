@@ -223,6 +223,53 @@ export const calculateProjectStats = (projects: Project[]): ProjectStats => {
 };
 
 /**
+ * Calcule les statistiques des tâches d'un projet
+ * @param tasks Tableau des tâches du projet
+ * @returns Statistiques (todo, inProgress, done, total)
+ */
+export const calculateTaskStats = (tasks: Task[]) => {
+  if (!tasks || !Array.isArray(tasks)) {
+    return { todo: 0, inProgress: 0, done: 0, total: 0 };
+  }
+
+  return tasks.reduce((stats, task) => {
+    // Utiliser la fonction centralisée pour normaliser le statut
+    const normalizedStatus = normalizeTaskStatus(task.status);
+    
+    if (normalizedStatus === 'done') {
+      stats.done += 1;
+    } else if (normalizedStatus === 'in_progress') {
+      stats.inProgress += 1;
+    } else {
+      stats.todo += 1;
+    }
+    
+    stats.total += 1;
+    return stats;
+  }, { todo: 0, inProgress: 0, done: 0, total: 0 });
+};
+
+/**
+ * Calcule le pourcentage de progression d'un projet
+ * @param project Le projet ou ses statistiques
+ * @returns Pourcentage de complétion (0-100)
+ */
+export const calculateProgress = (project: Project | ProjectStats): number => {
+  // Si nous avons un projet complet, on peut calculer à partir des tâches
+  if ('tasks' in project && project.tasks && project.tasks.length > 0) {
+    const stats = calculateTaskStats(project.tasks);
+    return stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0;
+  }
+  
+  // Si nous avons seulement les stats
+  if ('totalTasks' in project && project.totalTasks > 0) {
+    return Math.round((project.completedTasks / project.totalTasks) * 100);
+  }
+  
+  return 0;
+};
+
+/**
  * Calcule le pourcentage de progression d'un projet et son statut recommandé
  */
 export const calculateProjectProgress = (project: Project): { progress: number; recommendedStatus?: string } => {
@@ -263,15 +310,35 @@ export const shouldUpdateProjectStatus = (project: Project, tasks: Task[]): {
   }
   
   // Calculer la progression
-  const { progress, recommendedStatus } = calculateProjectProgress(project);
-  
-  // Vérifier si le statut actuel est différent du statut recommandé
+  const stats = calculateTaskStats(tasks);
+  const progress = calculateProgress({ tasks });
   const currentStatus = normalizeProjectStatus(project.status);
   
+  // Déterminer le nouveau statut en fonction des statistiques
+  let newStatus = currentStatus;
+  
+  // Si toutes les tâches sont terminées, le projet doit être marqué comme terminé
+  if (stats.done === stats.total && stats.total > 0) {
+    newStatus = 'completed';
+  } 
+  // Si le projet est marqué comme terminé mais qu'il reste des tâches non terminées
+  else if (currentStatus === 'completed' && stats.done < stats.total) {
+    newStatus = 'in_progress';
+  }
+  // Si aucune tâche n'est commencée, statut "ongoing"
+  else if (stats.inProgress === 0 && stats.done === 0) {
+    newStatus = 'ongoing';
+  }
+  // Si des tâches sont en cours, statut "in_progress"
+  else if (stats.inProgress > 0 || (stats.done > 0 && stats.done < stats.total)) {
+    newStatus = 'in_progress';
+  }
+  
+  // Ne mettre à jour que si le statut a changé
   return { 
-    shouldUpdate: currentStatus !== recommendedStatus,
-    newStatus: recommendedStatus,
-    progress
+    shouldUpdate: newStatus !== currentStatus, 
+    newStatus, 
+    progress 
   };
 };
 
@@ -296,6 +363,27 @@ export const formatDueDate = (dateString: string, translations?: any): string =>
   } catch (error) {
     console.error("Erreur lors du formatage de la date:", error);
     return translations?.utils?.project?.dates?.invalidDate || 'Date invalide';
+  }
+};
+
+/**
+ * Formatte une date d'échéance pour l'affichage
+ * @param date Date à formater
+ * @returns Date formatée
+ */
+export const formatDeadline = (date: string | Date): string => {
+  if (!date) return 'Non définie';
+  
+  try {
+    const deadlineDate = typeof date === 'string' ? new Date(date) : date;
+    return deadlineDate.toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Date invalide';
   }
 };
 

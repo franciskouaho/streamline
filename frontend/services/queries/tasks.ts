@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Task, SubTask } from '@/types/task';
+import { Task, SubTask, TaskStatusUpdateInput } from '@/types/task';
 import api from '@/services/api';
 import { normalizeTaskStatus } from '@/utils/projectUtils'; // Importer la fonction de normalisation
 
@@ -30,8 +30,24 @@ export const useProjectTasks = (projectId: string | number) => {
   return useQuery({
     queryKey: ['tasks', 'project', projectId],
     queryFn: async (): Promise<Task[]> => {
-      const response = await api.get(`/tasks?projectId=${projectId}`);
-      return response.data;
+      if (!projectId) return [];
+      try {
+        // Assurez-vous d'utiliser le paramètre de requête correct pour filtrer par projectId
+        const response = await api.get(`/tasks?projectId=${projectId}`);
+        console.log(`Tâches récupérées pour le projet ${projectId}:`, response.data.length);
+        // Vérifier que les tâches appartiennent bien au projet
+        const filteredTasks = response.data.filter((task: Task) => {
+          if (task.projectId !== Number(projectId)) {
+            console.warn(`Tâche ${task.id} avec projectId ${task.projectId} ne correspond pas au projet ${projectId}`);
+            return false;
+          }
+          return true;
+        });
+        return filteredTasks;
+      } catch (error) {
+        console.error(`Erreur lors de la récupération des tâches du projet ${projectId}:`, error);
+        return [];
+      }
     },
     enabled: !!projectId
   });
@@ -138,6 +154,7 @@ export const useUpdateTask = () => {
   
   return useMutation({
     mutationFn: async ({ id, ...data }: TaskStatusUpdateInput) => {
+      console.log(`Mise à jour de la tâche ${id} avec les données:`, data);
       const response = await api.put(`/tasks/${id}`, data);
       return response.data;
     },

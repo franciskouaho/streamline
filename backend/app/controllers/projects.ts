@@ -91,6 +91,19 @@ export default class Projects {
 
       await project.load('tasks')
 
+      // Définir une interface pour le type du membre projeté
+      interface SerializedMember {
+        id: number
+        userId: number
+        user?: {
+          id: number
+          fullName: string
+          email: string
+          avatar?: string
+        }
+        role: string
+      }
+
       // Transformer les données pour inclure les informations de l'utilisateur dans chaque membre
       const serializedProject = project.serialize()
       serializedProject.members = serializedProject.members.map((member: SerializedMember) => {

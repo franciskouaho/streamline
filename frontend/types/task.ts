@@ -43,9 +43,12 @@ export interface TaskCreateInput {
 }
 
 export interface TaskStatusUpdateInput {
-  id: number | string;  // Modifier pour accepter à la fois number et string
-  status: string;
+  id: number;
+  title?: string;
+  description?: string;
+  status?: string;
   priority?: string;
   dueDate?: string;
-  assigneeId?: number;
+  projectId?: number | null;
+  assigneeId?: number | null;
 }

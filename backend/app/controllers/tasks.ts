@@ -6,45 +6,36 @@ import {
   UpdateTaskData,
 } from '#validators/task'
 import Task from '#models/task'
-import ProjectMember from '#models/project_member'
 import { DateTime } from 'luxon'
 
 export default class Tasks {
-  async index({ params, auth, response }: HttpContext) {
+  async index({ request, response }: HttpContext) {
     try {
-      const projectId = params.projectId
+      const { projectId } = request.qs() as { projectId?: number | string }
+      console.log('Requête des tâches avec projectId:', projectId)
 
-      // Récupérer d'abord les projets autorisés
-      const memberProjectIds = await ProjectMember.query()
-        .where('user_id', auth.user!.id)
-        .select('project_id')
+      const query = Task.query().preload('assignee').orderBy('createdAt', 'desc')
 
-      const allowedProjectIds = memberProjectIds.map((m) => m.projectId)
+      if (projectId !== undefined && projectId !== null) {
+        // Convertir explicitement en nombre pour éviter des problèmes de typage
+        const numericProjectId = Number(projectId)
+        console.log('Filtrage des tâches pour le projet:', numericProjectId)
 
-      // Construire la requête de base
-      const query = Task.query().where((builder) => {
-        builder
-          .where('assignee_id', auth.user!.id)
-          .orWhere('created_by', auth.user!.id)
-          .orWhereIn('project_id', allowedProjectIds)
-      })
-
-      // Filtrer par projet si un projectId est fourni
-      if (projectId) {
-        query.where('project_id', projectId)
+        if (!isNaN(numericProjectId)) {
+          query.where('projectId', numericProjectId)
+        } else {
+          console.warn('ProjectId invalide fourni:', projectId)
+        }
       }
 
-      const tasks = await query.preload('project')
-
-      // Vérification supplémentaire
-      const filteredTasks = tasks.filter((task) => {
-        if (task.assigneeId === auth.user!.id) return true
-        if (task.createdBy === auth.user!.id) return true
-        if (task.projectId && allowedProjectIds.includes(task.projectId)) return true
-        return false
-      })
-
-      return response.ok(filteredTasks)
+      const tasks = await query
+      console.log(
+        'Tasks found:',
+        tasks.length,
+        'avec les projectId:',
+        tasks.map((t) => t.projectId)
+      )
+      return response.ok(tasks)
     } catch (error) {
       console.error('Error fetching tasks:', error)
       return response.internalServerError({
