@@ -11,17 +11,6 @@ import ProjectMember from '#models/project_member'
 import Notification from '#models/notification'
 import User from '#models/user'
 
-interface SerializedMember {
-  id: number
-  userId: number
-  user?: {
-    fullName: string
-    email: string
-    avatar: string | null
-  }
-  role: string
-}
-
 export default class Projects {
   async index({ request, auth, response }: HttpContext) {
     try {
