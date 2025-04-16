@@ -18,7 +18,6 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTask, useUpdateTask } from "@/services/queries/tasks";
 import { useProjects } from "@/services/queries/projects";
-import { getStatusColor } from "@/utils/projectUtils";
 
 export default function EditTask() {
   const router = useRouter();
@@ -203,7 +202,7 @@ export default function EditTask() {
                   display={Platform.OS === "ios" ? "spinner" : "default"}
                   onChange={onDateChange}
                   style={styles.datePicker}
-                  textColor="#000000" // Ajouter une couleur de texte noire
+                  textColor="#000000"
                 />
               )}
             </View>

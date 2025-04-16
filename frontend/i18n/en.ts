@@ -89,6 +89,7 @@ export default {
     todo: "To Do",
     done: "Done",
     in_progress: "In Progress",
+    updateSuccess: "Task updated successfully",
     categories: {
       design: "Design",
       development: "Development",
