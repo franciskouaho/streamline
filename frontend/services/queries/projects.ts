@@ -38,16 +38,16 @@ export const useCreateProject = () => {
   return useMutation({
     mutationFn: async (projectData: Partial<Project>) => {
       try {
+        // Formater les données avant l'envoi
         const formattedData = {
           ...projectData,
-          settings: {},
-          tags: projectData.tags ? 
-            projectData.tags.map(tag => ({
-              name: tag.name,
-              color: tag.color,
-              icon: tag.icon || 'pricetag'
-            })) : 
-            undefined
+          settings: '{}', // String JSON vide
+          // S'assurer que les tags sont envoyés comme un tableau d'objets
+          tags: projectData.tags ? projectData.tags.map(tag => ({
+            name: tag.name,
+            color: tag.color,
+            icon: tag.icon
+          })) : null
         };
         
         console.log('Formatted project data:', formattedData);

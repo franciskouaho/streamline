@@ -123,6 +123,7 @@ export default class Projects {
     try {
       const data = await request.validateUsing(createProjectValidator)
 
+      // Assurons-nous que les tags sont au bon format JSON
       const projectData: Partial<Project> = {
         name: data.name,
         description: data.description || null,
@@ -130,12 +131,15 @@ export default class Projects {
         ownerId: auth.user!.id,
         startDate: data.startDate ? DateTime.fromISO(data.startDate) : null,
         endDate: data.endDate ? DateTime.fromISO(data.endDate) : null,
-        tags: data.tags ? JSON.parse(JSON.stringify(data.tags)) : null,
-        settings: {},
+        settings: '{}', // String JSON vide par défaut
+      }
+
+      // Si des tags sont fournis, les convertir en JSON valide
+      if (data.tags) {
+        projectData.tags = JSON.stringify(data.tags)
       }
 
       const project = await Project.create(projectData)
-
       return response.created(project)
     } catch (error) {
       console.error('Project creation error:', error)
@@ -151,7 +155,6 @@ export default class Projects {
       const project = await Project.findOrFail(params.id)
       const data = (await request.validateUsing(updateProjectValidator)) as UpdateProjectData
 
-      // Préparer les données à mettre à jour (avec typage partiel)
       const updateData: Partial<Project> = {}
 
       // Copier les propriétés simples
@@ -160,7 +163,7 @@ export default class Projects {
       if (data.status !== undefined) updateData.status = data.status
       if (data.image !== undefined) updateData.image = data.image
 
-      // Convertir les dates si elles sont présentes
+      // Gérer les dates
       if (data.startDate) {
         updateData.startDate = DateTime.fromISO(data.startDate)
       } else if (data.startDate === null) {
@@ -173,12 +176,11 @@ export default class Projects {
         updateData.endDate = null
       }
 
-      // Ajouter la mise à jour des tags
+      // Gérer les tags correctement
       if (data.tags !== undefined) {
-        updateData.tags = data.tags ? JSON.parse(JSON.stringify(data.tags)) : null
+        updateData.tags = JSON.stringify(data.tags)
       }
 
-      // Merger les données avec le projet
       await project.merge(updateData).save()
       return response.ok(project)
     } catch (error) {
