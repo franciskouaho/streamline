@@ -10,6 +10,7 @@ import { useProjectTasks, useUpdateTask } from '@/services/queries/tasks';
 import { useQueryClient } from '@tanstack/react-query';
 import { getProjectStatusLabel, normalizeProjectStatus, shouldUpdateProjectStatus, getStatusColor, calculateProjectProgress } from '@/utils/projectUtils';
 import { useLanguage } from '@/contexts/LanguageContext';
+import ProjectTagDisplay from '@/components/ProjectTagDisplay';
 
 interface ChecklistItem {
     id: number;
@@ -375,6 +376,14 @@ export default function ProjectDetails() {
 
             <ScrollView style={styles.content}>
                 <Text style={styles.description}>{project?.description}</Text>
+
+                {/* Section des tags */}
+                {project.tags && project.tags.length > 0 && (
+                    <View style={styles.tagsSection}>
+                        <Text style={styles.sectionTitle}>{translations.tags.name}</Text>
+                        <ProjectTagDisplay tags={project.tags} size="large" />
+                    </View>
+                )}
 
                 <View style={styles.tabsContainer}>
                     <TouchableOpacity
@@ -1246,5 +1255,8 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.2,
         shadowRadius: 0,
         elevation: 3,
+    },
+    tagsSection: {
+        marginBottom: 20,
     },
 });

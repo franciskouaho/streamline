@@ -34,6 +34,9 @@ export default class Project extends BaseModel {
   @column()
   declare settings: JSON | null
 
+  @column()
+  declare tags: JSON[] | null
+
   @column.dateTime({ autoCreate: true, columnName: 'created_at' })
   declare createdAt: DateTime
 

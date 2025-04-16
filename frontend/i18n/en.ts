@@ -399,5 +399,31 @@ export default {
       },
       statusRecommended: "Recommended status: {status}"
     }
+  },
+  tags: {
+    name: "Name",
+    color: "Color",
+    icon: "Icon",
+    namePlaceholder: "Enter tag name",
+    createTag: "Create tag",
+    manageTags: "Manage tags",
+    noTags: "No tags found",
+    selectTags: "Select tags",
+    quickCreate: "Quick tag creation",
+    addTag: "Add tag",
+    removeTag: "Remove tag",
+    errors: {
+      nameRequired: "Tag name is required",
+      createFailed: "Unable to create tag",
+      deleteFailed: "Unable to delete tag"
+    },
+    alerts: {
+      confirmDelete: "Confirm deletion",
+      deleteMessage: "Are you sure you want to delete this tag?",
+      createSuccess: "Success",
+      tagCreated: "Tag created successfully",
+      deleteSuccess: "Success",
+      tagDeleted: "Tag deleted successfully"
+    }
   }
 };

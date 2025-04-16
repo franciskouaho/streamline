@@ -11,6 +11,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { shouldUpdateProjectStatus } from '@/utils/projectUtils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuthStore } from '@/stores/auth';
+import ProjectTagDisplay from '@/components/ui/ProjectTagDisplay';
+import { Tag } from "@/types/tag";
 
 interface ProjectMember {
     id: number;
@@ -50,6 +52,7 @@ interface Project {
     endDate?: string;
     members?: ProjectMember[];
     tasks?: ProjectTask[];
+    tags?: Tag[];
 }
 
 interface TaskStatusUpdateInput {
@@ -342,7 +345,7 @@ export default function ProjectDetails() {
         }
     };
 
-    const handleProjectDateChange = (event, selectedDate, dateType) => {
+    const handleProjectDateChange = (event: any, selectedDate: Date | undefined, dateType: 'start' | 'end') => {
         if (Platform.OS === 'android') {
             setEditProjectData({
                 ...editProjectData,
@@ -452,19 +455,15 @@ export default function ProjectDetails() {
             <ScrollView style={styles.content}>
                 <Text style={styles.description}>{project?.description}</Text>
 
-                <View style={styles.tabsContainer}>
-                   {/* <TouchableOpacity
-                        style={[styles.tabButton]}
-                        onPress={() => {
-                            setActiveTab('attachment');
-                            router.push(`/project/docs/${projectId}`);
-                        }}
-                    >
-                        <Text style={[styles.tabText]}>
-                            Attachment
-                        </Text>
-                    </TouchableOpacity>*/}
+                {/* Section des tags */}
+                {project.tags && project.tags.length > 0 && (
+                    <View style={styles.tagsSection}>
+                        <Text style={styles.sectionTitle}>{translations.tags.name}</Text>
+                        <ProjectTagDisplay tags={project.tags} size="large" />
+                    </View>
+                )}
 
+                <View style={styles.tabsContainer}>
                     <TouchableOpacity
                         style={[styles.tabButton, activeTab === 'kanban' && styles.activeTab]}
                         onPress={() => {
@@ -520,8 +519,8 @@ export default function ProjectDetails() {
                                                 <Ionicons name="close-circle" size={20} color="#FF3B30" />
                                             </TouchableOpacity>
                                         </View>
-                                    )}
-                                )}
+                                    );
+                                })}
                                 <TouchableOpacity
                                     style={styles.addMemberButton}
                                     onPress={openAddMemberModal}
@@ -538,7 +537,6 @@ export default function ProjectDetails() {
                             <Text style={styles.progressLabel}>{translations.projects.progress}</Text>
                         </View>
                     </View>
-
                     <View style={styles.deadlineContainer}>
                         <Ionicons name="alarm-outline" size={20} color="#000" />
                         <Text style={styles.deadlineText}>
@@ -1196,5 +1194,28 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 2, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 0,
+    },
+    tagsSection: {
+        marginBottom: 20,
+    },
+    tagsContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    tagChip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        borderRadius: 12,
+        borderWidth: 1,
+    },
+    tagText: {
+        fontSize: 14,
+        fontWeight: '500',
+    },
+    tagIcon: {
+        marginRight: 6,
     },
 });

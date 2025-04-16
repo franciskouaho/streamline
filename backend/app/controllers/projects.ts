@@ -121,63 +121,20 @@ export default class Projects {
 
   async store({ request, auth, response }: HttpContext) {
     try {
-      const data = (await request.validateUsing(createProjectValidator)) as CreateProjectData
-      console.log('Received project data:', data)
-
-      if (!auth.user) {
-        return response.unauthorized('User not authenticated')
-      }
+      const data = await request.validateUsing(createProjectValidator)
 
       const projectData: Partial<Project> = {
         name: data.name,
         description: data.description || null,
         status: data.status || 'active',
-        ownerId: auth.user.id,
+        ownerId: auth.user!.id,
         startDate: data.startDate ? DateTime.fromISO(data.startDate) : null,
         endDate: data.endDate ? DateTime.fromISO(data.endDate) : null,
-        settings: null,
+        tags: data.tags ? JSON.parse(JSON.stringify(data.tags)) : null,
+        settings: {},
       }
 
-      console.log('Creating project with:', projectData)
       const project = await Project.create(projectData)
-
-      // Ajouter les membres sélectionnés au projet
-      if (data.members && Array.isArray(data.members) && data.members.length > 0) {
-        for (const memberId of data.members) {
-          try {
-            // Vérifier si le membre existe
-            const member = await User.find(memberId)
-            if (member) {
-              // Créer le lien membre-projet
-              await ProjectMember.create({
-                projectId: project.id,
-                userId: Number(memberId),
-                role: 'member',
-              })
-
-              // Créer la notification
-              await Notification.create({
-                userId: Number(memberId),
-                type: 'project_invitation',
-                data: {
-                  projectId: String(project.id),
-                  projectName: project.name,
-                  inviterName: auth.user.fullName || auth.user.email,
-                } as unknown as JSON,
-                read: false,
-                relatedType: 'project',
-                relatedId: project.id,
-              })
-            }
-          } catch (memberError) {
-            console.error(`Error adding member ${memberId}:`, memberError)
-          }
-        }
-      }
-
-      // Actualiser le projet avec les relations
-      await project.refresh()
-      await project.load('members')
 
       return response.created(project)
     } catch (error) {
@@ -214,6 +171,11 @@ export default class Projects {
         updateData.endDate = DateTime.fromISO(data.endDate)
       } else if (data.endDate === null) {
         updateData.endDate = null
+      }
+
+      // Ajouter la mise à jour des tags
+      if (data.tags !== undefined) {
+        updateData.tags = data.tags ? JSON.parse(JSON.stringify(data.tags)) : null
       }
 
       // Merger les données avec le projet

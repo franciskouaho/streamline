@@ -1,4 +1,5 @@
 import { TaskStatusUpdateInput as TaskStatusUpdate } from './task';  // Importer depuis task.ts
+import { Tag } from './tag';
 
 export interface ProjectData {
     id: number;
@@ -46,31 +47,40 @@ export interface UpdateProjectInput extends Partial<CreateProjectInput> {}
 
 export interface ProjectMember {
   id: number;
-  userId?: number;
-  projectId?: number;
-  role?: string;
-  fullName?: string;
+  userId: number;
+  fullName: string;
   email?: string;
   photoURL?: string;
+  role?: string;
+  projectId?: number;
 }
 
 export interface Project {
-  id: number;
+  id: number | string;
   name: string;
   description?: string;
   status: string;
   startDate?: string;
   endDate?: string;
+  members?: Array<{ id: number | string; name: string; }>;
+  tasks?: Array<{ id: number | string; status: string; }>;
+  role?: 'owner' | 'member';
+  isInvitation?: boolean;
   createdAt?: string;
-  updatedAt?: string;
-  members?: Array<{
-    id: number;
-    fullName?: string;
-    email?: string;
-    photoURL?: string;
-  }>;
-  tasks?: Task[];
-  userRole: 'owner' | 'member';
+  progressPercentage?: number;
+  tags?: Tag[]; // Ajout des tags
+}
+
+export interface ProjectTask {
+  id: number | string;
+  title: string;
+  description?: string;
+  status: string;
+  priority?: string;
+  dueDate?: string;
+  assigneeId?: number;
+  projectId?: number | string;
+  tags?: Tag[]; // Ajout des tags aux tâches également
 }
 
 export interface TaskCreateInput {
@@ -134,4 +144,5 @@ export interface Task {
   projectId: number | string;
   createdAt?: string;
   updatedAt?: string;
+  tags?: Tag[];
 }

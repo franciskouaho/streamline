@@ -1,6 +1,7 @@
 import { Project, ProjectStats } from '@/types/project';
 import { Task } from '@/types/task';
 import { STATUS_COLORS } from '@/constants/StatusColors';
+import { formatDate } from './dateUtils';
 
 /**
  * GESTION DES STATUTS - NORMALISATION ET LABELS
@@ -13,11 +14,8 @@ import { STATUS_COLORS } from '@/constants/StatusColors';
  * @returns Le statut normalisé
  */
 export const normalizeStatus = (status: string, type: 'project' | 'task' = 'project'): string => {
-  if (!status) return type === 'project' ? 'ongoing' : 'todo';
+  const normalized = status?.toLowerCase().trim() || '';
   
-  const normalized = status.toLowerCase().trim();
-  
-  // Statuts communs
   if (['completed', 'terminé', 'termine', 'done', 'terminés', 'terminée'].includes(normalized)) {
     return type === 'project' ? 'completed' : 'done';
   } else if (['ongoing', 'en cours', 'in_progress', 'in progress', 'progression'].includes(normalized)) {
@@ -40,25 +38,27 @@ export const normalizeStatus = (status: string, type: 'project' | 'task' = 'proj
 
 // Fonctions d'aide qui utilisent la fonction centrale normalizeStatus
 export const normalizeProjectStatus = (status: string): string => {
-  const lowerStatus = status?.toLowerCase();
+  if (!status) return 'pending';
+  const normalized = status.toLowerCase().trim();
   
-  // Map des statuts possibles vers leur version normalisée
-  const statusMap: { [key: string]: string } = {
-    'active': 'ongoing',
-    'en cours': 'ongoing',
-    'ongoing': 'ongoing',
-    'in progress': 'in_progress',
-    'in_progress': 'in_progress',
-    'en progression': 'in_progress',
-    'completed': 'completed',
-    'terminé': 'completed',
-    'done': 'completed',
-    'canceled': 'canceled',
-    'annulé': 'canceled',
-    'cancelled': 'canceled'
-  };
-  
-  return statusMap[lowerStatus] || 'ongoing';
+  switch (normalized) {
+    case 'done':
+    case 'terminé':
+    case 'completed':
+      return 'completed';
+    case 'in progress':
+    case 'in_progress':
+    case 'en cours':
+      return 'in_progress';
+    case 'ongoing':
+    case 'en progression':
+      return 'ongoing';
+    case 'canceled':
+    case 'annulé':
+      return 'canceled';
+    default:
+      return 'pending';
+  }
 };
 
 export const normalizeTaskStatus = (status: string): string => {
@@ -100,27 +100,19 @@ export const getStatusLabel = (status: string, type: 'project' | 'task' = 'proje
 };
 
 // Fonction d'aide qui utilise la fonction centrale getStatusLabel
-export function getProjectStatusLabel(status: string, translations?: any): string {
-  const statusKey = normalizeProjectStatus(status);
-  
-  if (translations && translations.projects && translations.projects.status) {
-    return translations.projects.status[statusKey] || statusKey;
-  }
-  
-  // Fallback sans traductions
-  switch (statusKey) {
-    case 'ongoing':
-      return 'En cours';
-    case 'in_progress':
-      return 'En progression';
+export function getProjectStatusLabel(status: string): string {
+  const normalized = normalizeProjectStatus(status);
+  switch (normalized) {
     case 'completed':
       return 'Terminé';
+    case 'in_progress':
+      return 'En cours';
+    case 'ongoing':
+      return 'En progression';
     case 'canceled':
       return 'Annulé';
-    case 'active':
-      return 'Actif';
     default:
-      return status;
+      return 'En attente';
   }
 }
 
@@ -154,24 +146,19 @@ export const getTaskStatusLabel = (status: string, translations?: any): string =
  * @param type Le type d'objet ('project' ou 'task')
  * @returns La couleur correspondante au statut
  */
-export const getStatusColor = (status: string, type: 'project' | 'task' = 'project'): string => {
-  const normalized = normalizeStatus(status, type);
-  
-  // Retourne les couleurs selon le statut normalisé
-  switch (normalized) {
+export const getStatusColor = (status: string): string => {
+  const normalizedStatus = normalizeProjectStatus(status);
+  switch (normalizedStatus) {
     case 'completed':
-    case 'done':
-      return STATUS_COLORS.COMPLETED;
+      return '#43d2c3';
     case 'in_progress':
-      return STATUS_COLORS.IN_PROGRESS;
+      return '#ffb443';
     case 'ongoing':
-      return STATUS_COLORS.ONGOING;
+      return '#4d8efc';
     case 'canceled':
-      return STATUS_COLORS.CANCELED;
-    case 'todo':
-      return STATUS_COLORS.TODO;
+      return '#ff3b30';
     default:
-      return STATUS_COLORS.DEFAULT;
+      return '#888';
   }
 };
 
@@ -343,86 +330,6 @@ export const shouldUpdateProjectStatus = (project: Project, tasks: Task[]): {
 };
 
 /**
- * UTILITAIRES DE DATE
- */
-
-/**
- * Formate la date d'échéance pour l'affichage
- */
-export const formatDueDate = (dateString: string, translations?: any): string => {
-  if (!dateString) {
-    return translations?.utils?.project?.deadlineNotDefined || 'Non définie';
-  }
-  
-  try {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
-  } catch (error) {
-    console.error("Erreur lors du formatage de la date:", error);
-    return translations?.utils?.project?.dates?.invalidDate || 'Date invalide';
-  }
-};
-
-/**
- * Formatte une date d'échéance pour l'affichage
- * @param date Date à formater
- * @returns Date formatée
- */
-export const formatDeadline = (date: string | Date): string => {
-  if (!date) return 'Non définie';
-  
-  try {
-    const deadlineDate = typeof date === 'string' ? new Date(date) : date;
-    return deadlineDate.toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return 'Date invalide';
-  }
-};
-
-/**
- * Normalise une date en format YYYY-MM-DD
- */
-export const normalizeDate = (date: string | Date | null | undefined): string | null => {
-  if (!date) return null;
-  
-  try {
-    if (typeof date === 'string') {
-      // Si c'est déjà au format YYYY-MM-DD
-      if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-        return date;
-      }
-      
-      return new Date(date).toISOString().split('T')[0];
-    }
-    
-    return date.toISOString().split('T')[0];
-  } catch (error) {
-    console.error("Erreur lors de la normalisation de la date:", error);
-    return null;
-  }
-};
-
-/**
- * Vérifie si deux dates sont le même jour
- */
-export const isSameDay = (date1: string | Date | null | undefined, date2: string | Date | null | undefined): boolean => {
-  if (!date1 || !date2) return false;
-  
-  const normalizedDate1 = normalizeDate(date1);
-  const normalizedDate2 = normalizeDate(date2);
-  
-  return normalizedDate1 === normalizedDate2;
-};
-
-/**
  * AUTRES UTILITAIRES
  */
 
@@ -437,4 +344,34 @@ export const getInitials = (name: string): string => {
     .map(part => part[0])
     .join('')
     .toUpperCase();
+};
+
+/**
+ * Formate une date d'échéance
+ */
+export const formatDueDate = (date: string | Date | null | undefined): string => {
+  if (!date) return 'Non définie';
+  return formatDate(date, 'fr-FR', { 
+    day: 'numeric',
+    month: 'short'
+  });
+};
+
+/**
+ * Traduction des statuts des projets
+ */
+export const getProjectStatusTranslation = (status: string, translations: any): string => {
+  try {
+    const statusMap: { [key: string]: string } = {
+      'active': translations?.projects?.status?.active || 'Actif',
+      'in_progress': translations?.projects?.status?.in_progress || 'En progression',
+      'completed': translations?.projects?.status?.completed || 'Terminé',
+      'canceled': translations?.projects?.status?.canceled || 'Annulé',
+      'ongoing': translations?.projects?.status?.ongoing || 'En cours'
+    };
+    return statusMap[status] || status;
+  } catch (error) {
+    console.warn('Error getting status translation:', error);
+    return status;
+  }
 };

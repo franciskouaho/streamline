@@ -7,6 +7,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCreateTask } from "@/services/queries/tasks";
 import { TaskCreateInput } from "@/types/project";
+import { useProjectTags } from "@/services/queries/projectTags";
+import { Tag } from "@/types/tag";
 
 interface Category {
     id: string;
@@ -34,6 +36,10 @@ export default function NewTask() {
     const [alertEnabled, setAlertEnabled] = useState<boolean>(true);
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
+    const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
+    const [showTagsModal, setShowTagsModal] = useState<boolean>(false);
+    
+    const { data: projectTags, isLoading: isLoadingTags } = useProjectTags(projectId);
 
     console.log("Paramètres URL:", params);
     console.log("projectId récupéré:", projectId);
@@ -47,12 +53,20 @@ export default function NewTask() {
         { id: 'user', label: 'User Experience' },
     ];
 
-
     const toggleCategory = (categoryId: string) => {
         if (selectedCategories.includes(categoryId)) {
             setSelectedCategories(selectedCategories.filter(id => id !== categoryId));
         } else {
             setSelectedCategories([...selectedCategories, categoryId]);
+        }
+    };
+
+    const toggleTagSelection = (tag: Tag) => {
+        const isSelected = selectedTags.some(t => t.id === tag.id);
+        if (isSelected) {
+            setSelectedTags(selectedTags.filter(t => t.id !== tag.id));
+        } else {
+            setSelectedTags([...selectedTags, tag]);
         }
     };
 
@@ -88,6 +102,10 @@ export default function NewTask() {
             
             if (projectId && projectId !== 'undefined' && projectId !== 'null') {
                 taskData.projectId = Number(projectId);
+            }
+
+            if (selectedTags.length > 0) {
+                taskData.tagIds = selectedTags.map(tag => tag.id);
             }
 
             console.log('Sending task data:', taskData);
@@ -220,17 +238,50 @@ export default function NewTask() {
                     />
                 </View>
 
-               {/* <View style={styles.toolsContainer}>
-                    <TouchableOpacity style={styles.toolIcon}>
-                        <Ionicons name="grid" size={20} color="#000"/>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.toolIcon}>
-                        <Ionicons name="text" size={20} color="#000"/>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.toolIcon}>
-                        <Ionicons name="brush" size={20} color="#000"/>
-                    </TouchableOpacity>
-                </View>*/}
+                {projectId && projectTags && projectTags.length > 0 && (
+                    <View style={styles.tagsSection}>
+                        <View style={styles.tagsSectionHeader}>
+                            <Text style={styles.label}>Tags</Text>
+                            <TouchableOpacity 
+                                style={styles.selectTagsButton}
+                                onPress={() => setShowTagsModal(true)}
+                            >
+                                <Ionicons name="pricetags-outline" size={18} color="#ff7a5c" />
+                                <Text style={styles.selectTagsButtonText}>Sélectionner des tags</Text>
+                            </TouchableOpacity>
+                        </View>
+                        
+                        {selectedTags.length > 0 ? (
+                            <View style={styles.selectedTagsContainer}>
+                                {selectedTags.map(tag => (
+                                    <View 
+                                        key={tag.id} 
+                                        style={[styles.tagChip, { backgroundColor: tag.color + '20', borderColor: tag.color }]}
+                                    >
+                                        {tag.icon && (
+                                            <Ionicons 
+                                                name={`${tag.icon}-outline`} 
+                                                size={14} 
+                                                color={tag.color} 
+                                                style={styles.tagIcon}
+                                            />
+                                        )}
+                                        <Text style={[styles.tagText, { color: tag.color }]}>
+                                            {tag.name}
+                                        </Text>
+                                        <TouchableOpacity onPress={() => toggleTagSelection(tag)}>
+                                            <Ionicons name="close-circle" size={16} color={tag.color} />
+                                        </TouchableOpacity>
+                                    </View>
+                                ))}
+                            </View>
+                        ) : (
+                            <View style={styles.noTagsContainer}>
+                                <Text style={styles.noTagsText}>Aucun tag sélectionné</Text>
+                            </View>
+                        )}
+                    </View>
+                )}
 
                 <Text style={styles.sectionTitle}>Category</Text>
 
@@ -255,25 +306,51 @@ export default function NewTask() {
                         </TouchableOpacity>
                     ))}
                 </View>
-
-               {/* <View style={styles.alertSection}>
-                    <Text style={styles.alertText}>Get alert for this task</Text>
-                    <TouchableOpacity
-                        style={[
-                            styles.alertToggle,
-                            alertEnabled ? styles.alertToggleOn : styles.alertToggleOff
-                        ]}
-                        onPress={() => setAlertEnabled(!alertEnabled)}
-                    >
-                        <View
-                            style={[
-                                styles.alertToggleCircle,
-                                alertEnabled ? styles.alertToggleCircleOn : styles.alertToggleCircleOff
-                            ]}
-                        />
-                    </TouchableOpacity>
-                </View>*/}
             </ScrollView>
+
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={showTagsModal}
+                onRequestClose={() => setShowTagsModal(false)}
+            >
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Sélectionner des tags</Text>
+                            <TouchableOpacity onPress={() => setShowTagsModal(false)}>
+                                <Ionicons name="close" size={24} color="#000" />
+                            </TouchableOpacity>
+                        </View>
+                        
+                        <ScrollView style={styles.tagsList}>
+                            {projectTags && projectTags.map(tag => {
+                                const isSelected = selectedTags.some(t => t.id === tag.id);
+                                return (
+                                    <TouchableOpacity 
+                                        key={tag.id}
+                                        style={[styles.tagItem, isSelected && styles.tagItemSelected]}
+                                        onPress={() => toggleTagSelection(tag)}
+                                    >
+                                        <View style={[styles.tagColorDot, { backgroundColor: tag.color }]} />
+                                        <Text style={styles.tagItemName}>{tag.name}</Text>
+                                        {isSelected && (
+                                            <Ionicons name="checkmark-circle" size={20} color="#ff7a5c" />
+                                        )}
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </ScrollView>
+                        
+                        <TouchableOpacity 
+                            style={styles.modalButton}
+                            onPress={() => setShowTagsModal(false)}
+                        >
+                            <Text style={styles.modalButtonText}>Confirmer</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
 
             <View style={styles.footer}>
                 <TouchableOpacity
@@ -521,7 +598,7 @@ const styles = StyleSheet.create({
     datePicker: {
         marginBottom: 20,
         height: 200,
-        color: '#000000', // Assurer une couleur visible
+        color: '#000000',
     },
     modalButton: {
         backgroundColor: '#ff7a5c',
@@ -617,5 +694,84 @@ const styles = StyleSheet.create({
         color: '#ff7a5c',
         fontSize: 16,
         fontWeight: '600',
+    },
+    tagsSection: {
+        marginVertical: 15,
+    },
+    tagsSectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    selectTagsButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+    },
+    selectTagsButtonText: {
+        color: '#ff7a5c',
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    selectedTagsContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    tagChip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 4,
+        paddingHorizontal: 8,
+        borderRadius: 12,
+        borderWidth: 1,
+        gap: 4,
+    },
+    tagText: {
+        fontSize: 12,
+        fontWeight: '500',
+    },
+    tagIcon: {
+        marginRight: 4,
+    },
+    noTagsContainer: {
+        padding: 15,
+        backgroundColor: '#f0f0f0',
+        borderRadius: 10,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderStyle: 'dashed',
+    },
+    noTagsText: {
+        color: '#888',
+        fontSize: 14,
+    },
+    tagsList: {
+        maxHeight: 300,
+        marginBottom: 15,
+    },
+    tagItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+    },
+    tagItemSelected: {
+        backgroundColor: 'rgba(255, 122, 92, 0.1)',
+    },
+    tagColorDot: {
+        width: 16,
+        height: 16,
+        borderRadius: 8,
+        marginRight: 10,
+    },
+    tagItemName: {
+        fontSize: 16,
+        color: '#333',
+        flex: 1,
     },
 });

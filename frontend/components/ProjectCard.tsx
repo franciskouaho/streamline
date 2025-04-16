@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { shadowStyles } from '@/constants/CommonStyles';
 import { Project } from '@/types/project';
 import { formatDueDate, getStatusColor, getProjectStatusLabel, normalizeProjectStatus } from '@/utils/projectUtils';
+import ProjectTagDisplay from '@/components/ui/ProjectTagDisplay';
 
 interface ProjectCardProps {
   project: Project;
@@ -81,8 +82,16 @@ const ProjectCard = ({ project, onPress }: ProjectCardProps) => {
             {truncateDescription(project.description)}
           </Text>
         )}
+
+        {/* Ajout de l'affichage des tags */}
+        {project.tags && project.tags.length > 0 && (
+          <View style={styles.tagsContainer}>
+            <ProjectTagDisplay tags={project.tags} maxDisplay={2} size="small" />
+          </View>
+        )}
       </View>
-      
+
+
       <View style={styles.rightInfo}>
         {/* Date avec la bordure de couleur du statut */}
         <View style={[styles.dateContainer, { borderColor: statusColor }]}>
@@ -98,7 +107,7 @@ const ProjectCard = ({ project, onPress }: ProjectCardProps) => {
         </View>
         
         {/* Avatar des membres avec la couleur du statut */}
-        {project.members && project.members.length > 0 && (
+        { project.members && project.members.length > 0 && (
           <View style={[styles.memberAvatar, { backgroundColor: statusColor }]}>
             <Text style={styles.memberCount}>{project.members.length}</Text>
           </View>
@@ -222,6 +231,12 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 10,
     fontWeight: '500',
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 8,
+    gap: 4,
   },
 });
 

@@ -140,7 +140,6 @@ export default {
     startDate: "Date de début",
     endDate: "Date de fin",
     testNotification: "Envoyer une notification test",
-    // Ajouts pour l'écran d'accueil
     dashboard: "Tableau de bord",
     statistics: "Statistiques",
     completedProjects: "Projets terminés",
@@ -397,6 +396,32 @@ export default {
         invalidDate: "Date invalide"
       },
       statusRecommended: "Statut recommandé : {status}"
+    }
+  },
+  tags: {
+    name: "Nom",
+    color: "Couleur",
+    icon: "Icône",
+    namePlaceholder: "Entrer le nom du tag",
+    createTag: "Créer un tag",
+    manageTags: "Gérer les tags",
+    noTags: "Aucun tag trouvé",
+    selectTags: "Sélectionner des tags",
+    quickCreate: "Création rapide de tag",
+    addTag: "Ajouter un tag",
+    removeTag: "Supprimer le tag",
+    errors: {
+      nameRequired: "Le nom du tag est obligatoire",
+      createFailed: "Impossible de créer le tag",
+      deleteFailed: "Impossible de supprimer le tag"
+    },
+    alerts: {
+      confirmDelete: "Confirmer la suppression",
+      deleteMessage: "Êtes-vous sûr de vouloir supprimer ce tag ?",
+      createSuccess: "Tag créé avec succès",
+      tagCreated: "Le tag a été créé avec succès",
+      deleteSuccess: "Tag supprimé avec succès",
+      tagDeleted: "Le tag a été supprimé avec succès"
     }
   }
 };

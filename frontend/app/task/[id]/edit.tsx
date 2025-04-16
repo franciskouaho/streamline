@@ -9,7 +9,8 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator
+  ActivityIndicator,
+  Modal
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -18,6 +19,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTask, useUpdateTask } from "@/services/queries/tasks";
 import { useProjects } from "@/services/queries/projects";
+import { useProjectTags } from "@/services/queries/projectTags";
 
 export default function EditTask() {
   const router = useRouter();
@@ -36,6 +38,9 @@ export default function EditTask() {
   const [dueDate, setDueDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<number | string | null>(null);
+  const { data: projectTags } = useProjectTags(selectedProjectId);
+  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
+  const [showTagsModal, setShowTagsModal] = useState<boolean>(false);
   
   // Initialiser les données du formulaire quand la tâche est chargée
   useEffect(() => {
@@ -49,6 +54,11 @@ export default function EditTask() {
       if (task.dueDate) {
         setDueDate(new Date(task.dueDate));
       }
+      
+      // Initialiser les tags si présents
+      if (task.tags && task.tags.length > 0) {
+        setSelectedTags(task.tags);
+      }
     }
   }, [task]);
   
@@ -60,6 +70,16 @@ export default function EditTask() {
     
     if (selectedDate) {
       setDueDate(selectedDate);
+    }
+  };
+  
+  // Gérer la sélection de tags
+  const toggleTagSelection = (tag: Tag) => {
+    const isSelected = selectedTags.some(t => t.id === tag.id);
+    if (isSelected) {
+      setSelectedTags(selectedTags.filter(t => t.id !== tag.id));
+    } else {
+      setSelectedTags([...selectedTags, tag]);
     }
   };
   
@@ -79,7 +99,8 @@ export default function EditTask() {
         status,
         priority,
         dueDate: dueDate.toISOString(),
-        projectId: selectedProjectId ? Number(selectedProjectId) : undefined
+        projectId: selectedProjectId ? Number(selectedProjectId) : undefined,
+        tagIds: selectedTags.length > 0 ? selectedTags.map(tag => tag.id) : undefined
       };
       
       console.log("Données de mise à jour envoyées:", updateData);
@@ -241,8 +262,97 @@ export default function EditTask() {
               </ScrollView>
             </View>
           )}
+
+          {selectedProjectId && projectTags && projectTags.length > 0 && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.sectionTitle}>Tags</Text>
+                <TouchableOpacity 
+                  style={styles.selectTagsButton}
+                  onPress={() => setShowTagsModal(true)}
+                >
+                  <Ionicons name="pricetags-outline" size={18} color="#ff7a5c" />
+                  <Text style={styles.selectTagsButtonText}>Gérer les tags</Text>
+                </TouchableOpacity>
+              </View>
+              
+              {selectedTags.length > 0 ? (
+                <View style={styles.tagsContainer}>
+                  {selectedTags.map(tag => (
+                    <View 
+                      key={tag.id} 
+                      style={[styles.tagChip, { backgroundColor: tag.color + '20', borderColor: tag.color }]}
+                    >
+                      {tag.icon && (
+                        <Ionicons 
+                          name={`${tag.icon}-outline`} 
+                          size={14} 
+                          color={tag.color} 
+                          style={styles.tagIcon}
+                        />
+                      )}
+                      <Text style={[styles.tagText, { color: tag.color }]}>
+                        {tag.name}
+                      </Text>
+                      <TouchableOpacity onPress={() => toggleTagSelection(tag)}>
+                        <Ionicons name="close-circle" size={16} color={tag.color} />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <View style={styles.noTagsContainer}>
+                  <Text style={styles.noTagsText}>Aucun tag sélectionné</Text>
+                </View>
+              )}
+            </View>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
+      
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showTagsModal}
+        onRequestClose={() => setShowTagsModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Sélectionner des tags</Text>
+              <TouchableOpacity onPress={() => setShowTagsModal(false)}>
+                <Ionicons name="close" size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.tagsList}>
+              {projectTags && projectTags.map(tag => {
+                const isSelected = selectedTags.some(t => t.id === tag.id);
+                return (
+                  <TouchableOpacity 
+                    key={tag.id}
+                    style={[styles.tagItem, isSelected && styles.tagItemSelected]}
+                    onPress={() => toggleTagSelection(tag)}
+                  >
+                    <View style={[styles.tagColorDot, { backgroundColor: tag.color }]} />
+                    <Text style={styles.tagItemName}>{tag.name}</Text>
+                    {isSelected && (
+                      <Ionicons name="checkmark-circle" size={20} color="#ff7a5c" />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+            
+            <TouchableOpacity 
+              style={styles.modalButton}
+              onPress={() => setShowTagsModal(false)}
+            >
+              <Text style={styles.modalButtonText}>Confirmer</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
       
       <View style={styles.footer}>
         <TouchableOpacity
@@ -471,5 +581,101 @@ const styles = StyleSheet.create({
   disabledButton: {
     opacity: 0.7,
     backgroundColor: "#aaa",
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  selectTagsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  selectTagsButtonText: {
+    color: '#ff7a5c',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 15,
+  },
+  tagChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 4,
+  },
+  tagText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  tagIcon: {
+    marginRight: 4,
+  },
+  noTagsContainer: {
+    padding: 15,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderStyle: 'dashed',
+    marginBottom: 15,
+  },
+  noTagsText: {
+    color: '#888',
+    fontSize: 14,
+  },
+  tagsList: {
+    maxHeight: 300,
+    marginBottom: 15,
+  },
+  tagItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  tagItemSelected: {
+    backgroundColor: 'rgba(255, 122, 92, 0.1)',
+  },
+  tagColorDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    marginRight: 10,
+  },
+  tagItemName: {
+    fontSize: 16,
+    color: '#333',
+    flex: 1,
+  },
+  modalButton: {
+    backgroundColor: '#ff7a5c',
+    borderRadius: 10,
+    padding: 15,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#000',
+    shadowColor: '#000',
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 8,
+  },
+  modalButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

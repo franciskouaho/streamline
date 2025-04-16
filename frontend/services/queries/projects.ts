@@ -37,8 +37,26 @@ export const useCreateProject = () => {
   
   return useMutation({
     mutationFn: async (projectData: Partial<Project>) => {
-      const response = await api.post('/projects', projectData);
-      return response.data;
+      try {
+        const formattedData = {
+          ...projectData,
+          settings: {},
+          tags: projectData.tags ? 
+            projectData.tags.map(tag => ({
+              name: tag.name,
+              color: tag.color,
+              icon: tag.icon || 'pricetag'
+            })) : 
+            undefined
+        };
+        
+        console.log('Formatted project data:', formattedData);
+        const response = await api.post('/projects', formattedData);
+        return response.data;
+      } catch (error) {
+        console.error('Error details:', error.response?.data);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
