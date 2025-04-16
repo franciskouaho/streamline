@@ -199,19 +199,43 @@ export default {
   },
   premium: {
     title: "Premium",
-    description: "Unlock all features",
+    description: "Unlock all features and boost your productivity",
+    heroTitle: "Take your work to the next level",
     features: {
       unlimited: "Unlimited projects",
       collaboration: "Advanced team collaboration",
       analytics: "Detailed analytics",
-      support: "Priority support"
+      support: "Priority support",
+      unlimitedTasks: "Unlimited tasks",
+      unlimitedMembers: "Unlimited members",
+      advancedFeatures: "Advanced features (Complete Kanban, Gantt, dashboards)",
+      storage: "20 GB storage",
+      dataExport: "Data export"
     },
     monthly: "Monthly",
     yearly: "Yearly",
-    subscribe: "Subscribe",
+    subscribe: "Subscribe to",
     current: "Your current plan",
     selectPlan: "Select",
-    recommended: "Recommended"
+    recommended: "Recommended",
+    or: "or",
+    freeInfo: "Currently on free plan (limited to 3 projects, 2 members, 50 tasks/project)",
+    featuresIncluded: "Features included",
+    topFeatures: "Top Features",
+    choosePlan: "Choose your plan",
+    testimonials: "What our users say",
+    testimonial1: "Streamline Premium has completely transformed how we work. Managing our projects has never been so efficient.",
+    testimonialAuthor1: "John Smith, Project Manager",
+    faqTitle: "Frequently Asked Questions",
+    faq: {
+      q1: "How do I upgrade from the free plan to premium?",
+      a1: "Simply subscribe to our Premium plan directly from this page. Your account will be automatically updated with all Premium features immediately after payment.",
+      q2: "Can I cancel my subscription anytime?",
+      a2: "Yes, you can cancel your subscription at any time. You'll continue to enjoy premium features until the end of your billing period.",
+      q3: "Is there a trial period available?",
+      a3: "Yes, we offer a 14-day free trial for the Premium plan. You can activate it without commitment and without a credit card."
+    },
+    getStarted: "Get started now"
   },
   editProfile: {
     title: "Edit Profile",
@@ -255,15 +279,26 @@ export default {
       requiredFields: "Please fill in all required fields",
       invalidEmail: "Please enter a valid email address",
       passwordTooShort: "Password must be at least 6 characters long",
-      passwordMismatch: "Passwords do not match"
+      passwordMismatch: "Passwords do not match",
+      invalidCredentials: "Invalid credentials. Please check your email and password."
     },
     login: {
       title: "Login Error",
-      message: "Login failed. Please check your credentials and try again."
+      message: "Login failed. Please check your credentials and try again.",
+      invalidCredentials: "Incorrect email or password",
+      accountLocked: "Your account has been temporarily locked. Please try again later."
     },
     registration: {
       title: "Registration Error",
-      message: "Registration failed. Please try again or use a different email address."
+      message: "Registration failed. Please try again or use a different email address.",
+      emailExists: "This email address is already in use. Please login or use another email address.",
+      weakPassword: "Password is too weak. Use a combination of letters, numbers, and special characters."
+    },
+    forgotPassword: {
+      title: "Password Reset",
+      emailSent: "A password reset email has been sent to your address",
+      emailNotFound: "No account is associated with this email address",
+      resetFailed: "Password reset failed. Please try again."
     }
   },
   dashboard: {

@@ -199,19 +199,43 @@ export default {
   },
   premium: {
     title: "Premium",
-    description: "Débloquez toutes les fonctionnalités",
+    description: "Débloquez toutes les fonctionnalités et boostez votre productivité",
+    heroTitle: "Passez à la vitesse supérieure",
     features: {
       unlimited: "Projets illimités",
       collaboration: "Collaboration d'équipe avancée",
       analytics: "Analyses détaillées",
-      support: "Support prioritaire"
+      support: "Support prioritaire",
+      unlimitedTasks: "Tâches illimitées",
+      unlimitedMembers: "Membres illimités",
+      advancedFeatures: "Fonctionnalités avancées (Kanban complet, Gantt, tableaux de bord)",
+      storage: "Stockage de 20 Go",
+      dataExport: "Exportation de données"
     },
     monthly: "Mensuel",
     yearly: "Annuel",
-    subscribe: "S'abonner",
+    subscribe: "S'abonner à",
     current: "Votre plan actuel",
     selectPlan: "Sélectionner",
-    recommended: "Recommandé"
+    recommended: "Recommandé",
+    or: "ou",
+    freeInfo: "Actuellement en plan gratuit (limité à 3 projets, 2 membres, 50 tâches/projet)",
+    featuresIncluded: "Fonctionnalités incluses",
+    topFeatures: "Fonctionnalités principales",
+    choosePlan: "Choisissez votre plan",
+    testimonials: "Ce que disent nos utilisateurs",
+    testimonial1: "Streamline Premium a complètement transformé notre façon de travailler. L'organisation de nos projets n'a jamais été aussi efficace.",
+    testimonialAuthor1: "Marie Dupont, Chef de projet",
+    faqTitle: "Questions fréquentes",
+    faq: {
+      q1: "Comment passer du plan gratuit au plan premium ?",
+      a1: "Il vous suffit de vous abonner à notre plan Premium directement depuis cette page. Votre compte sera automatiquement mis à jour avec toutes les fonctionnalités Premium immédiatement après le paiement.",
+      q2: "Puis-je annuler mon abonnement à tout moment ?",
+      a2: "Oui, vous pouvez annuler votre abonnement à tout moment. Vous continuerez à bénéficier des fonctionnalités premium jusqu'à la fin de votre période de facturation.",
+      q3: "Y a-t-il une période d'essai disponible ?",
+      a3: "Oui, nous offrons une période d'essai gratuite de 14 jours pour le plan Premium. Vous pouvez l'activer sans engagement et sans carte bancaire."
+    },
+    getStarted: "Commencer dès maintenant"
   },
   editProfile: {
     title: "Modifier le profil",
@@ -255,15 +279,26 @@ export default {
       requiredFields: "Veuillez remplir tous les champs obligatoires",
       invalidEmail: "Veuillez entrer une adresse email valide",
       passwordTooShort: "Le mot de passe doit contenir au moins 6 caractères",
-      passwordMismatch: "Les mots de passe ne correspondent pas"
+      passwordMismatch: "Les mots de passe ne correspondent pas",
+      invalidCredentials: "Identifiants invalides. Veuillez vérifier votre email et mot de passe."
     },
     login: {
       title: "Erreur de connexion",
-      message: "La connexion a échoué. Veuillez vérifier vos identifiants et réessayer."
+      message: "La connexion a échoué. Veuillez vérifier vos identifiants et réessayer.",
+      invalidCredentials: "Email ou mot de passe incorrect",
+      accountLocked: "Votre compte a été temporairement verrouillé. Veuillez réessayer plus tard."
     },
     registration: {
       title: "Erreur d'inscription",
-      message: "L'inscription a échoué. Veuillez réessayer ou utiliser une autre adresse email."
+      message: "L'inscription a échoué. Veuillez réessayer ou utiliser une autre adresse email.",
+      emailExists: "Cette adresse email est déjà utilisée. Veuillez vous connecter ou utiliser une autre adresse.",
+      weakPassword: "Le mot de passe est trop faible. Utilisez une combinaison de lettres, chiffres et caractères spéciaux."
+    },
+    forgotPassword: {
+      title: "Réinitialisation du mot de passe",
+      emailSent: "Un email de réinitialisation a été envoyé à votre adresse",
+      emailNotFound: "Aucun compte n'est associé à cette adresse email",
+      resetFailed: "Échec de la réinitialisation du mot de passe. Veuillez réessayer."
     }
   },
   dashboard: {

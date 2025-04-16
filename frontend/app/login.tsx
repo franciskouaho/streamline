@@ -26,10 +26,21 @@ export default function Login() {
     const login = useLogin();
 
     const handleSignIn = async () => {
+        // Validation des champs requis
         if (!email || !password) {
             Alert.alert(
                 translations.errors.validation?.title || "Erreur",
                 translations.errors.validation?.requiredFields || "Veuillez remplir tous les champs obligatoires"
+            );
+            return;
+        }
+        
+        // Validation du format de l'email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            Alert.alert(
+                translations.errors.validation?.title || "Erreur",
+                translations.errors.validation?.invalidEmail || "Veuillez entrer une adresse email valide"
             );
             return;
         }

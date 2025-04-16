@@ -27,10 +27,30 @@ export default function Register() {
     const register = useRegister();
 
     const handleRegister = async () => {
+        // Validation basique
         if (!email || !password || !fullName) {
             Alert.alert(
                 translations.errors.validation?.title || "Erreur", 
                 translations.errors.validation?.requiredFields || "Veuillez remplir tous les champs obligatoires"
+            );
+            return;
+        }
+
+        // Validation du format de l'email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            Alert.alert(
+                translations.errors.validation?.title || "Erreur",
+                translations.errors.validation?.invalidEmail || "Veuillez entrer une adresse email valide"
+            );
+            return;
+        }
+
+        // Validation du mot de passe
+        if (password.length < 6) {
+            Alert.alert(
+                translations.errors.validation?.title || "Erreur",
+                translations.errors.validation?.passwordTooShort || "Le mot de passe doit contenir au moins 6 caractères"
             );
             return;
         }

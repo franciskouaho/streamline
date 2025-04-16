@@ -72,6 +72,7 @@ export default function EditTask() {
         return;
       }
       
+      // S'assurer que les valeurs sont du bon type
       const updateData = {
         id: Number(taskId),
         title,
@@ -82,24 +83,34 @@ export default function EditTask() {
         projectId: selectedProjectId ? Number(selectedProjectId) : undefined
       };
       
-      await updateTask.mutateAsync(updateData);
-      Alert.alert(translations.common?.save || "Succès", translations.tasks?.errors?.update || "La tâche a été mise à jour avec succès", [
-        {
-          text: "OK",
-          onPress: () => {
-            if (projectId) {
-              router.push(`/project/${projectId}`);
-            } else if (selectedProjectId) {
-              router.push(`/project/${selectedProjectId}`);
-            } else {
+      console.log("Données de mise à jour envoyées:", updateData);
+      
+      const result = await updateTask.mutateAsync(updateData);
+      
+      console.log("Résultat de la mise à jour:", result);
+      
+      Alert.alert(
+        translations.common?.save || "Succès", 
+        translations.tasks?.updateSuccess || "La tâche a été mise à jour avec succès", 
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              // Simplifier la navigation
               router.back();
             }
           }
-        }
-      ]);
+        ]
+      );
     } catch (error) {
-      console.error("Erreur lors de la mise à jour de la tâche:", error);
-      Alert.alert(translations.errors?.validation?.title || "Erreur", translations.tasks?.errors?.update || "Une erreur est survenue lors de la mise à jour de la tâche");
+      console.error("Erreur détaillée lors de la mise à jour de la tâche:", error);
+      
+      // Message d'erreur plus descriptif
+      const errorMessage = error instanceof Error ? 
+        `${translations.tasks?.errors?.update || "Une erreur est survenue lors de la mise à jour de la tâche"}: ${error.message}` :
+        translations.tasks?.errors?.update || "Une erreur est survenue lors de la mise à jour de la tâche";
+      
+      Alert.alert(translations.errors?.validation?.title || "Erreur", errorMessage);
     }
   };
   
@@ -198,148 +209,6 @@ export default function EditTask() {
             </View>
           </View>
           
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{translations.tasks?.status || "Statut"}</Text>
-            <View style={styles.statusContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.statusButton,
-                  status === 'todo' && { backgroundColor: getStatusColor('todo') }
-                ]}
-                onPress={() => setStatus('todo')}
-              >
-                <Ionicons
-                  name="list"
-                  size={18}
-                  color={status === 'todo' ? "#fff" : "#666"}
-                />
-                <Text
-                  style={[
-                    styles.statusText,
-                    status === 'todo' && { color: "#fff" }
-                  ]}
-                >
-                  {translations.tasks?.todo || "À faire"}
-                </Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[
-                  styles.statusButton,
-                  status === 'in_progress' && { backgroundColor: getStatusColor('in_progress') }
-                ]}
-                onPress={() => setStatus('in_progress')}
-              >
-                <Ionicons
-                  name="hourglass"
-                  size={18}
-                  color={status === 'in_progress' ? "#fff" : "#666"}
-                />
-                <Text
-                  style={[
-                    styles.statusText,
-                    status === 'in_progress' && { color: "#fff" }
-                  ]}
-                >
-                  {translations.tasks?.in_progress || "En cours"}
-                </Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[
-                  styles.statusButton,
-                  status === 'done' && { backgroundColor: getStatusColor('done') }
-                ]}
-                onPress={() => setStatus('done')}
-              >
-                <Ionicons
-                  name="checkmark-circle"
-                  size={18}
-                  color={status === 'done' ? "#fff" : "#666"}
-                />
-                <Text
-                  style={[
-                    styles.statusText,
-                    status === 'done' && { color: "#fff" }
-                  ]}
-                >
-                  {translations.tasks?.done || "Terminé"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-          
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{translations.tasks?.priority || "Priorité"}</Text>
-            <View style={styles.priorityContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.priorityButton,
-                  priority === 'low' && styles.priorityButtonLow
-                ]}
-                onPress={() => setPriority('low')}
-              >
-                <Ionicons
-                  name="flag"
-                  size={18}
-                  color={priority === 'low' ? "#fff" : "#666"}
-                />
-                <Text
-                  style={[
-                    styles.priorityText,
-                    priority === 'low' && { color: "#fff" }
-                  ]}
-                >
-                  {translations.tasks?.low || "Basse"}
-                </Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[
-                  styles.priorityButton,
-                  priority === 'medium' && styles.priorityButtonMedium
-                ]}
-                onPress={() => setPriority('medium')}
-              >
-                <Ionicons
-                  name="flag"
-                  size={18}
-                  color={priority === 'medium' ? "#fff" : "#666"}
-                />
-                <Text
-                  style={[
-                    styles.priorityText,
-                    priority === 'medium' && { color: "#fff" }
-                  ]}
-                >
-                  {translations.tasks?.medium || "Moyenne"}
-                </Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[
-                  styles.priorityButton,
-                  priority === 'high' && styles.priorityButtonHigh
-                ]}
-                onPress={() => setPriority('high')}
-              >
-                <Ionicons
-                  name="flag"
-                  size={18}
-                  color={priority === 'high' ? "#fff" : "#666"}
-                />
-                <Text
-                  style={[
-                    styles.priorityText,
-                    priority === 'high' && { color: "#fff" }
-                  ]}
-                >
-                  {translations.tasks?.high || "Haute"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-          
           {projects && projects.length > 0 && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>{translations.projects?.newProject || "Projet"}</Text>
@@ -378,7 +247,7 @@ export default function EditTask() {
       
       <View style={styles.footer}>
         <TouchableOpacity
-          style={styles.saveButton}
+          style={[styles.saveButton, updateTask.isPending && styles.disabledButton]}
           onPress={handleUpdateTask}
           disabled={updateTask.isPending}
         >
@@ -599,5 +468,9 @@ const styles = StyleSheet.create({
   },
   datePicker: {
     color: '#000000', // Assurer une bonne visibilité sur iOS
+  },
+  disabledButton: {
+    opacity: 0.7,
+    backgroundColor: "#aaa",
   },
 });

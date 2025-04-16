@@ -47,12 +47,6 @@ export default function NewTask() {
         { id: 'user', label: 'User Experience' },
     ];
 
-    const people: Person[] = [
-        { id: '1', name: 'John Doe' },
-        { id: '2', name: 'Jane Smith' },
-        { id: '3', name: 'Mike Johnson' },
-        { id: '4', name: 'Sarah Wilson' },
-    ];
 
     const toggleCategory = (categoryId: string) => {
         if (selectedCategories.includes(categoryId)) {
@@ -93,7 +87,7 @@ export default function NewTask() {
             };
             
             if (projectId && projectId !== 'undefined' && projectId !== 'null') {
-                taskData.projectId = Number(projectId); // Conversion explicite en nombre
+                taskData.projectId = Number(projectId);
             }
 
             console.log('Sending task data:', taskData);
@@ -200,7 +194,7 @@ export default function NewTask() {
                                 onChange={onDateChange}
                                 minimumDate={new Date()}
                                 style={styles.datePicker}
-                                textColor="#000000" // Ajouter une couleur de texte noire
+                                textColor="#000000"
                             />
 
                             {Platform.OS === "android" && (
@@ -226,17 +220,17 @@ export default function NewTask() {
                     />
                 </View>
 
-                <View style={styles.toolsContainer}>
+               {/* <View style={styles.toolsContainer}>
                     <TouchableOpacity style={styles.toolIcon}>
-                        <Ionicons name="grid" size={20} color="#000" />
+                        <Ionicons name="grid" size={20} color="#000"/>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.toolIcon}>
-                        <Ionicons name="text" size={20} color="#000" />
+                        <Ionicons name="text" size={20} color="#000"/>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.toolIcon}>
-                        <Ionicons name="brush" size={20} color="#000" />
+                        <Ionicons name="brush" size={20} color="#000"/>
                     </TouchableOpacity>
-                </View>
+                </View>*/}
 
                 <Text style={styles.sectionTitle}>Category</Text>
 
@@ -262,7 +256,7 @@ export default function NewTask() {
                     ))}
                 </View>
 
-                <View style={styles.alertSection}>
+               {/* <View style={styles.alertSection}>
                     <Text style={styles.alertText}>Get alert for this task</Text>
                     <TouchableOpacity
                         style={[
@@ -278,7 +272,7 @@ export default function NewTask() {
                             ]}
                         />
                     </TouchableOpacity>
-                </View>
+                </View>*/}
             </ScrollView>
 
             <View style={styles.footer}>

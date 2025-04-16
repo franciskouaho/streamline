@@ -197,7 +197,7 @@ export default function Profile() {
                         <Ionicons name="chevron-forward" size={20} color="#888" />
                     </TouchableOpacity>
 
-                   {/* <TouchableOpacity
+                   <TouchableOpacity
                         style={styles.menuItem}
                         onPress={() => router.push("/premium")}
                     >
@@ -206,7 +206,7 @@ export default function Profile() {
                         </View>
                         <Text style={styles.menuItemText}>{translations.profile.goPremium}</Text>
                         <Ionicons name="chevron-forward" size={20} color="#888" />
-                    </TouchableOpacity>*/}
+                    </TouchableOpacity>
 
                     {/*<TouchableOpacity style={styles.menuItem}>
                         <View style={styles.menuIconContainer}>
